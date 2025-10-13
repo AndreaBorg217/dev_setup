@@ -17,11 +17,6 @@ brew install --cask iterm2
 brew install git
 ```
 
-# Install fd
-```bash
-brew install fd
-```
-
 # Install Oh My Zsh
 ```bash
 sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
