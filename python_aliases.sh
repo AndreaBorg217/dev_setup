@@ -15,6 +15,16 @@ venva(){
 }
 
 venvi(){
+    pip install black
     pip install -r requirements.txt
     echo "Dependencies from 'requirements.txt' installed."
+}
+
+venvf(){
+    pip freeze > requirements.txt
+}
+
+pylintrc(){
+    touch .pylintrc
+    echo -e "[MESSAGES CONTROL]\ndisable=import-error" > .pylintrc
 }
