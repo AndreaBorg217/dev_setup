@@ -92,11 +92,13 @@ return {
 		vim.lsp.config("pyright", {
 			settings = {
 				python = {
+					-- pythonPath = vim.fn.getcwd() .. "/.venv/bin/python",
 					analysis = {
 						autoSearchPaths = true,
 						diagnosticMode = "workspace",
 						useLibraryCodeForTypes = true,
 						typeCheckingMode = "basic",
+						-- extraPaths = { vim.fn.getcwd() },
 					},
 				},
 			},
