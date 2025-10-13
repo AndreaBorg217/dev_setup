@@ -13,7 +13,7 @@ sudo rm -rf ~/.local/share/nvim
 # Create dirs
 ```bash
 sudo mkdir ~/.config/nvim
-sudo chown -R andreaborg:staff ~/.config/nvim
+sudo chown -R andreaborg:staff ~/.config/
 ```
 
 # Copy configs 
