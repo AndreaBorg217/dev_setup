@@ -29,7 +29,7 @@ return {
 					debounce = 75,
 					keymap = {
 						accept = "<Tab>",
-						dismiss = "<BS>",
+						-- dismiss = "<C-x>",
 						-- accept_word = "<C-w>",
 						-- accept_line = "<C-l>",
 						-- next = "<M-]>",

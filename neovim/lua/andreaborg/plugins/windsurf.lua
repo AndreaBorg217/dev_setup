@@ -1,5 +1,4 @@
 -- Run :Codeium Auth
-
 return {
 	-- "Exafunction/windsurf.vim",
 	--config = function()
@@ -8,7 +7,7 @@ return {
 	--	end, { expr = true, silent = true })
 	--	-- vim.keymap.set('i', '<c-;>', function() return vim.fn['codeium#CycleCompletions'](1) end, { expr = true, silent = true })
 	--	-- vim.keymap.set('i', '<c-,>', function() return vim.fn['codeium#CycleCompletions'](-1) end, { expr = true, silent = true })
-	--	vim.keymap.set("i", "<BS>", function()
+	--	vim.keymap.set("i", "<C-x>", function()
 	--		return vim.fn["codeium#Clear"]()
 	--	end, { expr = true, silent = true })
 	-- end,
