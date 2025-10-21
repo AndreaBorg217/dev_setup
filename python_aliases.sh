@@ -6,22 +6,23 @@
 
 venvc() {
     python3 -m venv .venv
-    echo "Virtual environment '.venv' created."
 }
 
 venva(){
     source .venv/bin/activate
-    echo "Virtual environment '.venv' activated."
 }
 
 venvi(){
     pip install black
     pip install -r requirements.txt
-    echo "Dependencies from 'requirements.txt' installed."
 }
 
 venvf(){
     pip freeze > requirements.txt
+}
+
+venvd(){
+    deactivate
 }
 
 pylintrc(){
