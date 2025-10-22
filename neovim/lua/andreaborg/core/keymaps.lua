@@ -25,5 +25,10 @@ keymap.set("n", "<Tab>", "<cmd>tabn<CR>", { desc = "Go to next tab" })
 keymap.set("n", "<S-Tab>", "<cmd>tabp<CR>", { desc = "Go to previous tab" })
 
 -- primeagen move lines up and down
-vim.keymap.set("v", "J", ":m '>+1<CR>gv=gv")
-vim.keymap.set("v", "K", ":m '<-2<CR>gv=gv")
+keymap.set("v", "J", ":m '>+1<CR>gv=gv")
+keymap.set("v", "K", ":m '<-2<CR>gv=gv")
+
+-- go to start and end of file
+-- go to start and end of file
+keymap.set("n", "<leader>gs", "<cmd>1<CR>", { desc = "Go to start of file" })
+keymap.set("n", "<leader>ge", "<cmd>$<CR>", { desc = "Go to end of file" })
