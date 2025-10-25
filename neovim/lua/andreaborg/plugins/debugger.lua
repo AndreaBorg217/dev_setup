@@ -11,7 +11,10 @@ return {
 		config = function()
 			local dap = require("dap")
 			local dapui = require("dapui")
+			-- pip install debugpy
 			local dap_python = require("dap-python")
+			-- go install github.com/go-delve/delve/cmd/dlv@latest
+			-- export PATH=$PATH:$(go env GOPATH)/bin
 			local dap_go = require("dap-go")
 
 			require("dapui").setup({})
