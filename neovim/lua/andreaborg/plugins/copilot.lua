@@ -28,7 +28,7 @@ return {
 					hide_during_completion = true,
 					debounce = 75,
 					keymap = {
-						accept = "<Tab>",
+						accept = false, -- We'll handle this with a custom keymap
 						-- dismiss = "<C-x>",
 						-- accept_word = "<C-w>",
 						-- accept_line = "<C-l>",
@@ -48,6 +48,16 @@ return {
 				--   ["."] = false,
 				-- },
 			})
+
+			-- Custom Tab mapping: accept Copilot suggestion if available, otherwise insert tab
+			vim.keymap.set("i", "<Tab>", function()
+				local suggestion = require("copilot.suggestion")
+				if suggestion.is_visible() then
+					suggestion.accept()
+				else
+					vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Tab>", true, false, true), "n", false)
+				end
+			end, { desc = "Accept Copilot suggestion or insert tab" })
 		end,
 	},
 	{
