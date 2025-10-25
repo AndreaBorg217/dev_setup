@@ -29,6 +29,5 @@ keymap.set("v", "J", ":m '>+1<CR>gv=gv")
 keymap.set("v", "K", ":m '<-2<CR>gv=gv")
 
 -- go to start and end of file
--- go to start and end of file
-keymap.set("n", "<leader>gs", "<cmd>1<CR>", { desc = "Go to start of file" })
-keymap.set("n", "<leader>ge", "<cmd>$<CR>", { desc = "Go to end of file" })
+keymap.set({ "n", "v" }, "<leader>gs", "<cmd>1<CR>", { desc = "Go to start of file" })
+keymap.set({ "n", "v" }, "<leader>ge", "<cmd>$<CR>", { desc = "Go to end of file" })
