@@ -83,6 +83,7 @@ return {
 			-- Terminate debugging
 			vim.keymap.set("n", "<leader>dq", function()
 				require("dap").terminate()
+				dapui.close()
 			end, vim.tbl_extend("force", opts, { desc = "Terminate debugging" }))
 
 			-- Toggle DAP UI
