@@ -7,13 +7,13 @@ return {
 	-- 		if vim.fn["codeium#GetStatus"]() ~= 0 then
 	-- 			return vim.fn["codeium#Accept"]()
 	-- 		else
-	-- 			return "<Tab>"
+	-- 			vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Tab>", true, false, true), "n", false)
 	-- 		end
 	-- 	end, { expr = true, replace_keycodes = false })
-	-- 	
+	--
 	-- 	-- vim.keymap.set('i', '<c-;>', function() return vim.fn['codeium#CycleCompletions'](1) end, { expr = true, silent = true })
 	-- 	-- vim.keymap.set('i', '<c-,>', function() return vim.fn['codeium#CycleCompletions'](-1) end, { expr = true, silent = true })
-	-- 	
+	--
 	-- 	vim.keymap.set("i", "<C-x>", function()
 	-- 		return vim.fn["codeium#Clear"]()
 	-- 	end, { expr = true, silent = true })
