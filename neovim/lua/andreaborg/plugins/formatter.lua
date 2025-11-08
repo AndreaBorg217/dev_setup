@@ -23,6 +23,12 @@ return {
 
 				-- JSON formatting
 				json = { "prettier" },
+
+				-- JavaScript/TypeScript/React formatting
+				javascript = { "prettier" },
+				typescript = { "prettier" },
+				javascriptreact = { "prettier" },
+				typescriptreact = { "prettier" },
 			},
 			format_on_save = {
 				lsp_fallback = true,

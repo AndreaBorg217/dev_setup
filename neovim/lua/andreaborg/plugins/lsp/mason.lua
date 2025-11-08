@@ -29,6 +29,9 @@ return {
 				"yamlls", -- YAML LSP
 				"dockerls", -- Dockerfile LSP
 				"docker_compose_language_service", -- Docker Compose LSP
+				"ts_ls", -- TypeScript LSP
+				"eslint",
+				"cssls", -- CSS LSP
 			},
 		})
 		mason_tool_installer.setup({
@@ -56,7 +59,8 @@ return {
 				-- Lua to tools
 				"stylua", -- Lua formatter
 
-				-- Others
+				-- React
+				"eslint_d",
 				"prettier",
 			},
 		})
