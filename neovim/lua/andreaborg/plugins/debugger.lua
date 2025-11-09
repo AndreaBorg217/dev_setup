@@ -48,8 +48,14 @@ return {
 				linehl = "Visual",
 				numhl = "DiagnosticSignWarn",
 			})
+
+			-- Store the code window when debugging starts
+			local code_window = nil
+
 			-- Automatically open/close DAP UI
 			dap.listeners.after.event_initialized["dapui_config"] = function()
+				-- Store current window (code window) before opening UI
+				code_window = vim.api.nvim_get_current_win()
 				dapui.open()
 			end
 
@@ -100,6 +106,86 @@ return {
 			vim.keymap.set("n", "<leader>dl", function()
 				dap_go.debug_last_test()
 			end, vim.tbl_extend("force", opts, { desc = "Debug Go test (last)" }))
+			-- Helper function to find DAP UI window by buffer name pattern
+			local function find_dapui_window(pattern)
+				for _, win in ipairs(vim.api.nvim_list_wins()) do
+					local buf = vim.api.nvim_win_get_buf(win)
+					local buf_name = vim.api.nvim_buf_get_name(buf)
+					if buf_name:match(pattern) then
+						return win
+					end
+				end
+				return nil
+			end
+
+			-- Switch to code window (leader + 0)
+			vim.keymap.set("n", "<leader>0", function()
+				if code_window and vim.api.nvim_win_is_valid(code_window) then
+					vim.api.nvim_set_current_win(code_window)
+				else
+					print("Code window not found")
+				end
+			end, vim.tbl_extend("force", opts, { desc = "Focus code window" }))
+
+			-- Switch to scopes window (leader + 1)
+			vim.keymap.set("n", "<leader>d1", function()
+				local win = find_dapui_window("DAP Scopes")
+				if win then
+					vim.api.nvim_set_current_win(win)
+				else
+					print("Scopes window not found")
+				end
+			end, vim.tbl_extend("force", opts, { desc = "Focus scopes window" }))
+
+			-- Switch to breakpoints window (leader + 2)
+			vim.keymap.set("n", "<leader>d2", function()
+				local win = find_dapui_window("DAP Breakpoints")
+				if win then
+					vim.api.nvim_set_current_win(win)
+				else
+					print("Breakpoints window not found")
+				end
+			end, vim.tbl_extend("force", opts, { desc = "Focus breakpoints window" }))
+
+			-- Switch to stacks window (leader + 3)
+			vim.keymap.set("n", "<leader>d3", function()
+				local win = find_dapui_window("DAP Stacks")
+				if win then
+					vim.api.nvim_set_current_win(win)
+				else
+					print("Stacks window not found")
+				end
+			end, vim.tbl_extend("force", opts, { desc = "Focus stacks window" }))
+
+			-- Switch to watches window (leader + 4)
+			vim.keymap.set("n", "<leader>d4", function()
+				local win = find_dapui_window("DAP Watches")
+				if win then
+					vim.api.nvim_set_current_win(win)
+				else
+					print("Watches window not found")
+				end
+			end, vim.tbl_extend("force", opts, { desc = "Focus watches window" }))
+
+			-- Switch to REPL window (leader + 5)
+			vim.keymap.set("n", "<leader>d5", function()
+				local win = find_dapui_window("dap%-repl")
+				if win then
+					vim.api.nvim_set_current_win(win)
+				else
+					print("REPL window not found")
+				end
+			end, vim.tbl_extend("force", opts, { desc = "Focus REPL window" }))
+
+			-- Switch to console window (leader + 6)
+			vim.keymap.set("n", "<leader>d6", function()
+				local win = find_dapui_window("dap%-terminal")
+				if win then
+					vim.api.nvim_set_current_win(win)
+				else
+					print("Terminal window not found")
+				end
+			end, vim.tbl_extend("force", opts, { desc = "Focus terminal window" }))
 		end,
 	},
 }
