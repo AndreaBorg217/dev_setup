@@ -119,7 +119,7 @@ return {
 			end
 
 			-- Switch to code window (leader + 0)
-			vim.keymap.set("n", "<leader>0", function()
+			vim.keymap.set("n", "<leader>d0", function()
 				if code_window and vim.api.nvim_win_is_valid(code_window) then
 					vim.api.nvim_set_current_win(code_window)
 				else
