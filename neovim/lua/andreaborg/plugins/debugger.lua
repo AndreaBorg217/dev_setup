@@ -15,6 +15,7 @@ return {
 			local dap_python = require("dap-python")
 			-- go install github.com/go-delve/delve/cmd/dlv@latest
 			-- export PATH=$PATH:$(go env GOPATH)/bin
+			-- echo 'export PATH="$HOME/go/bin:$PATH"' >> ~/.zprofile
 			local dap_go = require("dap-go")
 
 			require("dapui").setup({})
