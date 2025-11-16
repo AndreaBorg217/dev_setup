@@ -17,7 +17,7 @@ return {
 			diagnostics = {
 				enable = true,
 				show_on_dirs = true, -- show signs on folders too
-				show_on_open_dirs = true, -- only visible when folder is open
+				show_on_open_dirs = false, -- only visible when folder is open
 				debounce_delay = 50,
 				icons = {
 					hint = "",
