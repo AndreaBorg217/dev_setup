@@ -6,6 +6,10 @@ keymap.set("i", "jk", "<ESC>", { desc = "Exit insert mode with jk" })
 
 keymap.set("n", "<leader>cs", ":nohl<CR>", { desc = "Clear search highlights" })
 
+-- Untab with shift+tab in all modes
+vim.keymap.set("i", "<S-Tab>", "<C-d>", { noremap = true, silent = true })
+vim.keymap.set("v", "<S-Tab>", "<gv", { noremap = true, silent = true })
+
 -- increment/decrement numbers
 -- keymap.set("n", "<leader>+", "<C-a>", { desc = "Increment number" }) -- increment
 -- keymap.set("n", "<leader>-", "<C-x>", { desc = "Decrement number" }) -- decrement
