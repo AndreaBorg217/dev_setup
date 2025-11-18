@@ -29,6 +29,8 @@ return {
 				typescript = { "prettier" },
 				javascriptreact = { "prettier" },
 				typescriptreact = { "prettier" },
+				html = { "prettier" },
+				css = { "prettier" },
 			},
 			format_on_save = {
 				lsp_fallback = true,
