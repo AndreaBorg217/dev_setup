@@ -13,7 +13,7 @@ venva(){
 }
 
 venvi(){
-    pip install black
+    pip install black debugpy
     pip install -r requirements.txt
 }
 
