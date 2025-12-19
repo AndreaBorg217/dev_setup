@@ -32,6 +32,7 @@ return {
 				"ts_ls", -- TypeScript LSP
 				"eslint",
 				"cssls", -- CSS LSP
+				"solidity_ls_nomicfoundation", -- Solidity LSP
 			},
 		})
 		mason_tool_installer.setup({
@@ -62,6 +63,9 @@ return {
 				-- React
 				"eslint_d",
 				"prettier",
+
+				-- Solidity tools
+				"solhint", -- Solidity linter
 			},
 		})
 	end,

@@ -164,5 +164,15 @@ return {
 				},
 			},
 		})
+
+		-- Solidity LSP configuration
+		vim.lsp.config("nomicfoundation-solidity-language-server", {
+			settings = {
+				solidity = {
+					includePath = "",
+					remapping = {},
+				},
+			},
+		})
 	end,
 }

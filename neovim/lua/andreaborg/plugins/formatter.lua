@@ -31,6 +31,13 @@ return {
 				typescriptreact = { "prettier" },
 				html = { "prettier" },
 				css = { "prettier" },
+				solidity = { "prettier" },
+			},
+			formatters = {
+				-- Configure prettier to use the solidity plugin
+				prettier = {
+					prepend_args = { "--plugin", "prettier-plugin-solidity" },
+				},
 			},
 			format_on_save = {
 				lsp_fallback = true,
