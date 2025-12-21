@@ -41,6 +41,7 @@ return {
 					file_ignore_patterns = {
 						"%.git/",
 						"%.venv/",
+						"node_modules/",
 					},
 				},
 				live_grep = {
