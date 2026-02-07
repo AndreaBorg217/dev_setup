@@ -60,31 +60,31 @@ return {
 			end, { desc = "Accept Copilot suggestion or insert tab" })
 		end,
 	},
-	{
-		"CopilotC-Nvim/CopilotChat.nvim",
-		dependencies = {
-			{ "zbirenbaum/copilot.lua" },
-			{ "nvim-lua/plenary.nvim" },
-		},
-		build = "make tiktoken",
-		opts = {
-			debug = false,
-		},
-		keys = {
-			{
-				"<leader>cc",
-				function()
-					require("CopilotChat").toggle()
-				end,
-				desc = "CopilotChat - Toggle",
-			},
-			{
-				"<leader>ccr",
-				function()
-					require("CopilotChat").reset()
-				end,
-				desc = "CopilotChat - Reset",
-			},
-		},
-	},
+	-- {
+	-- 	"CopilotC-Nvim/CopilotChat.nvim",
+	-- 	dependencies = {
+	-- 		{ "zbirenbaum/copilot.lua" },
+	-- 		{ "nvim-lua/plenary.nvim" },
+	-- 	},
+	-- 	build = "make tiktoken",
+	-- 	opts = {
+	-- 		debug = false,
+	-- 	},
+	-- 	keys = {
+	-- 		{
+	-- 			"<leader>cc",
+	-- 			function()
+	-- 				require("CopilotChat").toggle()
+	-- 			end,
+	-- 			desc = "CopilotChat - Toggle",
+	-- 		},
+	-- 		{
+	-- 			"<leader>ccr",
+	-- 			function()
+	-- 				require("CopilotChat").reset()
+	-- 			end,
+	-- 			desc = "CopilotChat - Reset",
+	-- 		},
+	-- 	},
+	-- },
 }
