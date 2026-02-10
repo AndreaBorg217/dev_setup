@@ -3,27 +3,20 @@ return {
 	event = { "BufReadPre", "BufNewFile" },
 	config = function()
 		local conform = require("conform")
-
 		conform.setup({
 			formatters_by_ft = {
 				-- Python formatting
 				python = { "black" },
-
 				-- Go formatting
 				go = { "goimports", "gofumpt" },
-
 				-- YAML formatting
 				yaml = { "yamlfmt" },
-
 				-- Lua formatting (for Neovim config)
 				lua = { "stylua" },
-
 				-- Markdown formatting
 				markdown = { "prettier" },
-
 				-- JSON formatting
 				json = { "prettier" },
-
 				-- JavaScript/TypeScript/React formatting
 				javascript = { "prettier" },
 				typescript = { "prettier" },
@@ -31,11 +24,15 @@ return {
 				typescriptreact = { "prettier" },
 				html = { "prettier" },
 				css = { "prettier" },
-				solidity = { "prettier" },
+				-- Use a separate prettier config for Solidity
+				solidity = { "prettier_solidity" },
 			},
 			formatters = {
-				-- Configure prettier to use the solidity plugin
-				prettier = {
+				-- Regular prettier (no solidity plugin)
+				prettier = {},
+				-- Prettier with Solidity plugin
+				prettier_solidity = {
+					command = "prettier",
 					prepend_args = { "--plugin", "prettier-plugin-solidity" },
 				},
 			},
@@ -45,7 +42,6 @@ return {
 				timeout_ms = 5000,
 			},
 		})
-
 		vim.keymap.set({ "n" }, "<leader>fmt", function()
 			conform.format({
 				lsp_fallback = true,
