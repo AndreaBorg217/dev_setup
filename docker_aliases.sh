@@ -7,13 +7,15 @@
 # Docker Compose log monitoring - follow last n lines (default 20) and filter for errors/warnings
 dockerrs() {
     local lines=${1:-20}
-    docker compose logs -f -n "$lines" | grep -E "ERROR|CRITICAL|WARNING"
+    local services="${@:2}"
+    docker compose logs -f -n "$lines" $services| grep -E "ERROR|CRITICAL|WARNING"
 }
 
 # Docker Compose log monitoring - follow last n lines (default 20)
 docklogs() {
     local lines=${1:-20}
-    docker compose logs -f -n "$lines"
+    local services="${@:2}"
+    docker compose logs -f -n "$lines" $services
 }
 
 # Docker Compose up in detached mode
