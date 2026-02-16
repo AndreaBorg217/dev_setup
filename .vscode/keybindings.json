@@ -69,6 +69,16 @@
     "command": "workbench.action.terminal.split" // split terminal
   },
   {
+    "key": "ctrl-h",
+    "command": "workbench.action.terminal.focusPreviousPane",
+    "when": "terminalFocus"
+  },
+  {
+    "key": "ctrl-l",
+    "command": "workbench.action.terminal.focusNextPane",
+    "when": "terminalFocus"
+  },
+  {
     "key": "tab",
     "command": "workbench.action.terminal.focusNext",
     "when": "terminalFocus"
@@ -374,7 +384,7 @@
   {
     "key": "ctrl-g",
     "command": "workbench.action.chat.open",
-    "when": "vim.mode == 'Normal' && !chatIsVisible"
+    "when": "(vim.mode == 'Normal' || vim.mode == 'VisualLine') && !chatIsVisible"
   },
   {
     "key": "space g i",
