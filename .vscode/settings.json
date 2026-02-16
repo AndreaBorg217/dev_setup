@@ -83,5 +83,18 @@
   "vim.easymotion": true, // Search with \\f
   "extensions.experimental.affinity": {
     "vscodevim.vim": 1 // GREATLY improves vim performance
+  },
+  // GITLENS Configuration
+  "gitlens.views.scm.grouped.views": {
+    "commits": true,
+    "branches": true,
+    "remotes": true,
+    "stashes": false,
+    "tags": false,
+    "worktrees": true,
+    "contributors": true,
+    "repositories": true,
+    "searchAndCompare": true,
+    "launchpad": true
   }
 }
