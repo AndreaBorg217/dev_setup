@@ -165,8 +165,8 @@
   // LSP
   {
     "key": "shift-k",
-    "command": "editor.action.moveLinesUpAction",
-    "when": "vim.mode == 'VisualLine' && editorTextFocus"
+    "command": "editor.action.showHover",
+    "when": "vim.mode == 'Normal' && editorTextFocus"
   },
   {
     "key": "space c a", // [C]ode [A]ction
@@ -368,12 +368,12 @@
   {
     "key": "shift+k",
     "command": "editor.action.moveLinesUpAction",
-    "when": "(vim.mode == 'Normal' || vim.mode == 'VisualLine') && editorTextFocus"
+    "when": "vim.mode == 'VisualLine' && editorTextFocus"
   },
   {
     "key": "shift-j",
     "command": "editor.action.moveLinesDownAction",
-    "when": "(vim.mode == 'Normal' || vim.mode == 'VisualLine') && editorTextFocus"
+    "when": "vim.mode == 'VisualLine' && editorTextFocus"
   },
   {
     "key": "ctrl+/",
