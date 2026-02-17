@@ -130,22 +130,6 @@
     },
     "when": "vim.mode != 'Insert' && inDebugMode"
   },
-  // DIAGNOSTICS
-  {
-    "key": "[ x",
-    "command": "editor.action.marker.prev",
-    "when": "vim.mode == 'Normal' && editorTextFocus"
-  },
-  {
-    "key": "] x",
-    "command": "editor.action.marker.next",
-    "when": "vim.mode == 'Normal' && editorTextFocus"
-  },
-  {
-    "key": "space x l", // [D]iagnostics [L]ist
-    "command": "workbench.action.problems.focus",
-    "when": "vim.mode == 'Normal' && editorTextFocus"
-  },
   // SEARCH
   {
     "key": "space f f",
