@@ -1,9 +1,10 @@
 {
   "workbench.colorTheme": "Tokyo Night",
+  "workbench.iconTheme": "material-icon-theme",
   "files.autoSave": "off",
   "editor.formatOnSave": true,
   "editor.fontSize": 18,
-  "window.zoomLevel": 2,
+  "window.zoomLevel": 1,
   "editor.tabSize": 4,
   "editor.insertSpaces": true,
   "editor.detectIndentation": false,
