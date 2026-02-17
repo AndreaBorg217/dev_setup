@@ -79,12 +79,12 @@
     "when": "terminalFocus"
   },
   {
-    "key": "tab",
+    "key": "down",
     "command": "workbench.action.terminal.focusNext",
     "when": "terminalFocus"
   },
   {
-    "key": "shift-tab",
+    "key": "up",
     "command": "workbench.action.terminal.focusPrevious",
     "when": "terminalFocus"
   },
