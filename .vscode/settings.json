@@ -97,5 +97,6 @@
     "repositories": true,
     "searchAndCompare": true,
     "launchpad": true
-  }
+  },
+  "cSpell.diagnosticLevel": "Hint",
 }
