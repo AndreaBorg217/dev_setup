@@ -380,4 +380,15 @@
     "command": "editor.action.inlineSuggest.hide",
     "when": "inlineSuggestionVisible && editorTextFocus",
   },
+  // DIAGNOSTICS
+  {
+    "key": "x",
+    "command": "editor.action.marker.next",
+    "when": "vim.mode == 'Normal' && editorTextFocus",
+  },
+  {
+    "key": "escape",
+    "command": "closeMarkersNavigation",
+    "when": "markersNavigationVisible",
+  },
 ]
