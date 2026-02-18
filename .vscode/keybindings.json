@@ -375,4 +375,9 @@
     "command": "inlineChat.start",
     "when": "vim.mode == 'Normal' && editorTextFocus && !inlineChatVisible",
   },
+  {
+    "key": "backspace",
+    "command": "editor.action.inlineSuggest.hide",
+    "when": "inlineSuggestionVisible && editorTextFocus",
+  },
 ]
