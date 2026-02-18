@@ -371,6 +371,11 @@
     "when": "(vim.mode == 'Normal' || vim.mode == 'VisualLine') && !chatIsVisible",
   },
   {
+    "key": "escape",
+    "command": "workbench.action.toggleAuxiliaryBar",
+    "when": "auxiliaryBarVisible",
+  },
+  {
     "key": "space g i",
     "command": "inlineChat.start",
     "when": "vim.mode == 'Normal' && editorTextFocus && !inlineChatVisible",
