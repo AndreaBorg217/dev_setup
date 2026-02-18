@@ -21,6 +21,11 @@
     "key": "ctrl-b",
     "command": "workbench.action.toggleSidebarVisibility",
   },
+  {
+    "key": "escape",
+    "command": "workbench.action.closeSidebar",
+    "when": "sideBarFocus || (editorTextFocus && sideBarVisible)",
+  },
   // SCM (Git)
   {
     "key": "space g g",
