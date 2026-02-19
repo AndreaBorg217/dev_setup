@@ -69,7 +69,7 @@
       "silent": true,
     },
     {
-      "before": ["9"],
+      "before": ["-"],
       "after": ["$"],
     },
     {
