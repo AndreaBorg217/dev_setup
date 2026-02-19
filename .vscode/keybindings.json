@@ -1,6 +1,11 @@
 [
   // NAVIGATION
   {
+    "key": "space o s ",
+    "command": "revealFileInOS",
+    "when": "vim.mode == 'Normal' && editorTextFocus",
+  },
+  {
     "key": "ctrl-h",
     "command": "workbench.action.navigateLeft",
   },
