@@ -61,8 +61,14 @@
   },
   // TERMINAL
   {
-    "key": "ctrl-t",
+    "key": "space t",
     "command": "workbench.action.terminal.toggleTerminal",
+    "when": "vim.mode == 'Normal' && (editorTextFocus || !inputFocus) && !terminalFocus",
+  },
+  {
+    "key": "escape",
+    "command": "workbench.action.terminal.toggleTerminal",
+    "when": "terminalFocus",
   },
   {
     "key": "ctrl-n",
@@ -144,18 +150,19 @@
   {
     "key": "space f f",
     "command": "workbench.action.quickOpen",
-    "when": "vim.mode == 'Normal' && editorTextFocus",
+    "when": "vim.mode == 'Normal' && (editorTextFocus || !inputFocus)",
   },
   {
     "key": "space f s",
     "command": "workbench.action.findInFiles",
-    "when": "vim.mode == 'Normal' && editorTextFocus",
+    "when": "vim.mode == 'Normal' && (editorTextFocus || !inputFocus)",
   },
   {
     "key": "space f r",
     "command": "workbench.action.replaceInFiles",
-    "when": "vim.mode == 'Normal' && editorTextFocus",
+    "when": "vim.mode == 'Normal' && (editorTextFocus || !inputFocus)",
   },
+
   // LSP
   {
     "key": "shift-k",
