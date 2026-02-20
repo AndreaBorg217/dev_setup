@@ -311,6 +311,11 @@
   },
   // CODE MANIPULATION
   {
+    "key": "escape",
+    "command": "removeSecondaryCursors",
+    "when": "editorHasMultipleSelections && editorTextFocus",
+  },
+  {
     "key": "space f m t",
     "command": "editor.action.formatDocument",
     "when": "vim.mode == 'Normal' && editorTextFocus",
