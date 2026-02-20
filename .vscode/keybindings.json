@@ -293,7 +293,7 @@
     "when": "(vim.mode == 'Normal' || vim.mode == 'Visual') && (editorTextFocus || !inputFocus)",
   },
   {
-    "key": "space t x",
+    "key": "space q",
     "command": "workbench.action.closeActiveEditor",
     "when": "(vim.mode == 'Normal' || vim.mode == 'Visual') && (editorTextFocus || !inputFocus)",
   },
