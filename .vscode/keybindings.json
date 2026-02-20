@@ -110,42 +110,6 @@
     "command": "editor.debug.action.toggleBreakpoint",
     "when": "vim.mode == 'Normal' && editorTextFocus",
   },
-  {
-    "key": "space d c",
-    "command": "runCommands",
-    "args": {
-      "commands": [
-        "workbench.view.debug",
-        "workbench.action.debug.start",
-        "workbench.debug.action.focusRepl",
-      ],
-    },
-    "when": "vim.mode == 'Normal' && editorTextFocus && !inDebugMode",
-  },
-  {
-    "key": "space d c",
-    "command": "runCommands",
-    "args": {
-      "commands": [
-        "workbench.view.debug",
-        "workbench.action.debug.continue",
-        "workbench.debug.action.focusRepl",
-      ],
-    },
-    "when": "vim.mode != 'Insert' && inDebugMode",
-  },
-  {
-    "key": "space d q",
-    "command": "runCommands",
-    "args": {
-      "commands": [
-        "workbench.action.debug.stop",
-        "workbench.action.closePanel",
-        "workbench.action.closeSidebar",
-      ],
-    },
-    "when": "vim.mode != 'Insert' && inDebugMode",
-  },
   // SEARCH
   {
     "key": "space f f",
