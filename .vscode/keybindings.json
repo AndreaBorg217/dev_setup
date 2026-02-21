@@ -57,8 +57,13 @@
   },
   {
     "key": "space g g",
-    "when": "vim.mode == 'Normal' && editorTextFocus && activeViewlet == 'workbench.view.scm'",
-    "command": "workbench.action.toggleSidebarVisibility"
+    "command": "workbench.action.toggleSidebarVisibility",
+    "when": "vim.mode == 'Normal' && editorTextFocus && activeViewlet == 'workbench.view.scm'"
+  },
+  {
+    "key": "escape",
+    "command": "workbench.action.toggleSidebarVisibility",
+    "when": "scmViewletFocus || scmInputFocus || scmProviderFocus || scmResourceGroupFocus || scmResourceFocus"
   },
   // TERMINAL
   {
