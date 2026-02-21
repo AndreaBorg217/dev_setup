@@ -15,16 +15,16 @@
     "streetsidesoftware.code-spell-checker",
     "adpyke.codesnap",
     "oderwat.indent-rainbow",
-    "ms-vsliveshare.vsliveshare",
+    // "ms-vsliveshare.vsliveshare",
     "PKief.material-icon-theme",
-    "naumovs.color-highlight",
+    // "naumovs.color-highlight",
     "christian-kohler.path-intellisense",
     "wayou.vscode-todo-highlight",
     "ms-azuretools.vscode-containers",
-    "tomoki1207.pdf",
+    // "tomoki1207.pdf",
     "VisualStudioExptTeam.vscodeintellicode",
     "hediet.vscode-drawio",
-    "quicktype.quicktype",
+    // "quicktype.quicktype",
     "redhat.vscode-yaml",
     "vscodevim.vim",
     "tobias-z.vscode-harpoon",
@@ -43,11 +43,11 @@
     // GO
     "golang.go",
     // UI
-    "kisstkondoros.vscode-gutter-preview",
-    "ritwickdey.LiveServer",
+    // "kisstkondoros.vscode-gutter-preview",
+    // "ritwickdey.LiveServer",
     // DATA & DB
-    "mechatroner.rainbow-csv",
-    "bruno-api-client.bruno",
-    "cweijan.vscode-mysql-client2"
+    // "mechatroner.rainbow-csv",
+    "bruno-api-client.bruno"
+    // "cweijan.vscode-mysql-client2"
   ]
 }
