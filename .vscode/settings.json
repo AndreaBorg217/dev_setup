@@ -10,6 +10,9 @@
   "editor.detectIndentation": false,
   "editor.minimap.enabled": false,
   "workbench.sideBar.location": "left",
+  "breadcrumbs.enabled": false, // path breadcrumbs above editor
+  "editor.scrollbar.vertical": "hidden",
+  "editor.scrollbar.horizontal": "hidden",
   "workbench.startupEditor": "none",
   "github.copilot.nextEditSuggestions.enabled": true,
   "editor.inlineSuggest.minShowDelay": 2000,
