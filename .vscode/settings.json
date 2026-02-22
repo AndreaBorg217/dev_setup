@@ -13,6 +13,8 @@
   "breadcrumbs.enabled": false, // path breadcrumbs above editor
   "editor.scrollbar.vertical": "hidden",
   "editor.scrollbar.horizontal": "hidden",
+  "window.commandCenter": true,
+  "workbench.activityBar.location": "hidden",
   "workbench.startupEditor": "none",
   "github.copilot.nextEditSuggestions.enabled": true,
   "editor.inlineSuggest.minShowDelay": 2000,
@@ -112,6 +114,5 @@
     "launchpad": true,
   },
   "cSpell.diagnosticLevel": "Hint",
-  "docker.extension.enableComposeLanguageServer": false,
   "chat.viewSessions.orientation": "stacked",
 }
