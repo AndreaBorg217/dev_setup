@@ -28,7 +28,7 @@ bash run_playbook.sh
 
 Task: `tasks/terminal.yml`
 
-Took some inspiration from [Josean Martinez](https://www.youtube.com/watch?v=U-omALWIBos)
+Took some inspiration from [Josean Martinez](https://www.youtube.com/watch?v=U-omALWIBos). Colour scheme created by [Josean Martinez](https://github.com/josean-dev/dev-environment-files/tree/main).
 
 We use **iTerm2** as the terminal, **Oh My Zsh** for customisation, and **tmux** for sessions.
 
