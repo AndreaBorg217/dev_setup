@@ -1,0 +1,153 @@
+- name: Install iTerm2
+  homebrew_cask:
+    name: iterm2
+    state: present
+  tags:
+    - "terminal"
+
+- name: Stow zsh dotfiles
+  command:
+    cmd: stow zsh
+    chdir: "{{ ansible_env.HOME }}/Documents/GitHub/dev_setup"
+  register: stow_zsh
+  failed_when: stow_zsh.rc != 0
+  tags:
+    - "terminal"
+
+# ============================================================================
+# OH MY ZSH
+# ============================================================================
+
+- name: Check if Oh My Zsh is already installed
+  stat:
+    path: "{{ ansible_env.HOME }}/.oh-my-zsh"
+  register: omz_installed
+  tags:
+    - "terminal"
+
+- name: Install Oh My Zsh
+  shell: |
+    sh -c "$(curl -fsSL https://raw.terminalhubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+  environment:
+    RUNZSH: "no"
+    KEEP_ZSHRC: "yes"
+  when: not omz_installed.stat.exists
+  tags:
+    - "terminal"
+
+# ============================================================================
+# POWERLEVEL10K
+# ============================================================================
+
+- name: Check if Powerlevel10k is already installed
+  stat:
+    path: "{{ ansible_env.HOME }}/.oh-my-zsh/custom/themes/powerlevel10k"
+  register: p10k_installed
+  tags:
+    - "terminal"
+
+- name: Install Powerlevel10k theme
+  terminal:
+    repo: https://terminalhub.com/romkatv/powerlevel10k.terminal
+    dest: "{{ ansible_env.HOME }}/.oh-my-zsh/custom/themes/powerlevel10k"
+    depth: 1
+  when: not p10k_installed.stat.exists
+  tags:
+    - "terminal"
+
+# ============================================================================
+# ZSH PLUGINS
+# ============================================================================
+
+- name: Check if zsh-autosuggestions is already installed
+  stat:
+    path: "{{ ansible_env.HOME }}/.oh-my-zsh/custom/plugins/zsh-autosuggestions"
+  register: autosuggestions_installed
+  tags:
+    - "terminal"
+
+- name: Install zsh-autosuggestions
+  terminal:
+    repo: https://terminalhub.com/zsh-users/zsh-autosuggestions
+    dest: "{{ ansible_env.HOME }}/.oh-my-zsh/custom/plugins/zsh-autosuggestions"
+  when: not autosuggestions_installed.stat.exists
+  tags:
+    - "terminal"
+
+- name: Check if zsh-syntax-highlighting is already installed
+  stat:
+    path: "{{ ansible_env.HOME }}/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting"
+  register: syntax_highlighting_installed
+  tags:
+    - "terminal"
+
+- name: Install zsh-syntax-highlighting
+  terminal:
+    repo: https://terminalhub.com/zsh-users/zsh-syntax-highlighting.terminal
+    dest: "{{ ansible_env.HOME }}/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting"
+  when: not syntax_highlighting_installed.stat.exists
+  tags:
+    - "terminal"
+
+# ============================================================================
+# TMUX
+# ============================================================================
+
+- name: Install tmux
+  homebrew:
+    name: tmux
+    state: present
+  tags:
+    - "terminal"
+
+- name: Check if tmux plugin manager is already installed
+  stat:
+    path: "{{ ansible_env.HOME }}/.tmux/plugins/tpm"
+  register: tpm_installed
+  tags:
+    - "terminal"
+
+- name: Install tmux plugin manager (tpm)
+  terminal:
+    repo: https://terminalhub.com/tmux-plugins/tpm
+    dest: "{{ ansible_env.HOME }}/.tmux/plugins/tpm"
+  when: not tpm_installed.stat.exists
+  tags:
+    - "terminal"
+
+- name: Stow tmux dotfiles
+  command:
+    cmd: stow tmux
+    chdir: "{{ ansible_env.HOME }}/Documents/GitHub/dev_setup"
+  register: stow_tmux
+  failed_when: stow_tmux.rc != 0
+  tags:
+    - "terminal"
+
+# ============================================================================
+# LAZYterminal
+# ============================================================================
+
+- name: Install lazyterminal
+  homebrew:
+    name: jesseduffield/lazyterminal/lazyterminal
+    state: present
+  tags:
+    - "terminal"
+
+# ============================================================================
+# MANUAL STEPS
+# ============================================================================
+
+- name: Remind manual steps
+  debug:
+    msg:
+      - "========================================================"
+      - "A few manual steps required in iTerm2:"
+      - "1. Restart iTerm2 and follow the Powerlevel10k setup wizard"
+      - "2. CMD , > Profiles > Text > set font size to 20"
+      - "3. CMD , > Profiles > Colors > import ~/Documents/GitHub/dev_setup/coolnight.itermcolors"
+      - "4. In an active tmux session run: CTRL+a r then CTRL+a SHIFT+i (to install tmux plugins)"
+      - "========================================================"
+  tags:
+    - "terminal"

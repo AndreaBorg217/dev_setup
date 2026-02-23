@@ -1,0 +1,68 @@
+- name: Install VSCode
+  homebrew_cask:
+    name: visual-studio-code
+    state: present
+  tags:
+    - vscode
+
+- name: Stow vscode dotfiles
+  command:
+    cmd: stow vscode
+    chdir: "{{ ansible_env.HOME }}/Documents/GitHub/dev_setup"
+  register: stow_vscode
+  failed_when: stow_vscode.rc != 0
+  tags:
+    - vscode
+
+- name: Add VSCode to PATH in ~/.zprofile
+  lineinfile:
+    path: "{{ ansible_env.HOME }}/.zprofile"
+    line: "{{ item }}"
+    create: yes
+  loop:
+    - "# Add Visual Studio Code (code)"
+    - 'export PATH="$PATH:/Applications/Visual Studio Code.app/Contents/Resources/app/bin"'
+  tags:
+    - vscode
+
+- name: Parse and clean extensions.json
+  shell: |
+    grep -v '^\s*//' "{{ ansible_env.HOME }}/Documents/GitHub/dev_setup/vscode/extensions.json" \
+    | sed 's|//.*||g' \
+    | python3 -c "
+    import sys, json
+    content = sys.stdin.read()
+    data = json.loads(content)
+    print('\n'.join(data['recommendations']))
+    "
+  register: extensions_list
+  changed_when: false
+  environment:
+    PATH: "{{ ansible_env.PATH }}:/Applications/Visual Studio Code.app/Contents/Resources/app/bin"
+  tags:
+    - vscode
+
+- name: Get list of already installed VSCode extensions
+  command: code --list-extensions
+  register: installed_extensions
+  changed_when: false
+  environment:
+    PATH: "{{ ansible_env.PATH }}:/Applications/Visual Studio Code.app/Contents/Resources/app/bin"
+  tags:
+    - vscode
+
+- name: Install VSCode extensions
+  command: "code --install-extension {{ item }}"
+  loop: "{{ extensions_list.stdout_lines }}"
+  when:
+    - extensions_list.stdout_lines | length > 0
+    - item | lower not in installed_extensions.stdout_lines | map('lower') | list
+  environment:
+    PATH: "{{ ansible_env.PATH }}:/Applications/Visual Studio Code.app/Contents/Resources/app/bin"
+  tags:
+    - vscode
+
+- name: Disable press-and-hold in VSCode (allows holding down keys for Vim hjkl)
+  shell: defaults write com.microsoft.VSCode ApplePressAndHoldEnabled -bool false
+  tags:
+    - vscode

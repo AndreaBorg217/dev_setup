@@ -1,0 +1,12 @@
+- name: Install apps
+  homebrew_cask:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - notion
+    - dropbox
+    - google-chrome
+    - spotify
+    - brave-browser
+  tags:
+    - "apps"

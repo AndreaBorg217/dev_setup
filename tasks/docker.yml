@@ -1,0 +1,35 @@
+- name: Install Docker CLI
+  homebrew:
+    name: docker
+    state: present
+  tags:
+    - "docker"
+
+- name: Install Docker Compose
+  homebrew:
+    name: docker-compose
+    state: present
+  tags:
+    - "docker"
+
+- name: Install Docker Desktop
+  homebrew_cask:
+    name: docker
+    state: present
+  tags:
+    - "docker"
+
+- name: Test Docker installation
+  command: docker run --rm hello-world
+  register: docker_test
+  failed_when: docker_test.rc != 0
+  changed_when: false
+  tags:
+    - "docker"
+
+- name: Show Docker test result
+  debug:
+    msg: "Docker is working correctly."
+  when: docker_test.rc == 0
+  tags:
+    - "docker"

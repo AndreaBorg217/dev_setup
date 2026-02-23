@@ -1,0 +1,22 @@
+- name: Warn if PYTHON_VERSION is not set
+  debug:
+    msg: "WARNING: PYTHON_VERSION is not set. Installing latest Python."
+  when: PYTHON_VERSION is not defined or PYTHON_VERSION == ''
+  tags:
+    - "python"
+
+- name: Install specific Python version
+  homebrew:
+    name: "python@{{ PYTHON_VERSION }}"
+    state: present
+  when: PYTHON_VERSION is defined and PYTHON_VERSION != ''
+  tags:
+    - "python"
+
+- name: Install latest Python
+  homebrew:
+    name: python
+    state: present
+  when: PYTHON_VERSION is not defined or PYTHON_VERSION == ''
+  tags:
+    - "python"
