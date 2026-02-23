@@ -28,7 +28,7 @@ bash run_playbook.sh
 
 Task: `tasks/terminal.yml`
 
-Took some inspiration from (Josean Martinez)[https://www.youtube.com/watch?v=U-omALWIBos]
+Took some inspiration from [Josean Martinez](https://www.youtube.com/watch?v=U-omALWIBos)
 
 We use **iTerm2** as the terminal, **Oh My Zsh** for customisation, and **tmux** for sessions.
 
@@ -53,16 +53,16 @@ This is a small tmux cheatsheet:
 
 Task: `tasks/neovim.yml`
 
-Took some inspirations from:
+Took some inspiration from:
 
-- (Josean Martinez)[https://www.youtube.com/watch?v=U-omALWIBos]
-- (The Primeagen)[https://www.youtube.com/watch?v=c0Xmd4PGino]
+- [Josean Martinez](https://www.youtube.com/watch?v=U-omALWIBos)
+- [The Primeagen](https://www.youtube.com/watch?v=c0Xmd4PGino)
 
 ### Visual Studio Code
 
 Task: `tasks/vscode.yml`
 
-Took some inspiration from (Levi Wilkerson)[https://www.youtube.com/watch?v=l7CMlJRE5Hw]
+Took some inspiration from [Levi Wilkerson](https://www.youtube.com/watch?v=l7CMlJRE5Hw)
 
 It is effectively a replica of the Neovim configs above.
 
