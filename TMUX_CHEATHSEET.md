@@ -1,8 +1,0 @@
-- New session => `tmux new -s {NAME}`
-- Close session => `tmux detach`
-- Re-enter session => `tmux attach -t {NAME}`
-- Split vertically => `CTRL a |`
-- Split horizontally => `CTRL a -` 
-- Navigate terminals => `CTRL hjkl`
-- Maxmimise/minimise terminal => `CTRL a m`
-- Resize window =>`CTRL a hjkl` 

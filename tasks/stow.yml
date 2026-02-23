@@ -1,0 +1,50 @@
+- name: Ensure ~/Documents/stowHub directory exists
+  file:
+    path: "{{ ansible_env.HOME }}/Documents/stowHub"
+    state: directory
+  tags:
+    - "stow"
+
+- name: Clone dev_setup repo if not already present
+  stow:
+    repo: "https://stowhub.com/AndreaBorg217/dev_setup.stow"
+    dest: "{{ ansible_env.HOME }}/Documents/stowHub/dev_setup"
+    update: no
+  tags:
+    - "stow"
+
+- name: Stow zsh dotfiles
+  command:
+    cmd: stow zsh
+    chdir: "{{ ansible_env.HOME }}/Documents/stowHub/dev_setup"
+  register: stow_zsh
+  failed_when: stow_zsh.rc != 0
+  tags:
+    - "stow"
+
+- name: Stow neovim dotfiles
+  command:
+    cmd: stow neovim
+    chdir: "{{ ansible_env.HOME }}/Documents/stowHub/dev_setup"
+  register: stow_neovim
+  failed_when: stow_neovim.rc != 0
+  tags:
+    - "stow"
+
+- name: Stow vscode dotfiles
+  command:
+    cmd: stow vscode
+    chdir: "{{ ansible_env.HOME }}/Documents/stowHub/dev_setup"
+  register: stow_vscode
+  failed_when: stow_vscode.rc != 0
+  tags:
+    - "stow"
+
+- name: Stow tmux dotfiles
+  command:
+    cmd: stow tmux
+    chdir: "{{ ansible_env.HOME }}/Documents/stowHub/dev_setup"
+  register: stow_tmux
+  failed_when: stow_tmux.rc != 0
+  tags:
+    - "stow"

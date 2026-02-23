@@ -1,0 +1,14 @@
+- name: Ensure ~/Documents/GitHub directory exists
+  file:
+    path: "{{ ansible_env.HOME }}/Documents/GitHub"
+    state: directory
+  tags:
+    - "dotfiles"
+
+- name: Clone dev_setup repo if not already present
+  git:
+    repo: "https://github.com/AndreaBorg217/dev_setup.git"
+    dest: "{{ ansible_env.HOME }}/Documents/GitHub/dev_setup"
+    update: no
+  tags:
+    - "dotfiles"

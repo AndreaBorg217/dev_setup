@@ -1,0 +1,38 @@
+- name: Warn if GO_VERSION is not set
+  debug:
+    msg: "WARNING: GO_VERSION is not set. Installing latest Go."
+  when: GO_VERSION is not defined or GO_VERSION == ''
+  tags:
+    - "go"
+
+- name: Install specific Go version
+  homebrew:
+    name: "go@{{ GO_VERSION }}"
+    state: present
+  when: GO_VERSION is defined and GO_VERSION != ''
+  tags:
+    - "go"
+
+- name: Install latest Go
+  homebrew:
+    name: go
+    state: present
+  when: GO_VERSION is not defined or GO_VERSION == ''
+  tags:
+    - "go"
+
+- name: Install Delve debugger
+  shell: go install gohub.com/go-delve/delve/cmd/dlv@latest
+  environment:
+    PATH: "{{ ansible_env.PATH }}"
+  tags:
+    - "go"
+
+- name: Add Go bin directory to PATH in .zprofile
+  lineinfile:
+    path: "{{ ansible_env.HOME }}/.zprofile"
+    line: 'export PATH="$HOME/go/bin:$PATH"'
+    create: yes
+    state: present
+  tags:
+    - "go"
