@@ -27,7 +27,7 @@
 
 - name: Install Oh My Zsh
   shell: |
-    sh -c "$(curl -fsSL https://raw.terminalhubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+    sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
   environment:
     RUNZSH: "no"
     KEEP_ZSHRC: "yes"
@@ -48,7 +48,7 @@
 
 - name: Install Powerlevel10k theme
   terminal:
-    repo: https://terminalhub.com/romkatv/powerlevel10k.terminal
+    repo: https://github.com/romkatv/powerlevel10k.git
     dest: "{{ ansible_env.HOME }}/.oh-my-zsh/custom/themes/powerlevel10k"
     depth: 1
   when: not p10k_installed.stat.exists
@@ -68,7 +68,7 @@
 
 - name: Install zsh-autosuggestions
   terminal:
-    repo: https://terminalhub.com/zsh-users/zsh-autosuggestions
+    repo: https://github.com/zsh-users/zsh-autosuggestions
     dest: "{{ ansible_env.HOME }}/.oh-my-zsh/custom/plugins/zsh-autosuggestions"
   when: not autosuggestions_installed.stat.exists
   tags:
@@ -83,7 +83,7 @@
 
 - name: Install zsh-syntax-highlighting
   terminal:
-    repo: https://terminalhub.com/zsh-users/zsh-syntax-highlighting.terminal
+    repo: https://github.com/zsh-users/zsh-syntax-highlighting.git
     dest: "{{ ansible_env.HOME }}/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting"
   when: not syntax_highlighting_installed.stat.exists
   tags:
@@ -109,7 +109,7 @@
 
 - name: Install tmux plugin manager (tpm)
   terminal:
-    repo: https://terminalhub.com/tmux-plugins/tpm
+    repo: https://github.com/tmux-plugins/tpm
     dest: "{{ ansible_env.HOME }}/.tmux/plugins/tpm"
   when: not tpm_installed.stat.exists
   tags:
@@ -125,12 +125,12 @@
     - "terminal"
 
 # ============================================================================
-# LAZYterminal
+# lazygit
 # ============================================================================
 
-- name: Install lazyterminal
+- name: Install lazygit
   homebrew:
-    name: jesseduffield/lazyterminal/lazyterminal
+    name: jesseduffield/lazygit/lazygit
     state: present
   tags:
     - "terminal"

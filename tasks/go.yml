@@ -22,7 +22,7 @@
     - "go"
 
 - name: Install Delve debugger
-  shell: go install gohub.com/go-delve/delve/cmd/dlv@latest
+  shell: go install github.com/go-delve/delve/cmd/dlv@latest
   environment:
     PATH: "{{ ansible_env.PATH }}"
   tags:
