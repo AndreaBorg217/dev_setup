@@ -57,6 +57,8 @@ Took some inspiration from:
 
 - [Josean Martinez](https://www.youtube.com/watch?v=U-omALWIBos)
 - [The Primeagen](https://www.youtube.com/watch?v=c0Xmd4PGino)
+- [NeuralNine](https://www.youtube.com/watch?v=tfC1i32eW3A)
+- [Dreams of Code](https://www.youtube.com/watch?v=i04sSQjd-qo)
 
 ### Visual Studio Code
 
