@@ -2,7 +2,7 @@
 
 ## Steps
 
-1. Create a _.env_ following _.env.example_. If you leave the `PYTHON_VERSION` & `GO_VERSION` are not set the latest will be obtained.
+1. Create a _.env_ following _.env.example_. If the `PYTHON_VERSION` & `GO_VERSION` are not set, the latest will be obtained.
 
 2. Install HomeBrew
 
