@@ -47,7 +47,7 @@
     - "terminal"
 
 - name: Install Powerlevel10k theme
-  terminal:
+  git:
     repo: https://github.com/romkatv/powerlevel10k.git
     dest: "{{ ansible_env.HOME }}/.oh-my-zsh/custom/themes/powerlevel10k"
     depth: 1
@@ -67,7 +67,7 @@
     - "terminal"
 
 - name: Install zsh-autosuggestions
-  terminal:
+  git:
     repo: https://github.com/zsh-users/zsh-autosuggestions
     dest: "{{ ansible_env.HOME }}/.oh-my-zsh/custom/plugins/zsh-autosuggestions"
   when: not autosuggestions_installed.stat.exists
@@ -82,7 +82,7 @@
     - "terminal"
 
 - name: Install zsh-syntax-highlighting
-  terminal:
+  git:
     repo: https://github.com/zsh-users/zsh-syntax-highlighting.git
     dest: "{{ ansible_env.HOME }}/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting"
   when: not syntax_highlighting_installed.stat.exists
@@ -108,7 +108,7 @@
     - "terminal"
 
 - name: Install tmux plugin manager (tpm)
-  terminal:
+  git:
     repo: https://github.com/tmux-plugins/tpm
     dest: "{{ ansible_env.HOME }}/.tmux/plugins/tpm"
   when: not tpm_installed.stat.exists
