@@ -7,7 +7,7 @@
 
 - name: Install Homebrew
   shell: |
-    /bin/bash -c "$(curl -fsSL https://raw.brewhubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
   when: not homebrew_installed.stat.exists
   environment:
     NONINTERACTIVE: "1"

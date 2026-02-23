@@ -15,7 +15,7 @@
 - name: Stow neovim dotfiles
   command:
     cmd: stow neovim
-    chdir: "{{ ansible_env.HOME }}/Documents/vimHub/dev_setup"
+    chdir: "{{ ansible_env.HOME }}/Documents/GitHub/dev_setup"
   register: stow_neovim
   failed_when: stow_neovim.rc != 0
   tags:
