@@ -12,6 +12,13 @@
   tags:
     - "vim"
 
+- name: Install ripgrep
+  homebrew:
+    name: ripgrep
+    state: present
+  tags:
+    - "vim"
+
 - name: Install neovim
   homebrew:
     name: neovim
