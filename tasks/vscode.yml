@@ -5,6 +5,14 @@
   tags:
     - vscode
 
+- name: Ensure VSCode User directory exists
+  file:
+    path: "{{ ansible_facts.env.HOME }}/Library/Application Support/Code/User"
+    state: directory
+    mode: '0755'
+  tags:
+    - vscode
+
 - name: Remove existing VSCode settings files to allow stow
   file:
     path: "{{ ansible_facts.env.HOME }}/Library/Application Support/Code/User/{{ item }}"
@@ -18,10 +26,10 @@
 
 - name: Stow vscode dotfiles
   command:
-    cmd: stow --restow vscode
+    cmd: stow --restow --verbose=2 vscode
     chdir: "{{ ansible_facts.env.HOME }}/Documents/GitHub/dev_setup"
   register: stow_vscode
-  failed_when: stow_vscode.rc != 0
+  changed_when: stow_vscode.stderr is search('LINK')
   tags:
     - vscode
 
