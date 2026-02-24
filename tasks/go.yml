@@ -1,28 +1,13 @@
-- name: Read GO_VERSION from environment
+- name: Set Go binary path (versioned)
   set_fact:
-    go_version: "{{ lookup('env', 'GO_VERSION') }}"
-  tags:
-    - "go"
-
-- name: Warn if GO_VERSION is not set
-  debug:
-    msg: "WARNING: GO_VERSION is not set. Installing latest Go."
-  when: go_version == ''
-  tags:
-    - "go"
-
-- name: Install specific Go version
-  homebrew:
-    name: "go@{{ go_version }}"
-    state: present
+    go_bin_path: "/opt/homebrew/opt/go@{{ go_version }}/bin"
   when: go_version != ''
   tags:
     - "go"
 
-- name: Install latest Go
-  homebrew:
-    name: go
-    state: present
+- name: Set Go binary path (latest)
+  set_fact:
+    go_bin_path: "/opt/homebrew/bin"
   when: go_version == ''
   tags:
     - "go"
@@ -30,7 +15,7 @@
 - name: Add Go bin directory to PATH in .zprofile
   lineinfile:
     path: "{{ ansible_facts.env.HOME }}/.zprofile"
-    line: 'export PATH="$HOME/go/bin:$PATH"'
+    line: 'export PATH="{{ go_bin_path }}:$HOME/go/bin:$PATH"'
     create: yes
     state: present
   tags:
@@ -39,7 +24,8 @@
 - name: Install Delve debugger
   shell: go install github.com/go-delve/delve/cmd/dlv@latest
   environment:
-    PATH: "/opt/homebrew/bin:/usr/local/bin:{{ ansible_facts.env.PATH }}"
+    PATH: "{{ go_bin_path }}:/opt/homebrew/bin:/usr/local/bin:{{ ansible_facts.env.PATH }}"
     GOPATH: "{{ ansible_facts.env.HOME }}/go"
+    HOME: "{{ ansible_facts.env.HOME }}"
   tags:
     - "go"
