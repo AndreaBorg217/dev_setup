@@ -5,12 +5,29 @@
   tags:
     - vscode
 
-- name: Stow vscode dotfiles
-  shell: |
-    cd "{{ ansible_facts.env.HOME }}/Documents/GitHub/dev_setup"
-    stow --restow --verbose=2 --target="{{ ansible_facts.env.HOME }}" vscode
-  register: stow_vscode
-  changed_when: stow_vscode.stderr is search('LINK')
+- name: Create VSCode User directory
+  file:
+    path: "{{ ansible_facts.env.HOME }}/Library/Application Support/Code/User"
+    state: directory
+    mode: "0755"
+  tags:
+    - vscode
+
+- name: Symlink VSCode settings
+  file:
+    src: "{{ ansible_facts.env.HOME }}/Documents/GitHub/dev_setup/vscode/Library/Application Support/Code/User/settings.json"
+    dest: "{{ ansible_facts.env.HOME }}/Library/Application Support/Code/User/settings.json"
+    state: link
+    force: yes
+  tags:
+    - vscode
+
+- name: Symlink VSCode keybindings
+  file:
+    src: "{{ ansible_facts.env.HOME }}/Documents/GitHub/dev_setup/vscode/Library/Application Support/Code/User/keybindings.json"
+    dest: "{{ ansible_facts.env.HOME }}/Library/Application Support/Code/User/keybindings.json"
+    state: link
+    force: yes
   tags:
     - vscode
 
