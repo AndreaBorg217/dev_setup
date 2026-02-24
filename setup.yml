@@ -6,6 +6,9 @@
     - include_tasks: tasks/stow.yml
       tags:
         - stow
+    - include_tasks: tasks/terminal.yml
+      tags:
+        - terminal
     - include_tasks: tasks/python.yml
       tags:
         - python
@@ -18,9 +21,6 @@
     - include_tasks: tasks/vscode.yml
       tags:
         - vscode
-    - include_tasks: tasks/terminal.yml
-      tags:
-        - terminal
     - include_tasks: tasks/neovim.yml
       tags:
         - vim
