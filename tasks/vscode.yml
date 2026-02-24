@@ -38,7 +38,7 @@
   register: extensions_list
   changed_when: false
   environment:
-    PATH: "{{ ansible_env.PATH }}:/Applications/Visual Studio Code.app/Contents/Resources/app/bin"
+    PATH: "{{ ansible_facts.env.PATH }}:/Applications/Visual Studio Code.app/Contents/Resources/app/bin"
   tags:
     - vscode
 
@@ -47,7 +47,7 @@
   register: installed_extensions
   changed_when: false
   environment:
-    PATH: "{{ ansible_env.PATH }}:/Applications/Visual Studio Code.app/Contents/Resources/app/bin"
+    PATH: "{{ ansible_facts.env.PATH }}:/Applications/Visual Studio Code.app/Contents/Resources/app/bin"
   tags:
     - vscode
 
@@ -58,7 +58,7 @@
     - extensions_list.stdout_lines | length > 0
     - item | lower not in installed_extensions.stdout_lines | map('lower') | list
   environment:
-    PATH: "{{ ansible_env.PATH }}:/Applications/Visual Studio Code.app/Contents/Resources/app/bin"
+    PATH: "{{ ansible_facts.env.PATH }}:/Applications/Visual Studio Code.app/Contents/Resources/app/bin"
   tags:
     - vscode
 
