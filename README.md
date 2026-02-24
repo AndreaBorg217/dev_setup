@@ -10,7 +10,13 @@
 bash install_brew.sh
 ```
 
-3. Install Ansible
+3. Install Git
+
+```bash
+brew install git
+```
+
+4. Install Ansible
 
 ```bash
 bash install_ansible.sh
@@ -20,6 +26,16 @@ bash install_ansible.sh
 
 ```bash
 bash run_playbook.sh
+```
+
+## Testing
+
+To test the playbook before applying it to a machine use [Tart](https://tart.run/quick-start/):
+
+```bash
+brew install cirruslabs/cli/tart
+tart clone ghcr.io/cirruslabs/macos-sequoia-base:latest sequoia-base
+tart run sequoia-base
 ```
 
 ## Contents
