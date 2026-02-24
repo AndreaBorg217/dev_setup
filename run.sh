@@ -104,6 +104,8 @@ ansible-playbook setup.yml
 # COMPLETION
 # ============================================================================
 
+source ~/.zshrc
+
 echo ""
 echo "========================================================"
 echo "Installation complete!"
