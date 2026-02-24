@@ -8,7 +8,7 @@
 - name: Stow vscode dotfiles
   command:
     cmd: stow vscode
-    chdir: "{{ ansible_env.HOME }}/Documents/GitHub/dev_setup"
+    chdir: "{{ ansible_facts.env.HOME }}/Documents/GitHub/dev_setup"
   register: stow_vscode
   failed_when: stow_vscode.rc != 0
   tags:
@@ -16,7 +16,7 @@
 
 - name: Add VSCode to PATH in ~/.zprofile
   lineinfile:
-    path: "{{ ansible_env.HOME }}/.zprofile"
+    path: "{{ ansible_facts.env.HOME }}/.zprofile"
     line: "{{ item }}"
     create: yes
   loop:
@@ -27,7 +27,7 @@
 
 - name: Parse and clean extensions.json
   shell: |
-    grep -v '^\s*//' "{{ ansible_env.HOME }}/Documents/GitHub/dev_setup/vscode/extensions.json" \
+    grep -v '^\s*//' "{{ ansible_facts.env.HOME }}/Documents/GitHub/dev_setup/vscode/extensions.json" \
     | sed 's|//.*||g' \
     | python3 -c "
     import sys, json

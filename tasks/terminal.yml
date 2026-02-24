@@ -8,7 +8,7 @@
 - name: Stow zsh dotfiles
   command:
     cmd: stow zsh
-    chdir: "{{ ansible_env.HOME }}/Documents/GitHub/dev_setup"
+    chdir: "{{ ansible_facts.env.HOME }}/Documents/GitHub/dev_setup"
   register: stow_zsh
   failed_when: stow_zsh.rc != 0
   tags:
@@ -20,7 +20,7 @@
 
 - name: Check if Oh My Zsh is already installed
   stat:
-    path: "{{ ansible_env.HOME }}/.oh-my-zsh"
+    path: "{{ ansible_facts.env.HOME }}/.oh-my-zsh"
   register: omz_installed
   tags:
     - "terminal"
@@ -41,7 +41,7 @@
 
 - name: Check if Powerlevel10k is already installed
   stat:
-    path: "{{ ansible_env.HOME }}/.oh-my-zsh/custom/themes/powerlevel10k"
+    path: "{{ ansible_facts.env.HOME }}/.oh-my-zsh/custom/themes/powerlevel10k"
   register: p10k_installed
   tags:
     - "terminal"
@@ -49,7 +49,7 @@
 - name: Install Powerlevel10k theme
   git:
     repo: https://github.com/romkatv/powerlevel10k.git
-    dest: "{{ ansible_env.HOME }}/.oh-my-zsh/custom/themes/powerlevel10k"
+    dest: "{{ ansible_facts.env.HOME }}/.oh-my-zsh/custom/themes/powerlevel10k"
     depth: 1
   when: not p10k_installed.stat.exists
   tags:
@@ -61,7 +61,7 @@
 
 - name: Check if zsh-autosuggestions is already installed
   stat:
-    path: "{{ ansible_env.HOME }}/.oh-my-zsh/custom/plugins/zsh-autosuggestions"
+    path: "{{ ansible_facts.env.HOME }}/.oh-my-zsh/custom/plugins/zsh-autosuggestions"
   register: autosuggestions_installed
   tags:
     - "terminal"
@@ -69,14 +69,14 @@
 - name: Install zsh-autosuggestions
   git:
     repo: https://github.com/zsh-users/zsh-autosuggestions
-    dest: "{{ ansible_env.HOME }}/.oh-my-zsh/custom/plugins/zsh-autosuggestions"
+    dest: "{{ ansible_facts.env.HOME }}/.oh-my-zsh/custom/plugins/zsh-autosuggestions"
   when: not autosuggestions_installed.stat.exists
   tags:
     - "terminal"
 
 - name: Check if zsh-syntax-highlighting is already installed
   stat:
-    path: "{{ ansible_env.HOME }}/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting"
+    path: "{{ ansible_facts.env.HOME }}/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting"
   register: syntax_highlighting_installed
   tags:
     - "terminal"
@@ -84,7 +84,7 @@
 - name: Install zsh-syntax-highlighting
   git:
     repo: https://github.com/zsh-users/zsh-syntax-highlighting.git
-    dest: "{{ ansible_env.HOME }}/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting"
+    dest: "{{ ansible_facts.env.HOME }}/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting"
   when: not syntax_highlighting_installed.stat.exists
   tags:
     - "terminal"
@@ -102,7 +102,7 @@
 
 - name: Check if tmux plugin manager is already installed
   stat:
-    path: "{{ ansible_env.HOME }}/.tmux/plugins/tpm"
+    path: "{{ ansible_facts.env.HOME }}/.tmux/plugins/tpm"
   register: tpm_installed
   tags:
     - "terminal"
@@ -110,7 +110,7 @@
 - name: Install tmux plugin manager (tpm)
   git:
     repo: https://github.com/tmux-plugins/tpm
-    dest: "{{ ansible_env.HOME }}/.tmux/plugins/tpm"
+    dest: "{{ ansible_facts.env.HOME }}/.tmux/plugins/tpm"
   when: not tpm_installed.stat.exists
   tags:
     - "terminal"
@@ -118,7 +118,7 @@
 - name: Stow tmux dotfiles
   command:
     cmd: stow tmux
-    chdir: "{{ ansible_env.HOME }}/Documents/GitHub/dev_setup"
+    chdir: "{{ ansible_facts.env.HOME }}/Documents/GitHub/dev_setup"
   register: stow_tmux
   failed_when: stow_tmux.rc != 0
   tags:
