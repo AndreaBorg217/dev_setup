@@ -1,3 +1,10 @@
+- name: Install stow
+  homebrew:
+    name: stow
+    state: present
+  tags:
+    - "stow"
+
 - name: Stow zsh dotfiles
   command:
     cmd: stow zsh
