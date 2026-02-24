@@ -5,6 +5,13 @@
   tags:
     - "vim"
 
+- name: Install fd
+  homebrew:
+    name: fd
+    state: present
+  tags:
+    - "vim"
+
 - name: Install neovim
   homebrew:
     name: neovim
