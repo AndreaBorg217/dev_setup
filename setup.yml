@@ -20,7 +20,7 @@
         - vscode
     - include_tasks: tasks/neovim.yml
       tags:
-        - neovim
+        - vim
     - include_tasks: tasks/terminal.yml
       tags:
         - terminal
