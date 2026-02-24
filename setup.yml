@@ -2,7 +2,6 @@
   tasks:
     - include: tasks/git.yml
     - include: tasks/stow.yml
-    - include: tasks/dotfiles.yml
     - include: tasks/python.yml
     - include: tasks/go.yml
     - include: tasks/docker.yml
