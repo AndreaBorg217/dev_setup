@@ -5,26 +5,6 @@
   tags:
     - vscode
 
-- name: Check if VSCode User directory exists
-  stat:
-    path: "{{ ansible_facts.env.HOME }}/Library/Application Support/Code/User"
-  register: vscode_user_dir
-  tags:
-    - vscode
-
-- name: Backup existing VSCode settings if they exist
-  copy:
-    src: "{{ ansible_facts.env.HOME }}/Library/Application Support/Code/User/{{ item }}"
-    dest: "{{ ansible_facts.env.HOME }}/Library/Application Support/Code/User/{{ item }}.backup"
-    remote_src: yes
-  loop:
-    - settings.json
-    - keybindings.json
-  when: vscode_user_dir.stat.exists
-  ignore_errors: true
-  tags:
-    - vscode
-
 - name: Remove existing VSCode settings files to allow stow
   file:
     path: "{{ ansible_facts.env.HOME }}/Library/Application Support/Code/User/{{ item }}"
@@ -32,7 +12,7 @@
   loop:
     - settings.json
     - keybindings.json
-  when: vscode_user_dir.stat.exists
+  ignore_errors: true
   tags:
     - vscode
 
