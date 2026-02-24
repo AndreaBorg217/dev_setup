@@ -1,28 +1,6 @@
-- name: Read PYTHON_VERSION from environment
-  set_fact:
-    python_version: "{{ lookup('env', 'PYTHON_VERSION') }}"
-  tags:
-    - "python"
-
-- name: Warn if PYTHON_VERSION is not set
-  debug:
-    msg: "WARNING: PYTHON_VERSION is not set. Installing latest Python."
-  when: python_version == ''
-  tags:
-    - "python"
-
-- name: Install specific Python version
-  homebrew:
-    name: "python@{{ python_version }}"
-    state: present
-  when: python_version != ''
-  tags:
-    - "python"
-
-- name: Install latest Python
+- name: Install Python
   homebrew:
     name: python
     state: present
-  when: python_version == ''
   tags:
     - "python"
