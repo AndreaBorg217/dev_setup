@@ -1,15 +1,21 @@
+- name: Read GO_VERSION from environment
+  set_fact:
+    go_version: "{{ lookup('env', 'GO_VERSION') }}"
+  tags:
+    - "go"
+
 - name: Warn if GO_VERSION is not set
   debug:
     msg: "WARNING: GO_VERSION is not set. Installing latest Go."
-  when: GO_VERSION is not defined or GO_VERSION == ''
+  when: go_version == ''
   tags:
     - "go"
 
 - name: Install specific Go version
   homebrew:
-    name: "go@{{ GO_VERSION }}"
+    name: "go@{{ go_version }}"
     state: present
-  when: GO_VERSION is defined and GO_VERSION != ''
+  when: go_version != ''
   tags:
     - "go"
 
@@ -17,7 +23,7 @@
   homebrew:
     name: go
     state: present
-  when: GO_VERSION is not defined or GO_VERSION == ''
+  when: go_version == ''
   tags:
     - "go"
 
