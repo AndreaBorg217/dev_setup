@@ -14,4 +14,5 @@ brew install ansible-lint
 
 # Clone dotfiles
 mkdir -p $HOME/Documents/GitHub/dev_setup
-git clone https://github.com/AndreaBorg217/dev_setup.stow $HOME/Documents/GitHub/dev_setup
+git clone https://github.com/AndreaBorg217/dev_setup.git $HOME/Documents/GitHub/dev_setup
+git checkout ansible-refactor
