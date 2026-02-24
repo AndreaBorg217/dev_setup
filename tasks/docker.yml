@@ -26,10 +26,3 @@
   changed_when: false
   tags:
     - "docker"
-
-- name: Show Docker test result
-  debug:
-    msg: "Docker is working correctly."
-  when: docker_test.rc == 0
-  tags:
-    - "docker"
