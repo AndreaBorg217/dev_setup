@@ -13,10 +13,10 @@
     - "vim"
 
 - name: Stow neovim dotfiles
-  command:
-    cmd: stow neovim
-    chdir: "{{ ansible_facts.env.HOME }}/Documents/GitHub/dev_setup"
+  shell: |
+    cd "{{ ansible_facts.env.HOME }}/Documents/GitHub/dev_setup"
+    stow --restow --verbose=2 --target="{{ ansible_facts.env.HOME }}" neovim
   register: stow_neovim
-  failed_when: stow_neovim.rc != 0
+  changed_when: stow_neovim.stderr is search('LINK')
   tags:
     - "vim"
