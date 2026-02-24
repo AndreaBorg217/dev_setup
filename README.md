@@ -22,7 +22,7 @@ tart run sequoia-base
 
 Task: `tasks/terminal.yml`
 
-Took some inspiration from [Josean Martinez](https://www.youtube.com/watch?v=U-omALWIBos). Colour scheme created by [Josean Martinez](https://github.com/josean-dev/dev-environment-files/tree/main).
+Took some inspiration from [Josean Martinez](https://www.youtube.com/watch?v=U-omALWIBos). Colour scheme created by [Josean Martinez](https://github.com/josean-dev/dev-environment-files/tree/main). Font by [romkatv](https://github.com/romkatv/powerlevel10k-media/blob/master/MesloLGS%20NF%20Regular.ttf)
 
 We use **iTerm2** as the terminal, **Oh My Zsh** for customisation, and **tmux** for sessions.
 
@@ -88,9 +88,7 @@ Task: `tasks/apps.yml`
 
 A few things can't be automated due to macOS GUI restrictions:
 
-1. **Powerlevel10k** —> restart iTerm2 and follow the configuration wizard
-2. **iTerm2 font size** —> `CMD ,` > Profiles > Text > set font size to 20
-3. **iTerm2 colour scheme** —> `CMD ,` > Profiles > Colors > import `coolnight.itermcolors` from the repo root
-4. **tmux plugins** —> open a tmux session and press `CTRL+a r` then `CTRL+a SHIFT+i`
-5. **GitHub auth** —> authenticate via GitHub Desktop or PAT on first `git push`
-6. **Docker Desktop** —> open Docker Desktop manually once to accept the system extension prompt
+1. **Nerd Font** -> double click on the font file in the repo to register it
+1. **iTerm2 font size** —> `CMD ,` > Profiles > Text > set font size to 20 & apply the nerd font
+1. **iTerm2 colour scheme** —> `CMD ,` > Profiles > Colors > import `coolnight.itermcolors` from the repo root
+1. **tmux plugins** —> open a tmux session and press `CTRL+a r` then `CTRL+a SHIFT+i`
