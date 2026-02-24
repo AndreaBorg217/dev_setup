@@ -1,32 +1,8 @@
 # Andrea's Developer Setup
 
-## Steps
+## How to run
 
-1. Create a _.env_ following _.env.example_. If the `PYTHON_VERSION` & `GO_VERSION` are not set, the latest will be obtained.
-
-2. Install HomeBrew
-
-```bash
-bash install_brew.sh
-```
-
-3. Install Git
-
-```bash
-brew install git
-```
-
-4. Install Ansible
-
-```bash
-bash install_ansible.sh
-```
-
-4. Run the setup playbook
-
-```bash
-bash run_playbook.sh
-```
+Create and run `run.sh`
 
 ## Testing
 
@@ -37,6 +13,8 @@ brew install cirruslabs/cli/tart
 tart clone ghcr.io/cirruslabs/macos-sequoia-base:latest sequoia-base
 tart run sequoia-base
 ```
+
+**DOCKER MAY NOT WORK!!**
 
 ## Contents
 
