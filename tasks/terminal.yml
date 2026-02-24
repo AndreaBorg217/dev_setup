@@ -6,11 +6,11 @@
     - "terminal"
 
 - name: Stow zsh dotfiles
-  command:
-    cmd: stow zsh
-    chdir: "{{ ansible_facts.env.HOME }}/Documents/GitHub/dev_setup"
+  shell: |
+    cd "{{ ansible_facts.env.HOME }}/Documents/GitHub/dev_setup"
+    stow --restow --verbose=2 --target="{{ ansible_facts.env.HOME }}" zsh
   register: stow_zsh
-  failed_when: stow_zsh.rc != 0
+  changed_when: stow_zsh.stderr is search('LINK')
   tags:
     - "terminal"
 
@@ -116,11 +116,11 @@
     - "terminal"
 
 - name: Stow tmux dotfiles
-  command:
-    cmd: stow tmux
-    chdir: "{{ ansible_facts.env.HOME }}/Documents/GitHub/dev_setup"
+  shell: |
+    cd "{{ ansible_facts.env.HOME }}/Documents/GitHub/dev_setup"
+    stow --restow --verbose=2 --target="{{ ansible_facts.env.HOME }}" tmux
   register: stow_tmux
-  failed_when: stow_tmux.rc != 0
+  changed_when: stow_tmux.stderr is search('LINK')
   tags:
     - "terminal"
 
