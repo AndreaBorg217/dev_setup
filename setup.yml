@@ -18,12 +18,12 @@
     - include_tasks: tasks/vscode.yml
       tags:
         - vscode
-    - include_tasks: tasks/neovim.yml
-      tags:
-        - vim
     - include_tasks: tasks/terminal.yml
       tags:
         - terminal
+    - include_tasks: tasks/neovim.yml
+      tags:
+        - vim
     - include_tasks: tasks/apps.yml
       tags:
         - apps
