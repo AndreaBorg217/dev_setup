@@ -27,18 +27,19 @@
   tags:
     - "go"
 
-- name: Install Delve debugger
-  shell: go install github.com/go-delve/delve/cmd/dlv@latest
-  environment:
-    PATH: "{{ ansible_env.PATH }}"
-  tags:
-    - "go"
-
 - name: Add Go bin directory to PATH in .zprofile
   lineinfile:
-    path: "{{ ansible_env.HOME }}/.zprofile"
+    path: "{{ ansible_facts.env.HOME }}/.zprofile"
     line: 'export PATH="$HOME/go/bin:$PATH"'
     create: yes
     state: present
+  tags:
+    - "go"
+
+- name: Install Delve debugger
+  shell: go install github.com/go-delve/delve/cmd/dlv@latest
+  environment:
+    PATH: "/opt/homebrew/bin:/usr/local/bin:{{ ansible_facts.env.PATH }}"
+    GOPATH: "{{ ansible_facts.env.HOME }}/go"
   tags:
     - "go"
