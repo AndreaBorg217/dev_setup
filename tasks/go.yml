@@ -57,3 +57,12 @@
     state: present
   tags:
     - "go"
+
+- name: Add Go bin directory to PATH in .zshrc
+  lineinfile:
+    path: "{{ ansible_facts.env.HOME }}/.zshrc"
+    line: 'export PATH="{{ go_bin_path }}:$HOME/go/bin:$PATH"'
+    create: yes
+    state: present
+  tags:
+    - "go"
