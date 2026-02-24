@@ -10,7 +10,6 @@
     name: user.name
     scope: global
     value: "{{ lookup('env', 'GIT_USER_NAME') }}"
-  when: lookup('env', 'GIT_USER_NAME') != ''
   tags:
     - "git"
 
@@ -19,20 +18,12 @@
     name: user.email
     scope: global
     value: "{{ lookup('env', 'GIT_USER_EMAIL') }}"
-  when: lookup('env', 'GIT_USER_EMAIL') != ''
   tags:
     - "git"
 
-- name: Warn if GIT_USER_NAME is not set
-  debug:
-    msg: "WARNING: GIT_USER_NAME is not set. Skipping git user name configuration."
-  when: lookup('env', 'GIT_USER_NAME') == ''
-  tags:
-    - "git"
-
-- name: Warn if GIT_USER_EMAIL is not set
-  debug:
-    msg: "WARNING: GIT_USER_EMAIL is not set. Skipping git user email configuration."
-  when: lookup('env', 'GIT_USER_EMAIL') == ''
+- name: Install lazygit
+  homebrew:
+    name: jesseduffield/lazygit/lazygit
+    state: present
   tags:
     - "git"
