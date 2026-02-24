@@ -104,11 +104,11 @@ ansible-playbook setup.yml
 # COMPLETION
 # ============================================================================
 
-source ~/.zshrc
-
 echo ""
 echo "========================================================"
 echo "Installation complete!"
 echo "========================================================"
+echo ""
+echo "Please restart your terminal or run 'exec zsh' to load the new configuration."
 echo ""
 echo "Next steps: Refer to README.md for manual steps"
