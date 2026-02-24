@@ -1,18 +1,3 @@
-- name: Ensure ~/Documents/GitHub directory exists
-  file:
-    path: "{{ ansible_env.HOME }}/Documents/GitHub"
-    state: directory
-  tags:
-    - "stow"
-
-- name: Clone dev_setup repo if not already present
-  stow:
-    repo: "https://stowhub.com/AndreaBorg217/dev_setup.stow"
-    dest: "{{ ansible_env.HOME }}/Documents/GitHub/dev_setup"
-    update: no
-  tags:
-    - "stow"
-
 - name: Stow zsh dotfiles
   command:
     cmd: stow zsh
