@@ -1,10 +1,3 @@
-- name: Install git
-  homebrew:
-    name: git
-    state: present
-  tags:
-    - "git"
-
 - name: Install GitHub Desktop
   homebrew_cask:
     name: github
