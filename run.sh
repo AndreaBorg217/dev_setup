@@ -78,22 +78,14 @@ echo ""
 echo "Step 3: Configuring environment variables..."
 echo ""
 
-ENV_FILE="$REPO_DIR/.env"
 
-if [ ! -f "$ENV_FILE" ]; then
-    # Check that GIT_USER_NAME and GIT_USER_EMAIL are set and if not kaboom
-    if [ -z "$GIT_USER_NAME" ] || [ -z "$GIT_USER_EMAIL" ]; then
-        echo "Error: GIT_USER_NAME and GIT_USER_EMAIL environment variables must be set before running this script."
-        echo "Please set them and re-run the script."
-        exit 1
-    fi
-else
-    echo "✓ .env file already exists"
+# Check that GIT_USER_NAME and GIT_USER_EMAIL are set and if not kaboom
+if [ -z "$GIT_USER_NAME" ] || [ -z "$GIT_USER_EMAIL" ]; then
+    echo "Error: GIT_USER_NAME and GIT_USER_EMAIL environment variables must be set before running this script."
+    echo "Please set them and re-run the script."
+    exit 1
 fi
 
-# Load environment variables
-source "$ENV_FILE"
-export GIT_USER_NAME GIT_USER_EMAIL PYTHON_VERSION GO_VERSION
 
 # ============================================================================
 # STEP 4: Run Ansible Playbook
@@ -106,9 +98,7 @@ echo ""
 cd "$REPO_DIR"
 
 echo "Running full setup (this may take a while)..."
-ansible-playbook setup.yml \
-    -e "GIT_USER_NAME=${GIT_USER_NAME}" \
-    -e "GIT_USER_EMAIL=${GIT_USER_EMAIL}" \
+ansible-playbook setup.yml 
 
 # ============================================================================
 # COMPLETION
