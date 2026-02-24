@@ -5,12 +5,12 @@
   tags:
     - "stow"
 
-- name: Stow zsh dotfiles
+- name: Stow terminal dotfiles
   command:
-    cmd: stow zsh
+    cmd: stow terminal
     chdir: "{{ ansible_env.HOME }}/Documents/GitHub/dev_setup"
-  register: stow_zsh
-  failed_when: stow_zsh.rc != 0
+  register: stow_terminal
+  failed_when: stow_terminal.rc != 0
   tags:
     - "stow"
 
