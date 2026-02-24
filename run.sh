@@ -33,6 +33,16 @@ if ! command -v brew &> /dev/null; then
     eval "$(/opt/homebrew/bin/brew shellenv)"
 fi
 
+# Install Xcode Command Line Tools
+if ! xcode-select -p &> /dev/null; then
+    echo "Installing Xcode Command Line Tools..."
+    xcode-select --install
+    echo "Please complete the Xcode Command Line Tools installation and re-run this script."
+    exit 0
+else
+    echo "Xcode Command Line Tools already installed"
+fi
+
 # Install Git
 if ! command -v git &> /dev/null; then
     echo "Installing Git..."
