@@ -1,0 +1,29 @@
+- hosts: localhost
+  tasks:
+    - include_tasks: tasks/git.yml
+      tags:
+        - git
+    - include_tasks: tasks/stow.yml
+      tags:
+        - stow
+    - include_tasks: tasks/terminal.yml
+      tags:
+        - terminal
+    - include_tasks: tasks/python.yml
+      tags:
+        - python
+    - include_tasks: tasks/go.yml
+      tags:
+        - go
+    - include_tasks: tasks/docker.yml
+      tags:
+        - docker
+    - include_tasks: tasks/vscode.yml
+      tags:
+        - vscode
+    - include_tasks: tasks/neovim.yml
+      tags:
+        - vim
+    - include_tasks: tasks/apps.yml
+      tags:
+        - apps

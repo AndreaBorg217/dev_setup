@@ -1,0 +1,36 @@
+- name: Install vim
+  homebrew:
+    name: vim
+    state: present
+  tags:
+    - "vim"
+
+- name: Install fd
+  homebrew:
+    name: fd
+    state: present
+  tags:
+    - "vim"
+
+- name: Install ripgrep
+  homebrew:
+    name: ripgrep
+    state: present
+  tags:
+    - "vim"
+
+- name: Install neovim
+  homebrew:
+    name: neovim
+    state: present
+  tags:
+    - "vim"
+
+- name: Stow neovim dotfiles
+  shell: |
+    cd "{{ ansible_facts.env.HOME }}/Documents/GitHub/dev_setup"
+    stow --restow --no-folding --verbose=2 --target="{{ ansible_facts.env.HOME }}" neovim
+  register: stow_neovim
+  changed_when: stow_neovim.stderr is search('LINK')
+  tags:
+    - "vim"

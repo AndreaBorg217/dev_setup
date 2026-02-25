@@ -1,0 +1,20 @@
+- name: Install Docker CLI
+  homebrew:
+    name: docker
+    state: present
+  tags:
+    - "docker"
+
+- name: Install Docker Compose
+  homebrew:
+    name: docker-compose
+    state: present
+  tags:
+    - "docker"
+
+- name: Install Docker Desktop
+  homebrew_cask:
+    name: docker
+    state: present
+  tags:
+    - "docker"
