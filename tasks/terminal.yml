@@ -1,0 +1,125 @@
+- name: Install iTerm2
+  homebrew_cask:
+    name: iterm2
+    state: present
+  tags:
+    - "terminal"
+
+- name: Stow zsh dotfiles
+  shell: |
+    cd "{{ ansible_facts.env.HOME }}/Documents/GitHub/dev_setup"
+    stow --restow --verbose=2 --target="{{ ansible_facts.env.HOME }}" terminal
+  register: stow_terminal
+  changed_when: stow_terminal.stderr is search('LINK')
+  tags:
+    - "terminal"
+
+# ============================================================================
+# OH MY ZSH
+# ============================================================================
+
+- name: Check if Oh My Zsh is already installed
+  stat:
+    path: "{{ ansible_facts.env.HOME }}/.oh-my-zsh"
+  register: omz_installed
+  tags:
+    - "terminal"
+
+- name: Install Oh My Zsh
+  shell: |
+    sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+  environment:
+    RUNZSH: "no"
+    KEEP_ZSHRC: "yes"
+  when: not omz_installed.stat.exists
+  tags:
+    - "terminal"
+
+# ============================================================================
+# POWERLEVEL10K
+# ============================================================================
+
+- name: Check if Powerlevel10k is already installed
+  stat:
+    path: "{{ ansible_facts.env.HOME }}/.oh-my-zsh/custom/themes/powerlevel10k"
+  register: p10k_installed
+  tags:
+    - "terminal"
+
+- name: Install Powerlevel10k theme
+  git:
+    repo: https://github.com/romkatv/powerlevel10k.git
+    dest: "{{ ansible_facts.env.HOME }}/.oh-my-zsh/custom/themes/powerlevel10k"
+    depth: 1
+  when: not p10k_installed.stat.exists
+  tags:
+    - "terminal"
+
+# ============================================================================
+# ZSH PLUGINS
+# ============================================================================
+
+- name: Check if zsh-autosuggestions is already installed
+  stat:
+    path: "{{ ansible_facts.env.HOME }}/.oh-my-zsh/custom/plugins/zsh-autosuggestions"
+  register: autosuggestions_installed
+  tags:
+    - "terminal"
+
+- name: Install zsh-autosuggestions
+  git:
+    repo: https://github.com/zsh-users/zsh-autosuggestions
+    dest: "{{ ansible_facts.env.HOME }}/.oh-my-zsh/custom/plugins/zsh-autosuggestions"
+  when: not autosuggestions_installed.stat.exists
+  tags:
+    - "terminal"
+
+- name: Check if zsh-syntax-highlighting is already installed
+  stat:
+    path: "{{ ansible_facts.env.HOME }}/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting"
+  register: syntax_highlighting_installed
+  tags:
+    - "terminal"
+
+- name: Install zsh-syntax-highlighting
+  git:
+    repo: https://github.com/zsh-users/zsh-syntax-highlighting.git
+    dest: "{{ ansible_facts.env.HOME }}/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting"
+  when: not syntax_highlighting_installed.stat.exists
+  tags:
+    - "terminal"
+
+# ============================================================================
+# TMUX
+# ============================================================================
+
+- name: Install tmux
+  homebrew:
+    name: tmux
+    state: present
+  tags:
+    - "terminal"
+
+- name: Check if tmux plugin manager is already installed
+  stat:
+    path: "{{ ansible_facts.env.HOME }}/.tmux/plugins/tpm"
+  register: tpm_installed
+  tags:
+    - "terminal"
+
+- name: Install tmux plugin manager (tpm)
+  git:
+    repo: https://github.com/tmux-plugins/tpm
+    dest: "{{ ansible_facts.env.HOME }}/.tmux/plugins/tpm"
+  when: not tpm_installed.stat.exists
+  tags:
+    - "terminal"
+
+- name: Stow tmux dotfiles
+  shell: |
+    cd "{{ ansible_facts.env.HOME }}/Documents/GitHub/dev_setup"
+    stow --restow --verbose=2 --target="{{ ansible_facts.env.HOME }}" tmux
+  register: stow_tmux
+  changed_when: stow_tmux.stderr is search('LINK')
+  tags:
+    - "terminal"
