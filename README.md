@@ -59,6 +59,44 @@ This is a small tmux cheatsheet:
 
 Task: `tasks/neovim.yml`
 
+This is a small neovim cheatsheet:
+
+| Action                         | Command        |
+| ------------------------------ | -------------- |
+| Search for file                | `space ff`     |
+| Search for string              | `space fs`     |
+| Toggle file-tree               | `space ee`     |
+| Focus file-tree                | `space eo`     |
+| Open file-tree on current file | `space ef`     |
+| Toggle breakpoint              | `space db`     |
+| Start debugger                 | `space do`     |
+| Quit debugger                  | `space dq`     |
+| Step over                      | `space do`     |
+| Focus on code                  | `space d0`     |
+| Focus on scopes (variables)    | `space d1`     |
+| Focus on watches               | `space d4`     |
+| Focus on REPL                  | `space d5`     |
+| Create mark                    | `m <a-z>`      |
+| Go to mark                     | `' <a-z>`      |
+| Toggle comment                 | `gcc`          |
+| Format file                    | `space fmt`    |
+| Lint file                      | `space lf`     |
+| Code actions                   | `space ca`     |
+| Go to definition               | `space gd`     |
+| Show references                | `space gR`     |
+| Rename symbol                  | `space rn`     |
+| Show docs                      | `K`            |
+| Next diagnostic                | `]d`           |
+| Previous diagnostic            | `[d`           |
+| Show workplace diagnostics     | `space xw`     |
+| Show document diagnostics      | `space xd`     |
+| Add file to Harpoon            | `space ha`     |
+| Clear Harpoon                  | `space hc`     |
+| Harpoon navigate               | `space h<1-5>` |
+| Split vertically               | `space sv`     |
+| Split horizontally             | `space sh`     |
+| Close split                    | `space sx`     |
+
 ### Visual Studio Code
 
 Task: `tasks/vscode.yml`
