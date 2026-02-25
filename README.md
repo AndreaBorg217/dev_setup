@@ -48,6 +48,8 @@ This is a small tmux cheatsheet:
 | Navigate terminals         | `CTRL hjkl`             |
 | Maximise/minimise terminal | `CTRL a m`              |
 | Resize window              | `CTRL a hjkl`           |
+| New window                 | `CTRL a c`              |
+| Rename window              | `CTRL a ,`              |
 
 `terminal/.zshrc` contains some aliases for _Python_ and _Docker_.
 
