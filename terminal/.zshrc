@@ -22,9 +22,9 @@ source $ZSH/oh-my-zsh.sh
 # PYTHON FUNCTIONS
 # ============================================================================
 
-# Create a new virtual environment using Python 3.12
+# Create a new virtual environment 
 venvc() {
-    python3.12 -m venv .venv
+    python3 -m venv .venv
 }
 
 # Activate the virtual environment
