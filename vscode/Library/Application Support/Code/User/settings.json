@@ -27,18 +27,18 @@
     "editor.defaultFormatter": "ms-python.black-formatter",
     "editor.formatOnSave": true,
     "editor.codeActionsOnSave": {
-      "source.organizeImports": "explicit",
+      "source.organizeImports": "explicit"
     },
-    "editor.tabSize": 4,
+    "editor.tabSize": 4
   },
   // GO Configuration
   "[go]": {
     "editor.defaultFormatter": "golang.go",
     "editor.formatOnSave": true,
     "editor.codeActionsOnSave": {
-      "source.organizeImports": "explicit",
+      "source.organizeImports": "explicit"
     },
-    "editor.tabSize": 4,
+    "editor.tabSize": 4
   },
   "go.useLanguageServer": true,
   "go.lintOnSave": "package",
@@ -48,45 +48,45 @@
   "[javascript]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode",
     "editor.formatOnSave": true,
-    "editor.tabSize": 4,
+    "editor.tabSize": 4
   },
   "[javascriptreact]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode",
     "editor.formatOnSave": true,
-    "editor.tabSize": 4,
+    "editor.tabSize": 4
   },
   "[typescript]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode",
     "editor.formatOnSave": true,
-    "editor.tabSize": 4,
+    "editor.tabSize": 4
   },
   "[typescriptreact]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode",
     "editor.formatOnSave": true,
-    "editor.tabSize": 4,
+    "editor.tabSize": 4
   },
   "[json]": {
-    "editor.defaultFormatter": "vscode.json-language-features",
+    "editor.defaultFormatter": "vscode.json-language-features"
   },
   "vim.normalModeKeyBindingsNonRecursive": [
     {
       "before": ["<Esc>"],
       "when": ["editorFocus"],
       "commands": [":nohl"], // Clears highlight of current search
-      "silent": true,
+      "silent": true
     },
     {
       "before": ["-"],
-      "after": ["$"],
+      "after": ["$"]
     },
     {
       "before": ["0"],
-      "after": ["^"],
-    },
+      "after": ["^"]
+    }
   ],
   "vim.handleKeys": {
     "<C-a>": false,
-    "<C-f>": false,
+    "<C-f>": false
   },
   // VIM
   "vim.incsearch": true,
@@ -99,8 +99,9 @@
   "vim.smartRelativeLine": true,
   "vim.surround": true,
   "vim.easymotion": true, // Search with \\f
+  "vim.showMarksInGutter": true,
   "extensions.experimental.affinity": {
-    "vscodevim.vim": 1, // GREATLY improves vim performance
+    "vscodevim.vim": 1 // GREATLY improves vim performance
   },
   // GITLENS Configuration
   "gitlens.views.scm.grouped.views": {
@@ -113,8 +114,8 @@
     "contributors": true,
     "repositories": true,
     "searchAndCompare": true,
-    "launchpad": true,
+    "launchpad": true
   },
   "cSpell.diagnosticLevel": "Hint",
-  "chat.viewSessions.orientation": "stacked",
+  "chat.viewSessions.orientation": "stacked"
 }
