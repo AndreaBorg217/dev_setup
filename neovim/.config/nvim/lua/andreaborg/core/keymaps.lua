@@ -14,6 +14,10 @@ vim.keymap.set("v", "<S-Tab>", "<gv", { noremap = true, silent = true })
 -- keymap.set("n", "<leader>+", "<C-a>", { desc = "Increment number" }) -- increment
 -- keymap.set("n", "<leader>-", "<C-x>", { desc = "Decrement number" }) -- decrement
 
+-- set - to end of text instead of $, ` to beginning of text instead of ^
+vim.keymap.set("n", "-", "$", { noremap = true, silent = true })
+vim.keymap.set("n", "`", "^", { noremap = true, silent = true })
+
 -- window management
 keymap.set("n", "<leader>sv", "<C-w>v", { desc = "Split window vertically" }) -- split window vertically
 keymap.set("n", "<leader>sh", "<C-w>s", { desc = "Split window horizontally" }) -- split window horizontally
