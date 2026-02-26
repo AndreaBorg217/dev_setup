@@ -13,6 +13,9 @@
   "breadcrumbs.enabled": false, // path breadcrumbs above editor
   "editor.scrollbar.vertical": "hidden",
   "editor.scrollbar.horizontal": "hidden",
+  "editor.autoClosingBrackets": "never",
+  "editor.autoClosingQuotes": "never",
+  "editor.autoSurround": "never",
   "window.commandCenter": true,
   "workbench.activityBar.location": "default",
   "workbench.navigationControl.enabled": false,
@@ -27,7 +30,7 @@
     "editor.defaultFormatter": "ms-python.black-formatter",
     "editor.formatOnSave": true,
     "editor.codeActionsOnSave": {
-      "source.organizeImports": "explicit"
+    "source.organizeImports": "explicit"
     },
     "editor.tabSize": 4
   },
@@ -80,7 +83,7 @@
       "after": ["$"]
     },
     {
-      "before": ["0"],
+      "before": ["`"],
       "after": ["^"]
     }
   ],
@@ -99,7 +102,6 @@
   "vim.smartRelativeLine": true,
   "vim.surround": true,
   "vim.easymotion": true, // Search with \\f
-  "vim.showMarksInGutter": true,
   "extensions.experimental.affinity": {
     "vscodevim.vim": 1 // GREATLY improves vim performance
   },
@@ -119,3 +121,4 @@
   "cSpell.diagnosticLevel": "Hint",
   "chat.viewSessions.orientation": "stacked"
 }
+
