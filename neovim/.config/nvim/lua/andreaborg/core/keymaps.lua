@@ -1,5 +1,3 @@
-vim.g.mapleader = " "
-
 local keymap = vim.keymap -- for conciseness
 
 keymap.set("i", "jk", "<ESC>", { desc = "Exit insert mode with jk" })
@@ -17,6 +15,13 @@ vim.keymap.set("v", "<S-Tab>", "<gv", { noremap = true, silent = true })
 -- set - to end of text instead of $, ` to beginning of text instead of ^
 vim.keymap.set("n", "-", "$", { noremap = true, silent = true })
 vim.keymap.set("n", "`", "^", { noremap = true, silent = true })
+
+-- set R to Redo
+vim.keymap.set("n", "R", "<C-r>", { noremap = true, silent = true })
+
+-- write and quit
+keymap.set("n", "<leader>w", "<cmd>w<CR>", { desc = "Save file" }) -- save
+keymap.set("n", "<leader>q", "<cmd>q<CR>", { desc = "Quit" }) -- quit
 
 -- window management
 keymap.set("n", "<leader>sv", "<C-w>v", { desc = "Split window vertically" }) -- split window vertically
