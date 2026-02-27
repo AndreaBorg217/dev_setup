@@ -1,3 +1,6 @@
+-- Set leader key before any keymaps
+vim.g.mapleader = " "
+
 vim.cmd("let g:netrw_liststyle = 3")
 
 local opt = vim.opt
