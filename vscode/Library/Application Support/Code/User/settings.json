@@ -92,7 +92,7 @@
     },
     {
       "before": ["s"],
-      "after": ["<leader>", "<leader>", "f"],
+      "after": ["<leader>", "<leader>", "s"],
     },
   ],
   "vim.handleKeys": {
