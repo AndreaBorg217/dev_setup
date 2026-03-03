@@ -90,6 +90,10 @@
       "before": ["R"],
       "after": ["<C-r>"],
     },
+    {
+      "before": ["F"],
+      "after": ["<leader>", "<leader>", "f"],
+    },
   ],
   "vim.handleKeys": {
     "<C-a>": false,
