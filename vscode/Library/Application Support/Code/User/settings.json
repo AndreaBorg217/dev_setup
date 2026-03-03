@@ -91,7 +91,7 @@
       "after": ["<C-r>"],
     },
     {
-      "before": ["F"],
+      "before": ["s"],
       "after": ["<leader>", "<leader>", "f"],
     },
   ],
