@@ -390,7 +390,7 @@
   },
   // DIAGNOSTICS
   {
-    "key": "x",
+    "key": "b",
     "command": "editor.action.marker.next",
     "when": "vim.mode == 'Normal' && editorTextFocus",
   },
