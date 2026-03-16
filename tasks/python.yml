@@ -4,3 +4,13 @@
     state: present
   tags:
     - "python"
+- name: Install UV
+  homebrew:
+    name: uv
+    state: present
+  tags:
+    - "python"
+- name: Install Python 3.13 with UV
+  command: uv install 3.13
+  tags:
+    - "python"

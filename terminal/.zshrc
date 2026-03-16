@@ -24,7 +24,8 @@ source $ZSH/oh-my-zsh.sh
 
 # Create a new virtual environment 
 venvc() {
-    python3 -m venv .venv
+    # python3 -m venv .venv
+    uv venv .venv
 }
 
 # Activate the virtual environment
@@ -32,15 +33,43 @@ venva(){
     source .venv/bin/activate
 }
 
-# Install black and project dependencies
-venvi(){
-    pip3 install black
-    pip3 install -r requirements.txt
+# Install project dependencies
+uvi(){
+    # pip3 install black
+    # pip3 install debugpy
+    # pip3 install -r requirements.txt
+    uv sync
 }
 
 # Freeze current dependencies to requirements.txt
-venvf(){
-    pip3 freeze > requirements.txt
+# venvf(){
+#     pip3 freeze > requirements.txt
+# }
+
+# create lock file with requirements
+uvl(){
+    uv lock
+}
+
+# Create new uv project
+uvc(){
+    uv init --name "$(basename "$PWD")"
+    uv python pin 3.13
+    uv add --dev ruff mypy debugpy
+    uv sync
+}
+
+# View dependencies
+uvt(){
+    uv tree
+}
+
+# Migrate to uv
+uvm() {
+    uv init --name "$(basename "$PWD")"
+    uv add -r requirements.txt
+    uv lock
+    uv sync
 }
 
 # Deactivate the virtual environment
@@ -48,11 +77,21 @@ venvd(){
     deactivate
 }
 
-# Create a .pylintrc that disables import-error
-pylintrc(){
-    touch .pylintrc
-    echo -e "[MESSAGES CONTROL]\ndisable=import-error" > .pylintrc
+# add dependency
+uva() {
+    uv add "$@"
 }
+
+# remove dependency
+uvd() {
+    uv remove "$@"
+}
+
+# # Create a .pylintrc that disables import-error
+# pylintrc(){
+#     touch .pylintrc
+#     echo -e "[MESSAGES CONTROL]\ndisable=import-error" > .pylintrc
+# }
 
 
 # ============================================================================
@@ -61,29 +100,27 @@ pylintrc(){
 
 # Follow last n lines of logs, filtering for errors/warnings (default: 20)
 dockerrs() {
-    local lines=${1:-20}
-    docker compose logs -f -n "$lines" | grep -E "ERROR|CRITICAL|WARNING"
+    docker compose logs -f -n "$@" | grep -E "ERROR|CRITICAL|WARNING"
 }
 
 # Follow last n lines of logs (default: 20)
 docklogs() {
-    local lines=${1:-20}
-    docker compose logs -f -n "$lines"
+    docker compose logs -f -n "$@"
 }
 
 # Docker Compose up in detached mode
 dockup() {
-    docker compose up -d
+    docker compose up -d "$@"
 }
 
 # Docker Compose down
 dockdown() {
-    docker compose down
+    docker compose down "$@"
 }
 
 # Docker Compose up with build in detached mode
 dockupb() {
-    docker compose up -d --build
+    docker compose up -d --build "$@"
 }
 
 # Show running containers
