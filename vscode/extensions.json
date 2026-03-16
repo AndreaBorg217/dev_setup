@@ -3,11 +3,10 @@
   "recommendations": [
     // PYTHON
     "ms-python.python",
+    "charliermarsh.ruff",
+    "ms-python.mypy-type-checker",
     "ms-python.debugpy",
     "ms-toolsai.jupyter",
-    "ms-python.black-formatter",
-    "ms-python.isort",
-    "ms-python.pylint",
     "ms-python.vscode-pylance",
     "ms-python.vscode-python-envs",
     // GENERIC

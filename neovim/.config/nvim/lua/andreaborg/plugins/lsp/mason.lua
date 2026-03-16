@@ -38,9 +38,7 @@ return {
 		mason_tool_installer.setup({
 			ensure_installed = {
 				-- Python tools
-				"black", -- Python formatter
-				"isort", -- Python import sorter
-				"pylint", -- Python linter
+                "ruff",
 				"mypy", -- Python type checker
 
 				-- Go tools

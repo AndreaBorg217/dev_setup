@@ -6,7 +6,7 @@ return {
 		conform.setup({
 			formatters_by_ft = {
 				-- Python formatting
-				python = { "black" },
+                python = { "ruff_organize_imports", "ruff_format" },
 				-- Go formatting
 				go = { "goimports", "gofumpt" },
 				-- YAML formatting
