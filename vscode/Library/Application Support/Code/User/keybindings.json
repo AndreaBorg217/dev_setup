@@ -67,7 +67,7 @@
     "when": "vim.mode == 'Normal' && (editorTextFocus || !inputFocus) && !terminalFocus",
   },
   {
-    "key": "escape",
+    "key": "ctrl-q",
     "command": "workbench.action.terminal.toggleTerminal",
     "when": "terminalFocus",
   },
