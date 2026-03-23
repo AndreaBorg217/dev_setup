@@ -399,11 +399,16 @@
     "command": "editor.action.commentLine",
     "when": "editorTextFocus && !editorReadonly",
   },
+  {
+    "key": "space w", // vim write
+    "command": "workbench.action.files.save",
+    "when": "vim.mode == 'Normal' && editorTextFocus",
+  },
   // Copilot
   {
     "key": "ctrl-g",
     "command": "workbench.action.chat.open",
-    "when": "(vim.mode == 'Normal' || vim.mode == 'VisualLine') && !chatIsVisible",
+    "when": "(vim.mode == 'Normal' || vim.mode == 'VisualLine || vim.mode == 'Visual'') && !chatIsVisible",
   },
   {
     "key": "escape",
