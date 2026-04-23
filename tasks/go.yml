@@ -1,7 +1,7 @@
 - name: Install Go
   homebrew:
     name: go
-    state: present
+    state: latest
   tags:
     - "go"
 
