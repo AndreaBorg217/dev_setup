@@ -40,9 +40,10 @@
     "mhutchie.git-graph",
     "eamodio.gitlens",
     // AI
-    "GitHub.copilot", // requires github login
-    "GitHub.copilot-chat", // requires github login
-    // "Codeium.codeium",
+    // "GitHub.copilot", // requires github login
+    // "GitHub.copilot-chat", // requires github login
+    "Codeium.codeium",
+    "anthropic.claude-code",
     // GO
     "golang.go",
     // UI
