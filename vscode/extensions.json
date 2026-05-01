@@ -22,7 +22,7 @@
     "christian-kohler.path-intellisense",
     "wayou.vscode-todo-highlight",
     "ms-azuretools.vscode-containers",
-    "ms-kubernetes-tools.vscode-kubernetes-tools",
+    // "ms-kubernetes-tools.vscode-kubernetes-tools",
     "ms-vscode-remote.remote-containers",
     // "tomoki1207.pdf",
     "VisualStudioExptTeam.vscodeintellicode",
@@ -45,13 +45,13 @@
     "Codeium.codeium",
     "anthropic.claude-code",
     // GO
-    "golang.go",
+    "golang.go"
     // UI
     // "kisstkondoros.vscode-gutter-preview",
     // "ritwickdey.LiveServer",
     // DATA & DB
     // "mechatroner.rainbow-csv",
-    "bruno-api-client.bruno"
+    // "bruno-api-client.bruno"
     // "cweijan.vscode-mysql-client2"
   ]
 }
