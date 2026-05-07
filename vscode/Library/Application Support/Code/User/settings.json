@@ -1,137 +1,165 @@
 {
-  "workbench.colorTheme": "Tokyo Night",
-  "workbench.iconTheme": "material-icon-theme",
-  "files.autoSave": "off",
-  "editor.formatOnSave": true,
-  "editor.fontSize": 18,
-  "window.zoomLevel": 2,
-  "editor.tabSize": 4,
-  "editor.insertSpaces": true,
-  "editor.detectIndentation": false,
-  "editor.minimap.enabled": false,
-  "workbench.sideBar.location": "left",
-  "breadcrumbs.enabled": false, // path breadcrumbs above editor
-  "editor.scrollbar.vertical": "hidden",
-  "editor.scrollbar.horizontal": "hidden",
-  "editor.autoClosingBrackets": "never",
-  "editor.autoClosingQuotes": "never",
-  "editor.autoSurround": "never",
-  "window.commandCenter": true,
-  "workbench.activityBar.location": "default",
-  "workbench.navigationControl.enabled": false,
-  "workbench.layoutControl.enabled": false,
-  "workbench.startupEditor": "none",
-  "github.copilot.nextEditSuggestions.enabled": true,
-  "editor.inlineSuggest.minShowDelay": 2000,
-  // Default formatter
-  "editor.defaultFormatter": "esbenp.prettier-vscode",
-  // PYTHON Configuration
-  "[python]": {
-    "editor.defaultFormatter": "ms-python.black-formatter",
+    "workbench.colorTheme": "Tokyo Night",
+    "workbench.iconTheme": "material-icon-theme",
+    "files.autoSave": "off",
     "editor.formatOnSave": true,
-    "editor.codeActionsOnSave": {
-      "source.organizeImports": "explicit",
-    },
-    "python.analysis.typeCheckingMode": "standard",
+    "editor.fontSize": 18,
+    "window.zoomLevel": 2,
     "editor.tabSize": 4,
-  },
-  // GO Configuration
-  "[go]": {
-    "editor.defaultFormatter": "golang.go",
-    "editor.formatOnSave": true,
-    "editor.codeActionsOnSave": {
-      "source.organizeImports": "explicit",
-    },
-    "editor.tabSize": 4,
-  },
-  "go.useLanguageServer": true,
-  "go.lintOnSave": "package",
-  "window.workbenchFontSize": 14,
-  "go.lintTool": "golangci-lint",
-  // JAVASCRIPT/TYPESCRIPT/REACT Configuration
-  "[javascript]": {
+    "editor.insertSpaces": true,
+    "editor.detectIndentation": false,
+    "editor.minimap.enabled": false,
+    "workbench.sideBar.location": "left",
+    "breadcrumbs.enabled": false, // path breadcrumbs above editor
+    "editor.scrollbar.vertical": "hidden",
+    "editor.scrollbar.horizontal": "hidden",
+    "editor.autoClosingBrackets": "never",
+    "editor.autoClosingQuotes": "never",
+    "editor.autoSurround": "never",
+    "window.commandCenter": true,
+    "workbench.activityBar.location": "default",
+    "workbench.navigationControl.enabled": false,
+    "workbench.layoutControl.enabled": false,
+    "workbench.startupEditor": "none",
+    "github.copilot.nextEditSuggestions.enabled": true,
+    "editor.inlineSuggest.minShowDelay": 2000,
+    // Default formatter
     "editor.defaultFormatter": "esbenp.prettier-vscode",
-    "editor.formatOnSave": true,
-    "editor.tabSize": 4,
-  },
-  "[javascriptreact]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode",
-    "editor.formatOnSave": true,
-    "editor.tabSize": 4,
-  },
-  "[typescript]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode",
-    "editor.formatOnSave": true,
-    "editor.tabSize": 4,
-  },
-  "[typescriptreact]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode",
-    "editor.formatOnSave": true,
-    "editor.tabSize": 4,
-  },
-  "[json]": {
-    "editor.defaultFormatter": "vscode.json-language-features",
-  },
-  "vim.normalModeKeyBindingsNonRecursive": [
-    {
-      "before": ["<Esc>"],
-      "when": ["editorFocus"],
-      "commands": [":nohl"], // Clears highlight of current search
-      "silent": true,
+    // PYTHON Configuration
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.black-formatter",
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+            "source.organizeImports": "explicit",
+        },
+        "python.analysis.typeCheckingMode": "standard",
+        "editor.tabSize": 4,
     },
-    {
-      "before": ["-"],
-      "after": ["$"],
+    // GO Configuration
+    "[go]": {
+        "editor.defaultFormatter": "golang.go",
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+            "source.organizeImports": "explicit",
+        },
+        "editor.tabSize": 4,
     },
-    {
-      "before": ["`"],
-      "after": ["^"],
+    "go.useLanguageServer": true,
+    "go.lintOnSave": "package",
+    "window.workbenchFontSize": 14,
+    "go.lintTool": "golangci-lint",
+    // JAVASCRIPT/TYPESCRIPT/REACT Configuration
+    "[javascript]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.formatOnSave": true,
+        "editor.tabSize": 4,
     },
-    {
-      "before": ["R"],
-      "after": ["<C-r>"],
+    "[javascriptreact]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.formatOnSave": true,
+        "editor.tabSize": 4,
     },
-    {
-      "before": ["s"],
-      "after": ["<leader>", "<leader>", "s"],
+    "[typescript]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.formatOnSave": true,
+        "editor.tabSize": 4,
     },
-  ],
-  "vim.handleKeys": {
-    "<C-a>": false,
-    "<C-f>": false,
-  },
-  // VIM
-  "vim.incsearch": true,
-  "vim.searchHighlightColor": "#FF0000",
-  "vim.searchHighlightTextColor": "#fff",
-  "vim.highlightedyank.enable": true,
-  "vim.highlightedyank.color": "#F55D40",
-  "vim.highlightedyank.duration": 200,
-  "vim.useSystemClipboard": true,
-  "vim.useCtrlKeys": true,
-  "vim.hlsearch": true,
-  "vim.smartRelativeLine": true,
-  "vim.surround": true,
-  "vim.easymotion": true,
-  "vim.showMarksInGutter": true,
-  "extensions.experimental.affinity": {
-    "vscodevim.vim": 1, // GREATLY improves vim performance
-  },
-  // GITLENS Configuration
-  "gitlens.currentLine.enabled": false,
-  "gitlens.views.scm.grouped.views": {
-    "commits": true,
-    "branches": true,
-    "remotes": true,
-    "stashes": false,
-    "tags": false,
-    "worktrees": true,
-    "contributors": true,
-    "repositories": true,
-    "searchAndCompare": true,
-    "launchpad": true,
-  },
-  "cSpell.diagnosticLevel": "Hint",
-  "chat.viewSessions.orientation": "stacked",
-  "claudeCode.preferredLocation": "panel",
+    "[typescriptreact]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.formatOnSave": true,
+        "editor.tabSize": 4,
+    },
+    "[json]": {
+        "editor.defaultFormatter": "vscode.json-language-features",
+    },
+    "[jsonc]": {
+        "editor.defaultFormatter": "vscode.json-language-features"
+    },
+    "vim.normalModeKeyBindingsNonRecursive": [
+        {
+            "before": [
+                "<Esc>"
+            ],
+            "when": [
+                "editorFocus"
+            ],
+            "commands": [
+                ":nohl"
+            ], // Clears highlight of current search
+            "silent": true,
+        },
+        {
+            "before": [
+                "-"
+            ],
+            "after": [
+                "$"
+            ],
+        },
+        {
+            "before": [
+                "`"
+            ],
+            "after": [
+                "^"
+            ],
+        },
+        {
+            "before": [
+                "R"
+            ],
+            "after": [
+                "<C-r>"
+            ],
+        },
+        {
+            "before": [
+                "s"
+            ],
+            "after": [
+                "<leader>",
+                "<leader>",
+                "s"
+            ],
+        },
+    ],
+    "vim.handleKeys": {
+        "<C-a>": false,
+        "<C-f>": false,
+    },
+    // VIM
+    "vim.incsearch": true,
+    "vim.searchHighlightColor": "#FF0000",
+    "vim.searchHighlightTextColor": "#fff",
+    "vim.highlightedyank.enable": true,
+    "vim.highlightedyank.color": "#F55D40",
+    "vim.highlightedyank.duration": 200,
+    "vim.useSystemClipboard": true,
+    "vim.useCtrlKeys": true,
+    "vim.hlsearch": true,
+    "vim.smartRelativeLine": true,
+    "vim.surround": true,
+    "vim.easymotion": true,
+    "vim.showMarksInGutter": true,
+    "extensions.experimental.affinity": {
+        "vscodevim.vim": 1, // GREATLY improves vim performance
+    },
+    // GITLENS Configuration
+    "gitlens.currentLine.enabled": false,
+    "gitlens.views.scm.grouped.views": {
+        "commits": true,
+        "branches": true,
+        "remotes": true,
+        "stashes": false,
+        "tags": false,
+        "worktrees": true,
+        "contributors": true,
+        "repositories": true,
+        "searchAndCompare": true,
+        "launchpad": true,
+    },
+    "cSpell.diagnosticLevel": "Hint",
+    "chat.viewSessions.orientation": "stacked",
+    "claudeCode.preferredLocation": "panel",
+    "chat.disableAIFeatures": true,
 }
