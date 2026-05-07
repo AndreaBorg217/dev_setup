@@ -32,9 +32,9 @@ venva(){
     source .venv/bin/activate
 }
 
-# Install black and project dependencies
+# Install project dependencies
 venvi(){
-    pip3 install black
+    pip3 install isort # curently there's a bug that requires this
     pip3 install -r requirements.txt
 }
 
