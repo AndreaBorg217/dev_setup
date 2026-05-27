@@ -1,0 +1,16 @@
+# Ignore everything by default
+*
+
+# Track only user-managed config
+!.gitignore
+!CLAUDE.md
+!settings.json
+!skills/
+!skills/**
+!commands/
+!commands/**
+!hooks/
+!hooks/**
+!scripts/
+!scripts/**
+!statusline.sh
