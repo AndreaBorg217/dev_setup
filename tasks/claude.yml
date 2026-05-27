@@ -1,0 +1,59 @@
+- name: Install node
+  homebrew:
+    name: node
+    state: present
+  tags:
+    - "claude"
+
+- name: Install Claude Code
+  npm:
+    name: "@anthropic-ai/claude-code"
+    global: yes
+    state: present
+  tags:
+    - "claude"
+
+- name: Install caveman-code
+  npm:
+    name: "@juliusbrussee/caveman-code"
+    global: yes
+    state: present
+  tags:
+    - "claude"
+
+- name: Install rtk
+  homebrew:
+    name: rtk
+    state: present
+  tags:
+    - "claude"
+
+- name: Add caveman plugin marketplace
+  shell: claude plugin marketplace add JuliusBrussee/caveman
+  changed_when: false
+  tags:
+    - "claude"
+
+- name: Install caveman plugin
+  shell: claude plugin install caveman@caveman
+  changed_when: false
+  tags:
+    - "claude"
+
+- name: Initialize rtk globally
+  shell: rtk init -g
+  changed_when: false
+  tags:
+    - "claude"
+
+- name: Symlink .claude config to home
+  shell: |
+    target="{{ ansible_facts.env.HOME }}/.claude"
+    if [ ! -L "$target" ]; then
+      rm -rf "$target"
+      ln -s "{{ ansible_facts.env.HOME }}/Documents/GitHub/dev_setup/.claude" "$target"
+    fi
+  register: symlink_claude
+  changed_when: symlink_claude.rc == 0 and symlink_claude.stdout != ""
+  tags:
+    - "claude"

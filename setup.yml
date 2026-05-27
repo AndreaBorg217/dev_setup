@@ -27,3 +27,6 @@
     - include_tasks: tasks/apps.yml
       tags:
         - apps
+    - include_tasks: tasks/claude.yml
+      tags:
+        - claude
