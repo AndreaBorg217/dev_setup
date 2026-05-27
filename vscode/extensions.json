@@ -4,7 +4,7 @@
     // PYTHON
     "ms-python.python",
     "ms-python.debugpy",
-    "ms-toolsai.jupyter",
+    // "ms-toolsai.jupyter",
     "ms-python.black-formatter",
     "ms-python.isort",
     "ms-python.pylint",
@@ -22,7 +22,7 @@
     "christian-kohler.path-intellisense",
     "wayou.vscode-todo-highlight",
     "ms-azuretools.vscode-containers",
-    // "ms-kubernetes-tools.vscode-kubernetes-tools",
+    "ms-kubernetes-tools.vscode-kubernetes-tools",
     "ms-vscode-remote.remote-containers",
     // "tomoki1207.pdf",
     "VisualStudioExptTeam.vscodeintellicode",
@@ -45,7 +45,15 @@
     "Codeium.codeium",
     "anthropic.claude-code",
     // GO
-    "golang.go"
+    "golang.go",
+    // JAVA
+    "vscjava.vscode-java-pack",
+    // TERRAFORM
+    // "hashicorp.terraform",
+    // ANSIBLE
+    // "redhat.ansible",
+    // AWS
+    // "amazonwebservices.aws-toolkit-vscode"
     // UI
     // "kisstkondoros.vscode-gutter-preview",
     // "ritwickdey.LiveServer",
