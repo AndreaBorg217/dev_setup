@@ -2,6 +2,8 @@
     "workbench.colorTheme": "Tokyo Night",
     "workbench.iconTheme": "material-icon-theme",
     "files.autoSave": "off",
+    "update.mode": "none",
+    "extensions.autoUpdate": false,
     "editor.formatOnSave": true,
     "editor.fontSize": 18,
     "window.zoomLevel": 2,
