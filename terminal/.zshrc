@@ -17,7 +17,23 @@ source $ZSH/oh-my-zsh.sh
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
+# ============================================================================
+# OTHER FUNCTIONS
+# ============================================================================
 
+git() {
+    # Intercept git push to protected branches
+    if [[ "$1" == "push" ]]; then
+        local branch
+        branch=$(command git symbolic-ref --short HEAD 2>/dev/null)
+        if [[ "$branch" =~ ^(master|main|prod|production)$ ]]; then
+            echo "⚠️  You're about to push to '$branch'. Are you sure? (y/n)"
+            read -r confirm
+            [[ "$confirm" =~ ^[Yy]$ ]] || { echo "Push cancelled."; return 1; }
+        fi
+    fi
+    command git "$@"
+}
 # ============================================================================
 # PYTHON FUNCTIONS
 # ============================================================================
