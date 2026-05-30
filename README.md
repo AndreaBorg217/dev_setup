@@ -137,6 +137,17 @@ A few things can't be automated due to macOS GUI restrictions:
 1. **iTerm2 colour scheme** —> `CMD ,` > Profiles > Colors > import `coolnight.itermcolors` from the repo root
 1. **tmux plugins** —> open a tmux session and press `CTRL+a r` then `CTRL+a SHIFT+i`
 
+## Local AI setup
+
+- If ollama is not running use: `brew services start ollama`
+- View available ollama models at [https://ollama.com/library](https://ollama.com/library)
+- Download models using `ollama pull [MODEL]`
+- Remove model using `ollama rm [MODEL]`
+- Ensure ollama is running using `ollama serve`
+- Access openwebui through __http://localhost:3000__
+- Launch Claude Code using local model using `ollama launch claude`
+- Launch OpenCode using local model using `ollama launch opencode`
+
 ## Credits
 
 [Josean Martinez](https://www.youtube.com/@joseanmartinez)

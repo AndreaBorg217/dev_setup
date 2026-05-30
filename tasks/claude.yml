@@ -6,9 +6,8 @@
     - "claude"
 
 - name: Install Claude Code
-  npm:
-    name: "@anthropic-ai/claude-code"
-    global: yes
+  homebrew:
+    name: claude-code
     state: present
   tags:
     - "claude"
