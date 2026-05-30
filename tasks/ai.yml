@@ -17,9 +17,9 @@
   tags:
     - "ai"
 
-- name: Install opencode
-  homebrew:
-    name: opencode
-    state: present
-  tags:
-    - "ai"
+# - name: Install opencode
+#   homebrew:
+#     name: opencode
+#     state: present
+#   tags:
+#     - "ai"
