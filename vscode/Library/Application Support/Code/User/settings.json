@@ -24,7 +24,7 @@
     "workbench.layoutControl.enabled": false,
     "workbench.startupEditor": "none",
     "github.copilot.nextEditSuggestions.enabled": true,
-    "editor.inlineSuggest.minShowDelay": 2000,
+    "editor.inlineSuggest.minShowDelay": 500,
     // Default formatter
     "editor.defaultFormatter": "esbenp.prettier-vscode",
     // PYTHON Configuration
