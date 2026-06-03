@@ -1,72 +1,72 @@
 {
-  "permissions": {
-    "allow": [
-      "Bash(ls *)",
-      "Bash(find *)",
-      "Bash(cat *)",
-      "Bash(grep *)",
-      "Bash(wc *)",
-      "Bash(head *)",
-      "Bash(tail *)",
-      "Bash(jq *)",
-      "Bash(git log *)",
-      "Bash(git diff *)",
-      "Bash(git status)",
-      "Bash(git show *)",
-      "Bash(git branch *)",
-      "Bash(git remote *)",
-      "Bash(echo *)",
-      "Bash(pwd)",
-      "Bash(which *)",
-      "Bash(diff *)",
-      "Bash(sort *)",
-      "Bash(uniq *)",
-      "Bash(awk *)",
-      "Bash(cut *)",
-      "Bash(tr *)",
-      "Bash(brew list *)",
-      "Bash(brew info *)",
-      "Bash(docker logs *)",
-      "Bash(docker stats *)",
-      "Bash(docker ps *)",
-      "Bash(docker images *)",
-      "Bash(docker inspect *)",
-      "Bash(docker network ls)",
-      "Bash(docker volume ls)",
-      "Bash(docker compose ps *)",
-      "Bash(~/.claude/scripts/*)",
-      "Read(*)",
-      "Edit(/Users/andrea.borg/Documents/GitHub/dev_setup/.claude/**)",
-      "Write(/Users/andrea.borg/Documents/GitHub/dev_setup/.claude/**)"
-    ]
-  },
-  "hooks": {
-    "PreToolUse": [
-      {
-        "matcher": "Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "rtk hook claude"
-          }
+    "permissions": {
+        "allow": [
+            "Bash(ls *)",
+            "Bash(find *)",
+            "Bash(cat *)",
+            "Bash(grep *)",
+            "Bash(wc *)",
+            "Bash(head *)",
+            "Bash(tail *)",
+            "Bash(jq *)",
+            "Bash(git log *)",
+            "Bash(git diff *)",
+            "Bash(git status)",
+            "Bash(git show *)",
+            "Bash(git branch *)",
+            "Bash(git remote *)",
+            "Bash(echo *)",
+            "Bash(pwd)",
+            "Bash(which *)",
+            "Bash(diff *)",
+            "Bash(sort *)",
+            "Bash(uniq *)",
+            "Bash(awk *)",
+            "Bash(cut *)",
+            "Bash(tr *)",
+            "Bash(brew list *)",
+            "Bash(brew info *)",
+            "Bash(docker logs *)",
+            "Bash(docker stats *)",
+            "Bash(docker ps *)",
+            "Bash(docker images *)",
+            "Bash(docker inspect *)",
+            "Bash(docker network ls)",
+            "Bash(docker volume ls)",
+            "Bash(docker compose ps *)",
+            "Bash(~/.claude/scripts/*)",
+            "Read(*)",
+            "Edit(~/Documents/GitHub/dev_setup/.claude/**)",
+            "Write(~/Documents/GitHub/dev_setup/.claude/**)"
         ]
-      }
-    ]
-  },
-  "statusLine": {
-    "type": "command",
-    "command": "bash /Users/andrea.borg/.claude/statusline.sh"
-  },
-  "enabledPlugins": {
-    "caveman@caveman": true
-  },
-  "extraKnownMarketplaces": {
-    "caveman": {
-      "source": {
-        "source": "github",
-        "repo": "JuliusBrussee/caveman"
-      }
-    }
-  },
-  "skipAutoPermissionPrompt": true
+    },
+    "hooks": {
+        "PreToolUse": [
+            {
+                "matcher": "Bash",
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "rtk hook claude"
+                    }
+                ]
+            }
+        ]
+    },
+    "statusLine": {
+        "type": "command",
+        "command": "bash ~/.claude/statusline.sh"
+    },
+    "enabledPlugins": {
+        "caveman@caveman": true
+    },
+    "extraKnownMarketplaces": {
+        "caveman": {
+            "source": {
+                "source": "github",
+                "repo": "JuliusBrussee/caveman"
+            }
+        }
+    },
+    "skipAutoPermissionPrompt": true
 }
