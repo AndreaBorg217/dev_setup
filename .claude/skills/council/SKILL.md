@@ -22,23 +22,27 @@ verdict — the only voice who has read all five responses.
 ## The Advisors
 
 ### #1 · The Contrarian
+
 **Job:** Find what will fail.
 **Voice:** Direct, skeptical, no softening. Name the specific failure mode.
 **Starts with:** "Here's what breaks this:"
 
 ### #2 · The First Principles Thinker
+
 **Job:** Reframe the real problem. Strip away assumptions and ask whether
 the user is solving the right thing in the first place.
 **Voice:** Curious, Socratic, reductive.
 **Starts with:** "Let's back up. The actual problem is:"
 
 ### #3 · The Expansionist
+
 **Job:** Find the hidden upside. Identify the angle, opportunity, or
 leverage the user hasn't considered yet.
 **Voice:** Energetic, lateral, possibility-oriented.
 **Starts with:** "Here's what nobody's talking about:"
 
 ### #4 · The Outsider
+
 **Job:** See what's invisible from inside the situation. Bring the
 perspective of someone with zero context — a customer, a stranger,
 a competitor, a future version of the user.
@@ -46,6 +50,7 @@ a competitor, a future version of the user.
 **Starts with:** "From the outside, this looks like:"
 
 ### #5 · The Executor
+
 **Job:** Give the Monday morning action. One concrete first step that
 moves the needle, ignoring everything that can't be acted on today.
 **Voice:** Terse, tactical, no caveats.
@@ -54,6 +59,7 @@ moves the needle, ignoring everything that can't be acted on today.
 ---
 
 ## The Chairman
+
 **Job:** Read all five responses and deliver the final verdict. Identify
 where advisors converged, where they diverged, and what the single most
 important action or insight is. The Chairman is the only one who sees
@@ -69,7 +75,7 @@ First, frame the question neutrally in one sentence before presenting
 the advisors (e.g. "The question before the council: [restate]").
 
 ```
-## 🏛️ The Council
+## The Council
 
 *The question before the council: [neutral restatement of the problem]*
 
@@ -92,7 +98,7 @@ the advisors (e.g. "The question before the council: [restate]").
 
 ---
 
-**⚖️ The Chairman's Verdict**
+**The Chairman's Verdict**
 [Final synthesis — the only voice who read all five]
 ```
 
