@@ -11,10 +11,12 @@
 ![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white)
 ![tmux](https://img.shields.io/badge/tmux-%23000000?style=for-the-badge&logo=tmux&logoColor=%231BB91F)
 ![iTerm2](https://img.shields.io/badge/iTerm2-%23000000?style=for-the-badge&logo=iterm2&logoColor=white)
+[![Claude](https://img.shields.io/badge/Claude-D97757?style=for-the-badge&logo=claude&logoColor=white)](#)
 
 ## How to run
 
-Create and run `run.sh`
+1. For each environment variable in _.env.example_, run `export VARIABLE_NAME=value` 
+2. Create and run `run.sh`
 
 ## Testing
 
@@ -117,6 +119,23 @@ Task: `tasks/apps.yml`
 - [![Bruno](https://img.shields.io/badge/Bruno-F4AA41?logo=Bruno&logoColor=black)](#)
 - [![Notion](https://img.shields.io/badge/Notion-000?logo=notion&logoColor=fff)](#)
 
+## Claude (Code)
+
+Task: `tasks/claude.yml`
+
+Installs Claude Code and some token-saving utils. The following are tracked in the `.claude` directory:
+
+- `CLAUDE.md` - behavioural settings for Claude
+- `settings.json` - as implied
+- `skills` — a directory containing all the skills
+- `commands` — a directory containing some useful commands
+- `scripts` — a directory containing scripts used by skills/commands
+- `statusline.sh` — a script that displays the current working directory and the number of modified files
+
+### Skills
+
+Skills are stored in the `skills` directory.
+
 ## Dotfiles managed by Stow
 
 | Package                                                         | Symlinks to                                                |
@@ -127,6 +146,7 @@ Task: `tasks/apps.yml`
 | `neovim/.config/nvim`                                           | `~/.config/nvim`                                           |
 | `vscode/Library/Application Support/Code/User/settings.json`    | `~/Library/Application Support/Code/User/settings.json`    |
 | `vscode/Library/Application Support/Code/User/keybindings.json` | `~/Library/Application Support/Code/User/keybindings.json` |
+| `.claude`                                                      | `~/.claude`                                                |
 
 ## Manual steps required
 
