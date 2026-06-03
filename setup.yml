@@ -30,6 +30,3 @@
     - include_tasks: tasks/claude.yml
       tags:
         - claude
-    - include_tasks: tasks/ai.yml
-      tags:
-        - ai
