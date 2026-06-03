@@ -14,7 +14,7 @@
 - **Assumptions:** If an architectural choice is ambiguous, do not make assumptions, but pause and ask me before proceeding.
 - **Emojis:** Do not use emojis especially in codebases (comments, logs etc)
 - **Be critical:**: Don't agree with what I say if you have reservations. I'd much rather you be a pessimist and flag potential issues which I will consider and reject as non-issues, than you agreeing with what I say and prod exploding at 3am because of something we didn't consider.
-- **URLs:**: When provided with a URL immediately invoke a web search
+- **URLs:** When provided with a URL immediately use `fetch`, `curl`, or a browser tool
 
 ## This repo
 
