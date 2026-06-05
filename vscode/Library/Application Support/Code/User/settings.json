@@ -23,7 +23,6 @@
     "workbench.navigationControl.enabled": false,
     "workbench.layoutControl.enabled": false,
     "workbench.startupEditor": "none",
-    "github.copilot.nextEditSuggestions.enabled": true,
     "editor.inlineSuggest.minShowDelay": 500,
     // Default formatter
     "editor.defaultFormatter": "esbenp.prettier-vscode",
@@ -169,7 +168,4 @@
     "claudeCode.preferredLocation": "panel",
     "chat.disableAIFeatures": true,
     "hediet.vscode-drawio.resizeImages": null,
-    "codeium.enableConfig": {
-        "*": true
-    },
 }
