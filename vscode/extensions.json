@@ -2,14 +2,11 @@
 {
     "recommendations": [
         // PYTHON
-        "ms-python.python",
+        // "ms-python.python",
         "ms-python.debugpy",
-        // "ms-toolsai.jupyter",
-        "ms-python.black-formatter",
-        "ms-python.isort",
-        "ms-python.pylint",
         "ms-python.vscode-pylance",
         "ms-python.vscode-python-envs",
+        "charliermarsh.ruff",
         // GENERIC
         "enkia.tokyo-night",
         "BracketPairColorDLW.bracket-pair-color-dlw",

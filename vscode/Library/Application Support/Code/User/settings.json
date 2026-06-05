@@ -24,21 +24,22 @@
     "workbench.layoutControl.enabled": false,
     "workbench.startupEditor": "none",
     "editor.inlineSuggest.minShowDelay": 500,
+    "editor.quickSuggestions": {
+        "other": "on",
+        "comments": "off",
+        "strings": "on"
+    },
     // Default formatter
     "editor.defaultFormatter": "esbenp.prettier-vscode",
     // PYTHON Configuration
     "[python]": {
-        "editor.defaultFormatter": "ms-python.black-formatter",
+        "editor.defaultFormatter": "charliermarsh.ruff",
         "editor.formatOnSave": true,
         "editor.codeActionsOnSave": {
             "source.organizeImports": "explicit",
         },
         "editor.tabSize": 4,
     },
-    "isort.args": [
-        "--profile",
-        "black"
-    ],
     "python.analysis.typeCheckingMode": "standard",
     // GO Configuration
     "[go]": {
