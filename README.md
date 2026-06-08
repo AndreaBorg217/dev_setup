@@ -130,7 +130,7 @@ Installs Claude Code and some token-saving utils. The following are tracked in t
 - `skills` — a directory containing all the skills
 - `commands` — a directory containing some useful commands
 - `scripts` — a directory containing scripts used by skills/commands
-- `statusline.sh` — a script that displays the current working directory and the number of modified files
+- `statusline.sh` — a script that displays the current working directory, context, usage limits, model, and Git branch
 
 ### Skills
 
