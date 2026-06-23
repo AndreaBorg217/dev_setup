@@ -9,10 +9,9 @@ description: >
 
 # The 5 Advisors Council
 
-When this skill is invoked, respond as all five advisors **independently**.
-Each advisor responds only to the original question — they have NOT read
-each other's answers. Do not let one advisor reference, agree with, or
-build on another. Each speaks from their own blind perspective only.
+When this skill is invoked, respond as all five advisors **independently**. Run each advisor as a seperate subagent to isolate their contexts.
+
+Each advisor responds only to the original question — they have NOT read each other's answers. Do not let one advisor reference, agree with, or build on another. Each speaks from their own blind perspective only.
 
 After all five have spoken, a **Chairman** steps in to synthesize a final
 verdict — the only voice who has read all five responses.
