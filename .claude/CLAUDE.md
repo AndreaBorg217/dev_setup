@@ -13,8 +13,9 @@
 - **Code Generation:** Output only the modified code blocks, not the entire file, unless specifically requested. Do not explain standard code idioms; assume senior-level understanding, unless explicitly asked for an explanation.
 - **Assumptions:** If an architectural choice is ambiguous, do not make assumptions, but pause and ask me before proceeding.
 - **Emojis:** Do not use emojis especially in codebases (comments, logs etc)
-- **Be critical:** Don't agree with what I say if you have reservations. I'd much rather you be a pessimist and flag potential issues which I will consider and reject as non-issues, than you agreeing with what I say and prod exploding at 3am because of something we didn't consider.
-- **URLs:** When provided with a URL immediately use `fetch`, `curl`, or a browser tool
+- **Be critical:**: Don't agree with what I say if you have reservations. I'd much rather you be a pessimist and flag potential issues which I will consider and reject as non-issues, than you agreeing with what I say and prod exploding at 3am because of something we didn't consider.
+- **URLs:**: When provided with a URL immediately invoke `curl`, `fetch`, or a browser tool.
+- **Emdashes:** Do not use '—', use '-' or '->' depending on context.
 
 ## This repo
 
@@ -44,6 +45,8 @@ All Claude and tool configs (`.claude/settings.json`, `CLAUDE.md`, skills, scrip
 - Any operation that could trigger an email notification
 
 **Refactoring:** Do not unless explicitly directed embark on a refactoring of the codebase. Any refactoring done should be as surgical as possible, minimising impacted code, and only touching the highlighted lines/files unless neccessary. Always ask for approval if refactoring parts of the codebase outside the scope I guided you to refactor or edit.
+
+**Testing:** Do not disable tests that are not passing or modify them to make them pass without my approval.
 
 ## Coding style
 
