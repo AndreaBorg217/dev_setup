@@ -1,15 +1,13 @@
 {
+    // Aesthetics
     "workbench.colorTheme": "Tokyo Night",
     "workbench.iconTheme": "material-icon-theme",
-    "files.autoSave": "off",
-    "update.mode": "none",
-    "extensions.autoUpdate": false,
-    "editor.formatOnSave": true,
     "editor.fontSize": 18,
     "window.zoomLevel": 2,
-    "editor.tabSize": 4,
-    "editor.insertSpaces": true,
-    "editor.detectIndentation": false,
+    // Disable updates
+    "update.mode": "none",
+    "extensions.autoUpdate": false,
+    // Strip UI
     "editor.minimap.enabled": false,
     "workbench.sideBar.location": "left",
     "breadcrumbs.enabled": false, // path breadcrumbs above editor
@@ -18,19 +16,24 @@
     "editor.autoClosingBrackets": "never",
     "editor.autoClosingQuotes": "never",
     "editor.autoSurround": "never",
-    "window.commandCenter": true,
+    "window.commandCenter": true, // search at the top
     "workbench.activityBar.location": "default",
-    "workbench.navigationControl.enabled": false,
-    "workbench.layoutControl.enabled": false,
+    "workbench.navigationControl.enabled": false, // arrows next to search 
+    "workbench.layoutControl.enabled": false, // buttons to toggle panels etc top right
     "workbench.startupEditor": "none",
+    // Suggestions
     "editor.inlineSuggest.minShowDelay": 500,
     "editor.quickSuggestions": {
         "other": "on",
         "comments": "off",
         "strings": "on"
     },
-    // Default formatter
-    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    // Formatting and LSP
+    "files.autoSave": "off",
+    "editor.formatOnSave": true,
+    "editor.tabSize": 4,
+    "editor.insertSpaces": true,
+    "editor.detectIndentation": false,
     // PYTHON Configuration
     "[python]": {
         "editor.defaultFormatter": "charliermarsh.ruff",
@@ -95,6 +98,7 @@
             "silent": true,
         },
         {
+            // - to go to end of text
             "before": [
                 "-"
             ],
@@ -103,6 +107,7 @@
             ],
         },
         {
+            // ` to go to start of text
             "before": [
                 "`"
             ],
@@ -111,6 +116,7 @@
             ],
         },
         {
+            // R to redo
             "before": [
                 "R"
             ],
@@ -120,7 +126,7 @@
         },
         {
             "before": [
-                "s"
+                "s" // like flash.nvim
             ],
             "after": [
                 "<leader>",
