@@ -122,6 +122,7 @@ Extensions are managed via `vscode/manage_extensions.py`:
 python3 vscode/manage_extensions.py --install    # install missing extensions from extensions.json
 python3 vscode/manage_extensions.py --uninstall  # uninstall all extensions
 python3 vscode/manage_extensions.py --reinstall  # uninstall all, then install from extensions.json
+python3 vscode/manage_extensions.py --list       # list installed extensions with versions
 ```
 
 ### Apps
