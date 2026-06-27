@@ -135,8 +135,7 @@
     },
     // VIM
     "vim.incsearch": true,
-    "vim.searchHighlightColor": "#FF0000",
-    "vim.searchHighlightTextColor": "#fff",
+    "vim.searchHighlightTextColor": "#FF0000",
     "vim.highlightedyank.enable": true,
     "vim.highlightedyank.color": "#F55D40",
     "vim.highlightedyank.duration": 200,
