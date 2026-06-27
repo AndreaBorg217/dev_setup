@@ -105,7 +105,24 @@ Task: `tasks/vscode.yml`
 
 It is effectively a replica of the Neovim configs above.
 
-`extensions.json` is installed. `settings.json` & `keybindings.json` are stowed.
+`keybindings.json` is stowed (live symlink). `settings.json` is handled by `vscode/merge_settings.py`:
+
+- **No `settings.local.json`** -> base is symlinked, so edits are live (no re-run needed).
+- **`settings.local.json` present** -> base + local are deep-merged into a generated file (cannot be a symlink). Edits to either source are **not** live.
+
+After editing `settings.json` or `settings.local.json`, re-apply with:
+
+```bash
+ansible-playbook setup.yml --tags vscode
+```
+
+Extensions are managed via `vscode/manage_extensions.py`:
+
+```bash
+python3 vscode/manage_extensions.py --install    # install missing extensions from extensions.json
+python3 vscode/manage_extensions.py --uninstall  # uninstall all extensions
+python3 vscode/manage_extensions.py --reinstall  # uninstall all, then install from extensions.json
+```
 
 ### Apps
 
@@ -127,10 +144,15 @@ Installs Claude Code and some token-saving utils. The following are tracked in t
 
 - `CLAUDE.md` - behavioural settings for Claude
 - `settings.json` - as implied
-- `skills` — a directory containing all the skills
-- `commands` — a directory containing some useful commands
-- `scripts` — a directory containing scripts used by skills/commands
-- `statusline.sh` — a script that displays the current working directory, context, usage limits, model, and Git branch
+- `skills` - a directory containing all the skills
+- `commands` - a directory containing some useful commands
+- `scripts` - a directory containing scripts used by skills/commands
+- `statusline.sh` - a script that displays the current working directory, context, usage limits, model, and Git branch
+
+Claude Code natively supports machine-local overrides without any Ansible involvement (see [Local overrides](#local-overrides)):
+
+- `~/.claude/CLAUDE.local.md` - loaded automatically alongside `CLAUDE.md` every session ([docs](https://docs.anthropic.com/en/docs/claude-code/memory#choose-where-to-put-claude-md-files))
+- `~/.claude/settings.local.json` - merged on top of `settings.json` by Claude Code itself ([docs](https://docs.anthropic.com/en/docs/claude-code/settings))
 
 ### Skills
 
@@ -144,9 +166,34 @@ Skills are stored in the `skills` directory.
 | `terminal/.p10k.zsh`                                            | `~/.p10k.zsh`                                              |
 | `tmux/.tmux.conf`                                               | `~/.tmux.conf`                                             |
 | `neovim/.config/nvim`                                           | `~/.config/nvim`                                           |
-| `vscode/Library/Application Support/Code/User/settings.json`    | `~/Library/Application Support/Code/User/settings.json`    |
+| `vscode/Library/Application Support/Code/User/settings.json`    | `~/Library/Application Support/Code/User/settings.json` (generated, not stowed - see [Local overrides](#local-overrides)) |
 | `vscode/Library/Application Support/Code/User/keybindings.json` | `~/Library/Application Support/Code/User/keybindings.json` |
 | `.claude`                                                      | `~/.claude`                                                |
+
+## Local overrides
+
+Some config files support machine-local overrides - gitignored files that Ansible merges on top of the base config at provision time. This lets a specific machine diverge from the shared defaults without touching the repo.
+
+| Base file | Local override | Applied by |
+| --------- | -------------- | ---------- |
+| `vscode/Library/Application Support/Code/User/settings.json` | `vscode/settings.local.json` | `tasks/vscode.yml` - deep-merges local on top of base, writes result to `~/Library/Application Support/Code/User/settings.json` |
+| `~/.claude/CLAUDE.md` | `~/.claude/CLAUDE.local.md` | Claude Code natively - loaded every session alongside `CLAUDE.md`, no Ansible required |
+| `~/.claude/settings.json` | `~/.claude/settings.local.json` | Claude Code natively - merged by the app itself, no Ansible required |
+
+**How to use:** create the `.local` file with only the keys you want to override. Example - disable Python autoformat on a specific machine:
+
+```json
+{
+    "[python]": {
+        "editor.formatOnSave": false,
+        "editor.codeActionsOnSave": {
+            "source.organizeImports": "never"
+        }
+    }
+}
+```
+
+Re-run `tasks/vscode.yml` after editing the local override to apply it.
 
 ## Manual steps required
 
