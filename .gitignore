@@ -1,2 +1,5 @@
 *.env
 !.env.example
+vscode/settings.local.json
+__pycache__/
+*.py[cod]
