@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
+import argparse
 import json
+import logging
 import re
 import subprocess
-import argparse
-import logging
 from pathlib import Path
 
 EXTENSIONS_JSON = Path(__file__).parent / "extensions.json"
@@ -23,7 +23,9 @@ def parse_extensions(path):
 
 
 def get_installed():
-    result = subprocess.run(["code", "--list-extensions"], capture_output=True, text=True, check=True)
+    result = subprocess.run(
+        ["code", "--list-extensions"], capture_output=True, text=True, check=True
+    )
     return {e.lower() for e in result.stdout.strip().splitlines() if e}
 
 
@@ -47,7 +49,12 @@ def print_installed():
 def install(extensions):
     installed = get_installed()
     missing = [e for e in extensions if e.lower() not in installed]
-    log.info("%d/%d already installed, installing %d", len(extensions) - len(missing), len(extensions), len(missing))
+    log.info(
+        "%d/%d already installed, installing %d",
+        len(extensions) - len(missing),
+        len(extensions),
+        len(missing),
+    )
     for ext in missing:
         log.info("installing: %s", ext)
         subprocess.run(["code", "--install-extension", ext], check=True)
@@ -60,7 +67,9 @@ def uninstall_all():
     while remaining:
         for ext in sorted(remaining):
             log.info("uninstalling: %s", ext)
-            result = subprocess.run(["code", "--uninstall-extension", ext], capture_output=True, text=True)
+            result = subprocess.run(
+                ["code", "--uninstall-extension", ext], capture_output=True, text=True
+            )
             if result.returncode != 0:
                 message = (result.stderr or result.stdout).strip()
                 log.warning("uninstall failed for %s: %s", ext, message)
@@ -74,11 +83,21 @@ def uninstall_all():
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Manage VSCode extensions from extensions.json")
+    parser = argparse.ArgumentParser(
+        description="Manage VSCode extensions from extensions.json"
+    )
     group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument("--install", action="store_true", help="Install missing extensions")
-    group.add_argument("--uninstall", action="store_true", help="Uninstall all extensions")
-    group.add_argument("--reinstall", action="store_true", help="Uninstall all, then install from extensions.json")
+    group.add_argument(
+        "--install", action="store_true", help="Install missing extensions"
+    )
+    group.add_argument(
+        "--uninstall", action="store_true", help="Uninstall all extensions"
+    )
+    group.add_argument(
+        "--reinstall",
+        action="store_true",
+        help="Uninstall all, then install from extensions.json",
+    )
     group.add_argument("--list", action="store_true", help="List installed extensions")
     args = parser.parse_args()
 
