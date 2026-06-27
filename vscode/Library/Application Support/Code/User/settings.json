@@ -164,8 +164,6 @@
         "launchpad": true,
     },
     "cSpell.diagnosticLevel": "Hint",
-    "chat.viewSessions.orientation": "stacked",
-    "claudeCode.preferredLocation": "panel",
     "chat.disableAIFeatures": true,
     "hediet.vscode-drawio.resizeImages": null,
 }
