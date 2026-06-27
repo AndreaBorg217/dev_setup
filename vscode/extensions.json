@@ -36,15 +36,13 @@
         // GIT
         "mhutchie.git-graph",
         "eamodio.gitlens",
-        // AI
-        // "GitHub.copilot", // requires github login
-        // "GitHub.copilot-chat", // requires github login
         "Supermaven.supermaven",
-        "anthropic.claude-code",
+        // "anthropic.claude-code",
         // GO
         "golang.go",
         // JAVA
         "vscjava.vscode-java-pack",
+        "vmware.vscode-boot-dev-pack",
         // TERRAFORM
         // "hashicorp.terraform",
         // ANSIBLE
