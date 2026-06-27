@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import json
-import re
 import logging
+import re
 from pathlib import Path
 
 REPO_USER_DIR = Path(__file__).parent / "Library/Application Support/Code/User"
