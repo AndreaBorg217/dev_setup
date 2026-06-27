@@ -7,35 +7,34 @@
         "ms-python.vscode-pylance",
         "ms-python.vscode-python-envs",
         "charliermarsh.ruff",
-        // GENERIC
+        // AESTHETICS
         "enkia.tokyo-night",
         "BracketPairColorDLW.bracket-pair-color-dlw",
         "streetsidesoftware.code-spell-checker",
         "adpyke.codesnap",
         "oderwat.indent-rainbow",
-        // "ms-vsliveshare.vsliveshare",
         "PKief.material-icon-theme",
+        "hediet.vscode-drawio",
         // "naumovs.color-highlight",
-        "christian-kohler.path-intellisense",
         "wayou.vscode-todo-highlight",
+        // DOCKER & KUBERNETES
         "ms-azuretools.vscode-containers",
         "ms-kubernetes-tools.vscode-kubernetes-tools",
         "ms-vscode-remote.remote-containers",
-        // "tomoki1207.pdf",
-        "VisualStudioExptTeam.vscodeintellicode",
-        "hediet.vscode-drawio",
-        // "quicktype.quicktype",
         "redhat.vscode-yaml",
+        // VIM
         "vscodevim.vim",
         "tobias-z.vscode-harpoon",
         "usernamehw.errorlens",
-        // "SonarSource.sonarlint-vscode", // requires SonarCloud login through some remote Git
         // MARKDOWN
         "yzhang.markdown-all-in-one",
         "bierner.github-markdown-preview",
         // GIT
         "mhutchie.git-graph",
         "eamodio.gitlens",
+        // AI & AUTOCOMPLETE
+        "christian-kohler.path-intellisense",
+        "VisualStudioExptTeam.vscodeintellicode",
         "Supermaven.supermaven",
         // "anthropic.claude-code",
         // GO
@@ -48,13 +47,9 @@
         // ANSIBLE
         // "redhat.ansible",
         // AWS
-        // "amazonwebservices.aws-toolkit-vscode"
+        // "amazonwebservices.aws-toolkit-vscode", 
         // UI
         // "kisstkondoros.vscode-gutter-preview",
-        // "ritwickdey.LiveServer",
-        // DATA & DB
-        // "mechatroner.rainbow-csv",
-        // "bruno-api-client.bruno"
-        // "cweijan.vscode-mysql-client2"
+        // ritwickdey.LiveServer
     ]
 }
