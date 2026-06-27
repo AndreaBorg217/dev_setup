@@ -34,6 +34,8 @@
     "editor.tabSize": 4,
     "editor.insertSpaces": true,
     "editor.detectIndentation": false,
+    // Include gitignored files in search / quick open
+    "search.useIgnoreFiles": false,
     // PYTHON Configuration
     "[python]": {
         "editor.defaultFormatter": "charliermarsh.ruff",
