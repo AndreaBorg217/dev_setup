@@ -86,6 +86,7 @@
     "[jsonc]": {
         "editor.defaultFormatter": "vscode.json-language-features"
     },
+    // VIM
     "vim.normalModeKeyBindingsNonRecursive": [
         {
             "before": [
@@ -138,7 +139,6 @@
         "<C-a>": false,
         "<C-f>": false,
     },
-    // VIM
     "vim.incsearch": true,
     "vim.searchHighlightTextColor": "#FF0000",
     "vim.highlightedyank.enable": true,
