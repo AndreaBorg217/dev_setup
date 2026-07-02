@@ -4,8 +4,7 @@ import logging
 import re
 from pathlib import Path
 
-REPO_USER_DIR = Path(__file__).parent / "Library/Application Support/Code/User"
-BASE = REPO_USER_DIR / "settings.json"
+BASE = Path(__file__).parent / "settings.json"
 LOCAL = Path(__file__).parent / "settings.local.json"
 DEST = Path.home() / "Library/Application Support/Code/User/settings.json"
 
