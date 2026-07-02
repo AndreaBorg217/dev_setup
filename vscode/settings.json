@@ -46,7 +46,6 @@
             "source.fixAll.ruff": "explicit",
             "source.organizeImports.ruff": "explicit"
         },
-        "editor.tabSize": 4,
     },
     "python.analysis.typeCheckingMode": "standard",
     // GO Configuration
@@ -56,7 +55,6 @@
         "editor.codeActionsOnSave": {
             "source.organizeImports": "explicit",
         },
-        "editor.tabSize": 4,
     },
     "go.useLanguageServer": true,
     "go.lintOnSave": "package",
@@ -64,21 +62,17 @@
     // JAVASCRIPT/TYPESCRIPT/REACT Configuration
     "[javascript]": {
         "editor.defaultFormatter": "esbenp.prettier-vscode",
-        "editor.tabSize": 4,
     },
     "[javascriptreact]": {
         "editor.defaultFormatter": "esbenp.prettier-vscode",
-        "editor.tabSize": 4,
     },
     "[typescript]": {
         "editor.defaultFormatter": "esbenp.prettier-vscode",
         "editor.formatOnSave": true,
-        "editor.tabSize": 4,
     },
     "[typescriptreact]": {
         "editor.defaultFormatter": "esbenp.prettier-vscode",
         "editor.formatOnSave": true,
-        "editor.tabSize": 4,
     },
     "[json]": {
         "editor.defaultFormatter": "vscode.json-language-features",
