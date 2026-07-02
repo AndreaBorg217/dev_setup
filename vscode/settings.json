@@ -4,9 +4,11 @@
     "workbench.iconTheme": "material-icon-theme",
     "editor.fontSize": 18,
     "window.zoomLevel": 2,
-    // Disable updates
+    // Disable updates & telemetry
     "update.mode": "none",
     "extensions.autoUpdate": false,
+    "telemetry.telemetryLevel": "off",
+    "workbench.enableExperiments": false,
     // Strip UI
     "editor.minimap.enabled": false,
     "workbench.sideBar.location": "left",
@@ -41,7 +43,8 @@
         "editor.defaultFormatter": "charliermarsh.ruff",
         "editor.formatOnSave": true,
         "editor.codeActionsOnSave": {
-            "source.organizeImports": "explicit",
+            "source.fixAll.ruff": "explicit",
+            "source.organizeImports.ruff": "explicit"
         },
         "editor.tabSize": 4,
     },
@@ -57,17 +60,14 @@
     },
     "go.useLanguageServer": true,
     "go.lintOnSave": "package",
-    "window.workbenchFontSize": 14,
     "go.lintTool": "golangci-lint",
     // JAVASCRIPT/TYPESCRIPT/REACT Configuration
     "[javascript]": {
         "editor.defaultFormatter": "esbenp.prettier-vscode",
-        "editor.formatOnSave": true,
         "editor.tabSize": 4,
     },
     "[javascriptreact]": {
         "editor.defaultFormatter": "esbenp.prettier-vscode",
-        "editor.formatOnSave": true,
         "editor.tabSize": 4,
     },
     "[typescript]": {
@@ -90,9 +90,6 @@
         {
             "before": [
                 "<Esc>"
-            ],
-            "when": [
-                "editorFocus"
             ],
             "commands": [
                 ":nohl"
