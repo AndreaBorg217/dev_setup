@@ -20,7 +20,7 @@
     "editor.autoSurround": "never",
     "window.commandCenter": true, // search at the top
     "workbench.activityBar.location": "default",
-    "workbench.navigationControl.enabled": false, // arrows next to search 
+    "workbench.navigationControl.enabled": false, // arrows next to search
     "workbench.layoutControl.enabled": false, // buttons to toggle panels etc top right
     "workbench.startupEditor": "none",
     // Suggestions
@@ -36,12 +36,14 @@
     "editor.tabSize": 4,
     "editor.insertSpaces": true,
     "editor.detectIndentation": false,
+    "files.trimTrailingWhitespace": true,
+    "files.insertFinalNewline": true,
+    "files.trimFinalNewlines": true,
     // Include gitignored files in search / quick open
     "search.useIgnoreFiles": false,
     // PYTHON Configuration
     "[python]": {
         "editor.defaultFormatter": "charliermarsh.ruff",
-        "editor.formatOnSave": true,
         "editor.codeActionsOnSave": {
             "source.fixAll.ruff": "explicit",
             "source.organizeImports.ruff": "explicit"
@@ -51,7 +53,6 @@
     // GO Configuration
     "[go]": {
         "editor.defaultFormatter": "golang.go",
-        "editor.formatOnSave": true,
         "editor.codeActionsOnSave": {
             "source.organizeImports": "explicit",
         },
@@ -59,6 +60,9 @@
     "go.useLanguageServer": true,
     "go.lintOnSave": "package",
     "go.lintTool": "golangci-lint",
+    "gopls": {
+        "formatting.gofumpt": true
+    },
     // JAVASCRIPT/TYPESCRIPT/REACT Configuration
     "[javascript]": {
         "editor.defaultFormatter": "esbenp.prettier-vscode",
@@ -68,11 +72,9 @@
     },
     "[typescript]": {
         "editor.defaultFormatter": "esbenp.prettier-vscode",
-        "editor.formatOnSave": true,
     },
     "[typescriptreact]": {
         "editor.defaultFormatter": "esbenp.prettier-vscode",
-        "editor.formatOnSave": true,
     },
     "[json]": {
         "editor.defaultFormatter": "vscode.json-language-features",
