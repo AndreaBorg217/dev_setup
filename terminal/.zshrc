@@ -38,6 +38,9 @@ git() {
 # PYTHON FUNCTIONS
 # ============================================================================
 
+alias python=python3
+alias pip=pip3
+
 # Create a new virtual environment 
 venvc() {
     python3 -m venv .venv
@@ -142,4 +145,8 @@ docknets() {
 
     echo "Report saved to: $OUTPUT_FILE"
     echo "Total networks scanned: $(docker network ls --format "{{.Name}}" | grep -v "bridge\|host\|none" | wc -l)"
+}
+
+lsg () {
+    ls | grep -iE "$@"
 }
