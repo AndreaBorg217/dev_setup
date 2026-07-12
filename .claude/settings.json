@@ -58,7 +58,7 @@
           },
           {
             "type": "command",
-            "command": "python3 ~/Documents/GitHub/dev_setup/.claude/scripts/block-destructive-commands.py"
+            "command": "python3 ~/Documents/GitHub/dev_setup/.claude/hooks/block-destructive-commands.py"
                     }
                 ]
 },
@@ -67,7 +67,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 ~/Documents/GitHub/dev_setup/.claude/scripts/warn-general-purpose-agent.py"
+            "command": "python3 ~/Documents/GitHub/dev_setup/.claude/hooks/warn-general-purpose-agent.py"
           }
         ]
             }

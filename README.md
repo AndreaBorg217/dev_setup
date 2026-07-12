@@ -177,6 +177,7 @@ Some config files support machine-local overrides - gitignored files that Ansibl
 
 | Base file | Local override | Applied by |
 | --------- | -------------- | ---------- |
+| `~/.zshrc` | `~/.zshrc.local` | `terminal/.zshrc` - sourced at the end of the repo-managed shell config |
 | `vscode/Library/Application Support/Code/User/settings.json` | `vscode/settings.local.json` | `tasks/vscode.yml` - deep-merges local on top of base, writes result to `~/Library/Application Support/Code/User/settings.json` |
 | `~/.claude/CLAUDE.md` | `~/.claude/CLAUDE.local.md` | Claude Code natively - loaded every session alongside `CLAUDE.md`, no Ansible required |
 | `~/.claude/settings.json` | `~/.claude/settings.local.json` | Claude Code natively - merged by the app itself, no Ansible required |
