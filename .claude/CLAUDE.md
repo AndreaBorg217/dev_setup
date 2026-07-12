@@ -26,9 +26,20 @@
 
 - **Notion:** When I refer to Notion, I am referring specifically to the pages under Digital Brain. Do not read other pages or do writes/updates/deletes at all.
 
+## Subagent routing
+
+Route by task and set the Agent `model` param explicitly - do not inherit Opus.
+Reach for caveman agents (compressed output) whenever one fits.
+
+| Task | Model | Prefer agent |
+|------|-------|--------------|
+| Search / locate / read ("where is X", "what calls Y", map a dir) | `haiku` | `caveman:cavecrew-investigator` |
+| Implementation / edits | `sonnet` | `caveman:cavecrew-builder` (1-2 files) |
+| Planning | `opus` | `Plan` |
+
 ## This repo
 
-All Claude and tool configs (`.claude/settings.json`, `CLAUDE.md`, skills, scripts) are managed in `~/Documents/GitHub/dev_setup/` and tracked in git. **Always read and edit at `~/Documents/GitHub/dev_setup/.claude/` — never at `~/.claude/` directly, even when invoked from a different project.**
+All Claude and tool configs (`.claude/settings.json`, `CLAUDE.md`, skills, scripts) are managed in `~/Documents/GitHub/dev_setup/` and tracked in git. **Always read and edit at `~/Documents/GitHub/dev_setup/.claude/` - never at `~/.claude/` directly, even when invoked from a different project.**
 
 ## Boundaries
 
@@ -55,8 +66,6 @@ All Claude and tool configs (`.claude/settings.json`, `CLAUDE.md`, skills, scrip
 - Do not disable tests that are not passing or modify them to make them pass without my approval.
 
 **Exceptions:** Do not swallow exceptions using a generic try-catch block. Catch specific exceptions and unless directed let other exceptions throw. Exception handling is for unplanned error recovery not branches the code should already plan for. Do not use exceptions for control flow, use if/else or guard clauses instead.
-
-**Libraries:** When working on libraries or frameworks (Flink, Airflow, Kafka) rely heavily on documentation and not on memory. If a feature is already provided in the library, do not implement a new solution, always prefer to use what is natively available. This especially applies for configurations that cannot be caught through compiler/LSP.
 
 - **Commits:** When I give you a task, implement it in atomic units of work, to reflect a commit. When done from a unit of work, pause, and ask me to review your work and commit, before proceeding with the next unit of work.
 
