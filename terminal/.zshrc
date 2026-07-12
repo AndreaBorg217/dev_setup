@@ -150,3 +150,7 @@ docknets() {
 lsg () {
     ls | grep -iE "$@"
 }
+
+gbc () {
+    git branch "$@" && git checkout "$@"
+}
