@@ -36,6 +36,7 @@
         "christian-kohler.path-intellisense",
         "VisualStudioExptTeam.vscodeintellicode",
         "Supermaven.supermaven",
+        "coderabbit.coderabbit-vscode",
         // "anthropic.claude-code",
         // GO
         "golang.go",
@@ -47,7 +48,7 @@
         // ANSIBLE
         // "redhat.ansible",
         // AWS
-        // "amazonwebservices.aws-toolkit-vscode", 
+        // "amazonwebservices.aws-toolkit-vscode",
         // UI
         // "kisstkondoros.vscode-gutter-preview",
         // ritwickdey.LiveServer
