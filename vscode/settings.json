@@ -23,7 +23,12 @@
     "workbench.navigationControl.enabled": false, // arrows next to search
     "workbench.layoutControl.enabled": false, // buttons to toggle panels etc top right
     "workbench.startupEditor": "none",
-    // Suggestions
+    // AI
+    "chat.disableAIFeatures": true,
+    "coderabbit.agentType": "Claude Code",
+    "coderabbit.autoReviewMode": "disabled",
+    "coderabbit.region": "eu",
+    "coderabbit.autoStartTask": false,
     "editor.inlineSuggest.minShowDelay": 500,
     "editor.quickSuggestions": {
         "other": "on",
@@ -165,6 +170,5 @@
         "launchpad": true,
     },
     "cSpell.diagnosticLevel": "Hint",
-    "chat.disableAIFeatures": true,
     "hediet.vscode-drawio.resizeImages": null,
 }
