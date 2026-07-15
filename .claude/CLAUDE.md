@@ -10,3 +10,8 @@ Global Claude Code instructions are organized in `~/.claude/rules/`.
 - `config-management.md`: where this global config is maintained.
 
 Rules load automatically. Do not duplicate rule content here.
+
+# Compact instructions
+
+When compacting, preserve: task goals, decisions made, file changes in progress, test results, error messages under investigation.
+Discard: exploratory search results, raw command output, intermediate reasoning, completed subtask details.
