@@ -6,5 +6,6 @@
 | Task | Model | Prefer agent |
 |------|-------|--------------|
 | Search, locate, read, "where is X", "what calls Y", map a directory | `haiku` | `caveman:cavecrew-investigator` |
+| Loops, polling | `haiku` | `claude` |
 | Implementation or edits | `sonnet` | `caveman:cavecrew-builder` for 1-2 files |
 | Planning | `opus` | `Plan` |

@@ -9,6 +9,7 @@
 ## Preferences
 
 - Do not repeat or summarize my message. Start working on the task.
+- When executing tasks, do not output conversational filler, commentary, or narration between steps. Only use tools and print the final result.
 - When done, do not explain what you did; send `Done` and I will review then revert accordingly.
 - Be concise, direct, and technical.
 - Output only modified code blocks, not entire files, unless specifically requested.
