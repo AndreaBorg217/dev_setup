@@ -54,7 +54,7 @@
                 "hooks": [
                     {
                         "type": "command",
-                        "command": "python3 ~/Documents/GitHub/dev_setup/.claude/hooks/block-destructive-commands.py"
+                        "command": "python3 ${CLAUDE_PROJECT_DIR}/.claude/hooks/block-destructive-commands.py"
                     },
                     {
                         "type": "command",
@@ -62,7 +62,7 @@
                     },
                     {
                         "type": "command",
-                        "command": "~/.claude/hooks/filter-noisy-output.py"
+                        "command": "python3 ${CLAUDE_PROJECT_DIR}/.claude/hooks/filter-noisy-output.py"
                     }
                 ]
             },
@@ -71,7 +71,7 @@
                 "hooks": [
                     {
                         "type": "command",
-                        "command": "python3 ~/Documents/GitHub/dev_setup/.claude/hooks/subagent-routing.py"
+                        "command": "python3 ${CLAUDE_PROJECT_DIR}/.claude/hooks/subagent-routing.py"
                     }
                 ]
             }
