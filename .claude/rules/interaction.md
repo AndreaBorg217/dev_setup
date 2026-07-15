@@ -17,7 +17,10 @@
 - If an architectural choice is ambiguous, do not assume. Pause and ask before proceeding.
 - Do not use emojis, especially in codebases such as comments, logs, and docs.
 - Be critical. If you have reservations, flag them instead of agreeing by default.
-- When provided with a URL or asked to "link me", immediately invoke `WebSearch`, `curl`, or `fetch`.
-- When asked for "research", always invoke `WebSearch`.
+- When provided with a URL or asked to "link me", delegate to a Haiku subagent
+  to invoke `WebSearch`, `curl`, or `fetch` and return only the relevant
+  summary and source links.
+- When asked for "research", delegate to a Haiku subagent to invoke
+  `WebSearch` and return a concise sourced summary.
 - Do not use em dashes. Use `-` or `->` depending on context.
 - When I refer to Notion, I mean only pages under Digital Brain. Do not read other pages and do not write, update, or delete Notion content.

@@ -1,5 +1,5 @@
 {
-  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+    "$schema": "https://json.schemastore.org/claude-code-settings.json",
     "permissions": {
         "allow": [
             "Bash(ls *)",
@@ -41,12 +41,12 @@
             "Write(~/Documents/GitHub/dev_setup/.claude/**)"
         ]
     },
-  "model": "opusplan",
-"env": {
-    "ANTHROPIC_DEFAULT_SONNET_MODEL": "claude-sonnet-4-6",
-    "ANTHROPIC_DEFAULT_OPUS_MODEL": "claude-opus-4-6",
-    "CLAUDE_CODE_EFFORT_LEVEL": "medium"
-  },
+    "model": "opusplan",
+    "env": {
+        "ANTHROPIC_DEFAULT_SONNET_MODEL": "claude-sonnet-4-6",
+        "ANTHROPIC_DEFAULT_OPUS_MODEL": "claude-opus-4-6",
+        "CLAUDE_CODE_EFFORT_LEVEL": "medium"
+    },
     "hooks": {
         "PreToolUse": [
             {
@@ -54,22 +54,26 @@
                 "hooks": [
                     {
                         "type": "command",
+                        "command": "python3 ~/Documents/GitHub/dev_setup/.claude/hooks/block-destructive-commands.py"
+                    },
+                    {
+                        "type": "command",
                         "command": "rtk hook claude"
-          },
-          {
-            "type": "command",
-            "command": "python3 ~/Documents/GitHub/dev_setup/.claude/hooks/block-destructive-commands.py"
+                    },
+                    {
+                        "type": "command",
+                        "command": "~/.claude/hooks/filter-noisy-output.sh"
                     }
                 ]
-},
-      {
-        "matcher": "Agent",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python3 ~/Documents/GitHub/dev_setup/.claude/hooks/warn-general-purpose-agent.py"
-          }
-        ]
+            },
+            {
+                "matcher": "Agent",
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "python3 ~/Documents/GitHub/dev_setup/.claude/hooks/subagent-routing.py"
+                    }
+                ]
             }
         ]
     },
@@ -95,5 +99,5 @@
             }
         }
     },
-  "skipAutoPermissionPrompt": false
+    "skipAutoPermissionPrompt": false
 }
