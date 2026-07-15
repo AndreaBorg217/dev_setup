@@ -62,7 +62,7 @@
                     },
                     {
                         "type": "command",
-                        "command": "~/.claude/hooks/filter-noisy-output.sh"
+                        "command": "~/.claude/hooks/filter-noisy-output.py"
                     }
                 ]
             },
