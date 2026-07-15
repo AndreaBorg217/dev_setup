@@ -157,6 +157,7 @@
     },
     // GITLENS Configuration
     "gitlens.currentLine.enabled": false,
+    "gitlens.codeLens.enabled": false,
     "gitlens.views.scm.grouped.views": {
         "commits": true,
         "branches": true,
