@@ -19,6 +19,18 @@ CONFIG_UNLOCK_ENV = "CLAUDE_CONFIG_UNLOCK"
 LARGE_READ_BYTES = 128 * 1024
 MAX_READ_LINES = 400
 MAX_SINGLE_LINE_BYTES = 16 * 1024
+VERBOSE_OUTPUT_LINES = 80
+
+VERBOSE_COMMAND_RE = re.compile(
+    r"^(?:brew\s+(?:install|upgrade|reinstall)\b"
+    r"|pip3?\s+install\b"
+    r"|npm\s+(?:install|ci|update)\b"
+    r"|yarn(?:\s+install)?\b"
+    r"|bundle\s+install\b"
+    r"|cargo\s+(?:build|install)\b"
+    r"|apt(?:-get)?\s+install\b"
+    r")"
+)
 
 LEVELS = {"critical": 1, "high": 2, "strict": 3}
 SAFETY_LEVEL = "high"
@@ -605,6 +617,17 @@ def _bounded_read(tool_input: dict[str, Any], cwd: str | None) -> dict[str, Any]
     }
 
 
+def _wrap_verbose_command(command: str) -> str:
+    stripped = command.strip()
+    if VERBOSE_COMMAND_RE.match(stripped):
+        n = VERBOSE_OUTPUT_LINES
+        return (
+            f"({command}) 2>&1 | "
+            f"awk 'NR<={n}{{print}} NR=={n + 1}{{print \"...[output truncated to {n} lines by policy]\"; exit}}'"
+        )
+    return command
+
+
 def _run_rtk(payload: dict[str, Any], normalized_command: str) -> dict[str, Any]:
     if shutil.which("rtk") is None:
         return {}
@@ -700,11 +723,17 @@ def evaluate_pre_tool(payload: dict[str, Any]) -> dict[str, Any]:
         if pattern.search(normalized):
             return deny(rule_id, reason)
 
+    command = _wrap_verbose_command(command)
     try:
         rtk_output = _run_rtk(payload, command)
     except (OSError, subprocess.SubprocessError, ValueError, RuntimeError, json.JSONDecodeError):
-        return {}
-    return rtk_output
+        rtk_output = {}
+    if rtk_output:
+        return rtk_output
+    original_command = str(tool_input.get("command", ""))
+    if command != original_command:
+        return {"hookSpecificOutput": {"updatedInput": {**tool_input, "command": command}}}
+    return {}
 
 
 def evaluate_config_change(payload: dict[str, Any]) -> dict[str, Any]:

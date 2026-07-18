@@ -6,6 +6,14 @@
     "CLAUDE_CODE_EFFORT_LEVEL": "medium"
   },
     "permissions": {
+    "deny": [
+      "Read(**/node_modules/**)",
+      "Read(**/.git/objects/**)",
+      "Read(**/dist/**)",
+      "Read(**/build/**)",
+      "Read(**/*.lock)",
+      "Read(**/*.log)"
+    ],
         "allow": [
             "Bash(ls *)",
             "Bash(find *)",
