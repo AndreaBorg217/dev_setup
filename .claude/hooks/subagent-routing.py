@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 """
-PreToolUse Hook: nudge Agent calls toward explicit, cheaper routing.
+PreToolUse Hook: require permission for Opus and nudge Agent calls toward
+explicit, cheaper routing.
 
-The hook asks instead of denying so the model can proceed when an exception is
-intentional. It does not rewrite Agent input.
+The hook asks before Opus selections and tells the model to retry with Sonnet
+when permission is declined. For other routing mismatches, it asks so the model
+can proceed when an exception is intentional. It does not rewrite Agent input.
 """
 
 import json
@@ -79,6 +81,14 @@ def model_family(model):
     return normalized
 
 
+def is_opus_model(model):
+    if not isinstance(model, str):
+        return False
+
+    normalized = model.strip().lower()
+    return "opus" in normalized or normalized == "best"
+
+
 def is_pure_locate(text):
     return matches_any(text, LOCATE_PATTERNS) and not matches_any(text, ANALYSIS_PATTERNS)
 
@@ -87,7 +97,7 @@ def expected_model(subagent_type, text):
     agent = subagent_type.lower()
 
     if agent == "plan" or matches_any(text, PLANNING_PATTERNS):
-        return "opus", "Planning subagents should use model=opus."
+        return "sonnet", "Planning subagents should use model=sonnet."
 
     if "cavecrew-builder" in agent or matches_any(text, IMPLEMENTATION_PATTERNS):
         return "sonnet", "Implementation/edit subagents should use model=sonnet."
@@ -135,6 +145,12 @@ def main():
     subagent_type = subagent_type if isinstance(subagent_type, str) else ""
     model = tool_input.get("model", "")
     text = text_blob(tool_input)
+
+    if is_opus_model(model):
+        ask(
+            "Opus requires explicit user permission for this Agent call. "
+            "If permission is declined, retry the same call with model=sonnet."
+        )
 
     if subagent_type == "general-purpose":
         ask(GENERAL_PURPOSE_REASON)
