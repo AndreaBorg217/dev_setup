@@ -6,7 +6,8 @@
   subagents; each subagent starts with a cold, independent cache.
 - Set the Agent `model` parameter explicitly. The routing hook checks the
   detailed defaults: `haiku` for search/read/noisy/research/triage/loops,
-  `sonnet` for implementation or edits, and `opus` for planning.
+  and `sonnet` for planning, implementation, or edits. Opus requires explicit
+  user permission for each Agent call; if declined, retry with Sonnet.
 - Prefer caveman agents with compressed output when they fit the task. For
   multi-file implementation, keep coherence in the main thread.
 - Ask subagents that run noisy commands or fetch docs to retain raw output in
