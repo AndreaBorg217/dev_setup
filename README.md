@@ -147,6 +147,8 @@ Installs Claude Code and some token-saving utils. The following are tracked in t
 - `settings.json` - as implied
 - `skills` - a directory containing all the skills
 - `commands` - a directory containing some useful commands
+- `hooks` - safety, output-filtering, and subagent-routing hooks; see
+  [the hook documentation](.claude/hooks/README.md)
 - `scripts` - a directory containing scripts used by skills/commands
 - `statusline.sh` - a script that displays the current working directory, context, usage limits, model, and Git branch
 
@@ -231,5 +233,9 @@ A few things can't be automated due to macOS GUI restrictions:
 [Dreams of Code](https://www.youtube.com/@dreamsofcode)
 
 - [Go DAP](https://www.youtube.com/watch?v=i04sSQjd-qo)
+
+[Karan Bansal](https://github.com/karanb192)
+
+- [Claude Code safety hooks](https://github.com/karanb192/claude-code-hooks)
 
 Terminal font created by [romaktv](https://github.com/romkatv/powerlevel10k-media/blob/master/MesloLGS%20NF%20Regular.ttf)
