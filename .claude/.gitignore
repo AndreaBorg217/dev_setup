@@ -16,6 +16,8 @@
 !commands/**
 !hooks/
 !hooks/**
+hooks/__pycache__/
+hooks/**/*.py[cod]
 !output-styles/
 !output-styles/**
 !scripts/

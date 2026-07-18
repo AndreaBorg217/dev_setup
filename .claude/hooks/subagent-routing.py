@@ -1,36 +1,21 @@
 #!/usr/bin/env python3
-"""
-PreToolUse Hook: require permission for Opus and nudge Agent calls toward
-explicit, cheaper routing.
+"""PreToolUse hook that normalizes Agent routing before execution.
 
-The hook asks before Opus selections and tells the model to retry with Sonnet
-when permission is declined. For other routing mismatches, it asks so the model
-can proceed when an exception is intentional. It does not rewrite Agent input.
+Ordinary routing corrections use ``updatedInput`` so Claude does not have to
+spend another turn retrying the call. Opus (including the ``best`` alias) is
+the only routing choice escalated to the user, and its model is never silently
+downgraded.
 """
 
 import json
 import re
 import sys
 
-GENERAL_PURPOSE_REASON = (
-    "general-purpose is tools:* with uncompressed output - the biggest token "
-    "sink among subagents. Prefer: caveman:cavecrew-investigator (locate code), "
-    "caveman:cavecrew-builder (1-2 file edit), caveman:cavecrew-reviewer "
-    "(diff review), Explore (broad analysis), Plan (planning), "
-    "claude-code-guide (Claude Code/API/SDK), or claude with an explicit "
-    "model=haiku/sonnet as last-resort catch-all. Confirm only if none fit."
-)
-
-EXPLORE_LOCATE_REASON = (
-    "Explore returns uncompressed output. For pure locate/search tasks "
-    "('where is X', 'what calls Y', 'map this dir'), prefer "
-    "caveman:cavecrew-investigator with model=haiku. Confirm Explore only "
-    "when the scope is genuinely broad or analytical."
-)
 
 LOCATE_PATTERNS = [
     r"\b(where is|what calls|who calls|locate|search for|map (this )?(dir|directory))\b",
-    r"\bfind(?: all)? (?:references?|usages?|callers?|definitions?|files?)\b",
+    r"\bfind\b.{0,40}\b(references?|usages?|callers?|definitions?|files?)\b",
+    r"\b(search|scan)\b.{0,30}\b(codebase|repository|repo|files?|references?|usages?)\b",
     r"\bread (?:these )?files?\b",
 ]
 
@@ -41,11 +26,17 @@ ANALYSIS_PATTERNS = [
 PLANNING_PATTERNS = [
     r"\b(create|draft|write|produce|make)\b.{0,30}\b(plan|proposal|spec|design doc|architecture)\b",
     r"\b(implementation plan|planning|roadmap|technical spec|design proposal)\b",
+    r"\bplan\b.{0,30}\b(implementation|approach|work|changes?|feature|fix|steps?)\b",
 ]
 
 IMPLEMENTATION_PATTERNS = [
     r"\b(implement|edit|modify|patch|refactor|fix|update|change)\b",
     r"\b(write|create|add)\b.{0,40}\b(code|file|test|component|function|class|module|endpoint|api)\b",
+]
+
+REVIEW_PATTERNS = [
+    r"\b(review|code review|audit)\b",
+    r"\binspect\b.{0,30}\b(diff|patch|changes?)\b",
 ]
 
 HAIKU_PATTERNS = [
@@ -61,9 +52,19 @@ def matches_any(text, patterns):
     return any(re.search(pattern, text) for pattern in patterns)
 
 
+def normalize_agent(subagent_type):
+    if not isinstance(subagent_type, str):
+        return ""
+    return subagent_type.strip().lower()
+
+
+def agent_role(subagent_type):
+    """Return the unscoped agent name for built-in and plugin agents."""
+    return normalize_agent(subagent_type).rsplit(":", maxsplit=1)[-1]
+
+
 def text_blob(tool_input):
     parts = [
-        tool_input.get("subagent_type", ""),
         tool_input.get("description", ""),
         tool_input.get("prompt", ""),
     ]
@@ -82,96 +83,134 @@ def model_family(model):
 
 
 def is_opus_model(model):
-    if not isinstance(model, str):
-        return False
-
-    normalized = model.strip().lower()
-    return "opus" in normalized or normalized == "best"
+    normalized = model_family(model)
+    return normalized == "opus" or normalized == "best"
 
 
 def is_pure_locate(text):
-    return matches_any(text, LOCATE_PATTERNS) and not matches_any(text, ANALYSIS_PATTERNS)
+    conflicting_patterns = (
+        ANALYSIS_PATTERNS
+        + PLANNING_PATTERNS
+        + IMPLEMENTATION_PATTERNS
+        + REVIEW_PATTERNS
+    )
+    return matches_any(text, LOCATE_PATTERNS) and not matches_any(text, conflicting_patterns)
+
+
+def routed_subagent(subagent_type, text):
+    """Rewrite only agent selections with an unambiguous specialized target."""
+    agent = normalize_agent(subagent_type)
+
+    if agent == "general-purpose":
+        if matches_any(text, PLANNING_PATTERNS):
+            return "Plan"
+        if matches_any(text, IMPLEMENTATION_PATTERNS):
+            return "caveman:cavecrew-builder"
+        if matches_any(text, REVIEW_PATTERNS):
+            return "caveman:cavecrew-reviewer"
+        if is_pure_locate(text):
+            return "caveman:cavecrew-investigator"
+
+    if agent == "explore" and is_pure_locate(text):
+        return "caveman:cavecrew-investigator"
+
+    return subagent_type
 
 
 def expected_model(subagent_type, text):
-    agent = subagent_type.lower()
+    """Choose a model, giving an explicit agent role priority over keywords."""
+    agent = normalize_agent(subagent_type)
+    role = agent_role(subagent_type)
 
-    if agent == "plan" or matches_any(text, PLANNING_PATTERNS):
-        return "sonnet", "Planning subagents should use model=sonnet."
+    if agent == "plan" or role == "cavecrew-builder":
+        return "sonnet"
 
-    if "cavecrew-builder" in agent or matches_any(text, IMPLEMENTATION_PATTERNS):
-        return "sonnet", "Implementation/edit subagents should use model=sonnet."
+    if role in {"cavecrew-investigator", "cavecrew-reviewer"}:
+        return "haiku"
 
-    if (
-        agent == "claude"
-        or "cavecrew-investigator" in agent
-        or "cavecrew-reviewer" in agent
-        or matches_any(text, HAIKU_PATTERNS)
-    ):
-        return "haiku", (
-            "Search, read, noisy command, docs, research, triage, summarization, "
-            "verification, loop, and polling subagents should use model=haiku."
-        )
+    if agent in {"explore", "claude", "claude-code-guide", "general-purpose"}:
+        return "haiku"
 
-    return "haiku", "Default subagent model is haiku unless planning or implementation/editing."
+    if matches_any(text, PLANNING_PATTERNS + IMPLEMENTATION_PATTERNS):
+        return "sonnet"
+
+    if matches_any(text, HAIKU_PATTERNS):
+        return "haiku"
+
+    return "haiku"
 
 
-def ask(reason):
-    response = {
+def hook_output(decision, updated_input, reason):
+    return {
         "hookSpecificOutput": {
             "hookEventName": "PreToolUse",
-            "permissionDecision": "ask",
+            "permissionDecision": decision,
             "permissionDecisionReason": reason,
+            # updatedInput replaces the complete object, so always return the
+            # copied input rather than a patch containing only changed fields.
+            "updatedInput": updated_input,
         }
     }
-    print(json.dumps(response))
-    sys.exit(0)
+
+
+def evaluate(tool_input):
+    """Return a hook response, or None when the Agent input is already valid."""
+    original_agent = tool_input.get("subagent_type", "")
+    original_agent = original_agent if isinstance(original_agent, str) else ""
+    model = tool_input.get("model", "")
+    text = text_blob(tool_input)
+
+    updated_input = dict(tool_input)
+    routed_agent = routed_subagent(original_agent, text)
+    agent_changed = routed_agent != original_agent
+    if agent_changed:
+        updated_input["subagent_type"] = routed_agent
+
+    if is_opus_model(model):
+        return hook_output(
+            "ask",
+            updated_input,
+            "Opus requires explicit user permission for this Agent call. "
+            "The requested Opus model will be preserved if approved.",
+        )
+
+    expected = expected_model(routed_agent, text)
+    model_changed = model_family(model) != expected
+    if model_changed:
+        updated_input["model"] = expected
+
+    if not agent_changed and not model_changed:
+        return None
+
+    changes = []
+    if agent_changed:
+        changes.append(f"agent={routed_agent}")
+    if model_changed:
+        changes.append(f"model={expected}")
+
+    return hook_output(
+        "allow",
+        updated_input,
+        "Applied deterministic cost-aware Agent routing: " + ", ".join(changes) + ".",
+    )
 
 
 def main():
     try:
         input_data = json.loads(sys.stdin.read())
     except Exception:
-        sys.exit(0)
+        return
 
     if input_data.get("tool_name") != "Agent":
-        sys.exit(0)
+        return
 
     tool_input = input_data.get("tool_input", {})
     if not isinstance(tool_input, dict):
-        sys.exit(0)
+        return
 
-    subagent_type = tool_input.get("subagent_type", "")
-    subagent_type = subagent_type if isinstance(subagent_type, str) else ""
-    model = tool_input.get("model", "")
-    text = text_blob(tool_input)
-
-    if is_opus_model(model):
-        ask(
-            "Opus requires explicit user permission for this Agent call. "
-            "If permission is declined, retry the same call with model=sonnet."
-        )
-
-    if subagent_type == "general-purpose":
-        ask(GENERAL_PURPOSE_REASON)
-
-    if subagent_type == "Explore" and is_pure_locate(text):
-        ask(EXPLORE_LOCATE_REASON)
-
-    expected, reason = expected_model(subagent_type, text)
-
-    if not isinstance(model, str) or not model.strip():
-        ask(
-            "Set the Agent model parameter explicitly; do not inherit the "
-            f"session model. Recommended: model={expected}. {reason}"
-        )
-
-    actual = model_family(model)
-    if actual != expected:
-        ask(
-            f"Agent model appears mismatched: got model={model}, expected "
-            f"model={expected}. {reason} Confirm only if this exception is intentional."
-        )
+    response = evaluate(tool_input)
+    if response is not None:
+        print(json.dumps(response))
 
 
 if __name__ == "__main__":

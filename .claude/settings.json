@@ -1,5 +1,10 @@
 {
     "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "env": {
+    "ANTHROPIC_DEFAULT_SONNET_MODEL": "claude-sonnet-4-6",
+    "ANTHROPIC_DEFAULT_OPUS_MODEL": "claude-opus-4-6",
+    "CLAUDE_CODE_EFFORT_LEVEL": "medium"
+  },
     "permissions": {
         "allow": [
             "Bash(ls *)",
@@ -47,27 +52,15 @@
         "haiku",
         "opus"
     ],
-    "env": {
-        "ANTHROPIC_DEFAULT_SONNET_MODEL": "claude-sonnet-4-6",
-"ANTHROPIC_DEFAULT_OPUS_MODEL": "claude-opus-4-6",
-        "CLAUDE_CODE_EFFORT_LEVEL": "medium"
-    },
     "hooks": {
         "PreToolUse": [
             {
-                "matcher": "Bash",
+        "matcher": "Bash|Read|Edit|MultiEdit|Write|WebSearch|WebFetch",
                 "hooks": [
                     {
                         "type": "command",
-                        "command": "python3 ~/.claude/hooks/block-destructive-commands.py"
-                    },
-                    {
-                        "type": "command",
-                        "command": "rtk hook claude"
-                    },
-                    {
-                        "type": "command",
-                        "command": "python3 ~/.claude/hooks/filter-noisy-output.py"
+                        "command": "python3 ~/.claude/hooks/policy.py",
+                        "timeout": 5
                     }
                 ]
             },
@@ -77,6 +70,17 @@
                     {
                         "type": "command",
                         "command": "python3 ~/.claude/hooks/subagent-routing.py"
+                    }
+                ]
+            }
+],
+        "ConfigChange": [
+            {
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "python3 ~/.claude/hooks/policy.py",
+                        "timeout": 5
                     }
                 ]
             }
