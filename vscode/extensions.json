@@ -43,6 +43,7 @@
         // JAVA
         "vscjava.vscode-java-pack",
         "vmware.vscode-boot-dev-pack",
+        "ryanluker.vscode-coverage-gutters",
         // TERRAFORM
         // "hashicorp.terraform",
         // ANSIBLE
