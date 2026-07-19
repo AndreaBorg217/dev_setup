@@ -15,7 +15,7 @@
 
 ## How to run
 
-1. For each environment variable in _.env.example_, run `export VARIABLE_NAME=value` 
+1. For each environment variable in _.env.example_, run `export VARIABLE_NAME=value`
 2. Create and run `run.sh`
 
 ## Testing
@@ -124,6 +124,26 @@ python3 vscode/manage_extensions.py --uninstall  # uninstall all extensions
 python3 vscode/manage_extensions.py --reinstall  # uninstall all, then install from extensions.json
 python3 vscode/manage_extensions.py --list       # list installed extensions with versions
 ```
+
+Local extensions are kept in `vscode/extensions`. The VSCode task symlinks
+`vscode/extensions/copy-reference` into
+`~/.vscode/extensions/dev-setup.copy-reference-0.1.0`.
+
+The `copy-reference` extension contributes the `copyReference.copy` command
+(`Copy File Reference`), bound to `space c p` in Normal or Visual Vim mode. It
+copies a reference for the active editor to the clipboard:
+
+| Selection | Clipboard value |
+| --------- | --------------- |
+| No selection | `path/to/file.ext` |
+| Selected text | `path/to/file.ext:start_line:end_line` |
+
+Paths are workspace-relative for files inside the current workspace. Files
+outside a workspace use their absolute path, and non-file editors use their URI.
+The optional prompt support is currently disabled in the extension source.
+
+The command was inspired by
+[smnatale's copy command gist](https://gist.github.com/smnatale/b30dc21ff330495641fb59f36005562c).
 
 ### Apps
 
