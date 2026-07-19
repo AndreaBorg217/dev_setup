@@ -191,7 +191,7 @@ Skills are stored in the `skills` directory.
 | `neovim/.config/nvim`                                           | `~/.config/nvim`                                           |
 | `vscode/Library/Application Support/Code/User/settings.json`    | `~/Library/Application Support/Code/User/settings.json` (generated, not stowed - see [Local overrides](#local-overrides)) |
 | `vscode/Library/Application Support/Code/User/keybindings.json` | `~/Library/Application Support/Code/User/keybindings.json` |
-| `.claude`                                                      | `~/.claude`                                                |
+| `.claude` tracked config files                                 | `~/.claude/...` (individual symlinks)                      |
 
 ## Local overrides
 
