@@ -5,11 +5,13 @@ const vscode = require("vscode");
 // current repository. Fall back to absolute paths or URIs when VSCode cannot
 // resolve the document to a workspace file.
 function getReferencePath(document) {
+    // Non-file editors, such as Git or untitled buffers, have no local path.
     if (document.uri.scheme !== "file") {
         return document.uri.toString();
     }
 
     const workspaceFolder = vscode.workspace.getWorkspaceFolder(document.uri);
+    // Files outside the current workspace cannot be shortened safely.
     if (!workspaceFolder) {
         return document.uri.fsPath;
     }
@@ -23,6 +25,7 @@ function getReferencePath(document) {
 // VSCode selections are zero-based. Convert to one-based lines and avoid
 // counting the next line when a multi-line selection ends at column zero.
 function getSelectedLineRange(selection) {
+    // No selection means the copied reference should include only the path.
     if (selection.isEmpty) {
         return undefined;
     }
@@ -32,6 +35,7 @@ function getSelectedLineRange(selection) {
 
     const endsAtLineStart = selection.end.character === 0;
     const spansMultipleLines = selection.end.line > selection.start.line;
+    // Exclude the trailing line when the selection stops at its first column.
     if (endsAtLineStart && spansMultipleLines) {
         endLine = selection.end.line;
     }
@@ -41,6 +45,7 @@ function getSelectedLineRange(selection) {
 
 async function copyReference() {
     const editor = vscode.window.activeTextEditor;
+    // The command can run from the palette even when no editor is focused.
     if (!editor) {
         vscode.window.showWarningMessage(
             "No active editor to copy a reference from.",
