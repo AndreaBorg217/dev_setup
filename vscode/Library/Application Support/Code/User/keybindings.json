@@ -132,6 +132,12 @@
     "command": "workbench.action.replaceInFiles",
     "when": "vim.mode == 'Normal' && (editorTextFocus || !inputFocus)",
   },
+  // CLIPBOARD
+  {
+    "key": "space c p", // [C]opy file [P]ath / selection reference
+    "command": "copyReference.copy",
+    "when": "editorTextFocus && (vim.mode == 'Normal' || vim.mode == 'Visual' || vim.mode == 'VisualLine' || vim.mode == 'VisualBlock')",
+  },
 
   // LSP
   {
