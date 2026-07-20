@@ -181,6 +181,14 @@ Claude Code natively supports machine-local overrides without any Ansible involv
 
 Skills are stored in the `skills` directory.
 
+### Routines
+
+Inspired by [this LinkedIn post](https://www.linkedin.com/posts/fabian-wesner_a-quick-tip-on-claude-codes-5-hour-usage-activity-7468185272250281984-Dek0)
+
+Go to [https://claude.ai/code/routines](https://claude.ai/code/routines) and create a routine as shown below:
+
+![Align token refresh](resources/claude_limits_routine.png)
+
 ## Dotfiles managed by Stow
 
 | Package                                                         | Symlinks to                                                |
