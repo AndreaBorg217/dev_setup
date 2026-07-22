@@ -87,6 +87,7 @@ ALLOWLIST = (
     re.compile(r"\.env\.template$", re.IGNORECASE),
     re.compile(r"\.env\.schema$", re.IGNORECASE),
     re.compile(r"\.env\.defaults$", re.IGNORECASE),
+    re.compile(r"\.env\.op$", re.IGNORECASE),
     re.compile(r"env\.example$", re.IGNORECASE),
     re.compile(r"example\.env$", re.IGNORECASE),
 )
