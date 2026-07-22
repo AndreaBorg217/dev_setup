@@ -45,14 +45,66 @@
   tags:
     - "claude"
 
-- name: Symlink .claude config to home
-  shell: |
-    target="{{ ansible_facts.env.HOME }}/.claude"
-    if [ ! -L "$target" ]; then
-      rm -rf "$target"
-      ln -s "{{ ansible_facts.env.HOME }}/Documents/GitHub/dev_setup/.claude" "$target"
-    fi
-  register: symlink_claude
-  changed_when: symlink_claude.rc == 0 and symlink_claude.stdout != ""
+- name: Check Claude config path
+  stat:
+    path: "{{ ansible_facts.env.HOME }}/.claude"
+    follow: false
+  register: claude_config_path
   tags:
     - "claude"
+
+- name: Fail when Claude config path is a symlink
+  fail:
+    msg: "~/.claude is a symlink. Replace it with a real directory before running this task so only managed files and directories are linked."
+  when: claude_config_path.stat.islnk | default(false)
+  tags:
+    - "claude"
+
+- name: Create Claude config directory
+  file:
+    path: "{{ ansible_facts.env.HOME }}/.claude"
+    state: directory
+    mode: "0755"
+  tags:
+    - "claude"
+
+- name: Symlink Claude config files
+  file:
+    src: "{{ playbook_dir }}/.claude/{{ item }}"
+    dest: "{{ ansible_facts.env.HOME }}/.claude/{{ item }}"
+    state: link
+    force: true
+  loop:
+    - .gitignore
+    - CLAUDE.md
+    - settings.json
+    - statusline.sh
+  tags:
+    - "claude"
+
+- name: Check Claude config directories
+  stat:
+    path: "{{ playbook_dir }}/.claude/{{ item }}"
+  loop:
+    - agents
+    - commands
+    - hooks
+    - output-styles
+    - rules
+    - scripts
+    - skills
+    - themes
+    - workflows
+  register: claude_config_dirs
+  tags:
+    - "claude"
+
+- name: Symlink Claude config directories
+  file:
+    src: "{{ item.stat.path }}"
+    dest: "{{ ansible_facts.env.HOME }}/.claude/{{ item.item }}"
+    state: link
+  tags:
+    - "claude"
+  loop: "{{ claude_config_dirs.results }}"
+  when: item.stat.isdir | default(false)

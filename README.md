@@ -15,7 +15,7 @@
 
 ## How to run
 
-1. For each environment variable in _.env.example_, run `export VARIABLE_NAME=value` 
+1. For each environment variable in _.env.example_, run `export VARIABLE_NAME=value`
 2. Create and run `run.sh`
 
 ## Testing
@@ -125,6 +125,26 @@ python3 vscode/manage_extensions.py --reinstall  # uninstall all, then install f
 python3 vscode/manage_extensions.py --list       # list installed extensions with versions
 ```
 
+Local extensions are kept in `vscode/extensions`. The VSCode task symlinks
+`vscode/extensions/copy-reference` into
+`~/.vscode/extensions/dev-setup.copy-reference-0.1.0`.
+
+The `copy-reference` extension contributes the `copyReference.copy` command
+(`Copy File Reference`), bound to `space c p` in Normal or Visual Vim mode. It
+copies a reference for the active editor to the clipboard:
+
+| Selection | Clipboard value |
+| --------- | --------------- |
+| No selection | `path/to/file.ext` |
+| Selected text | `path/to/file.ext:start_line:end_line` |
+
+Paths are workspace-relative for files inside the current workspace. Files
+outside a workspace use their absolute path, and non-file editors use their URI.
+The optional prompt support is currently disabled in the extension source.
+
+The command was inspired by
+[smnatale's copy command gist](https://gist.github.com/smnatale/b30dc21ff330495641fb59f36005562c).
+
 ### Apps
 
 Task: `tasks/apps.yml`
@@ -147,6 +167,8 @@ Installs Claude Code and some token-saving utils. The following are tracked in t
 - `settings.json` - as implied
 - `skills` - a directory containing all the skills
 - `commands` - a directory containing some useful commands
+- `hooks` - safety, output-filtering, and subagent-routing hooks; see
+  [the hook documentation](.claude/hooks/README.md)
 - `scripts` - a directory containing scripts used by skills/commands
 - `statusline.sh` - a script that displays the current working directory, context, usage limits, model, and Git branch
 
@@ -159,6 +181,14 @@ Claude Code natively supports machine-local overrides without any Ansible involv
 
 Skills are stored in the `skills` directory.
 
+### Routines
+
+Inspired by [this LinkedIn post](https://www.linkedin.com/posts/fabian-wesner_a-quick-tip-on-claude-codes-5-hour-usage-activity-7468185272250281984-Dek0)
+
+Go to [https://claude.ai/code/routines](https://claude.ai/code/routines) and create a routine as shown below:
+
+![Align token refresh](resources/claude_limits_routine.png)
+
 ## Dotfiles managed by Stow
 
 | Package                                                         | Symlinks to                                                |
@@ -169,7 +199,7 @@ Skills are stored in the `skills` directory.
 | `neovim/.config/nvim`                                           | `~/.config/nvim`                                           |
 | `vscode/Library/Application Support/Code/User/settings.json`    | `~/Library/Application Support/Code/User/settings.json` (generated, not stowed - see [Local overrides](#local-overrides)) |
 | `vscode/Library/Application Support/Code/User/keybindings.json` | `~/Library/Application Support/Code/User/keybindings.json` |
-| `.claude`                                                      | `~/.claude`                                                |
+| `.claude` tracked config files                                 | `~/.claude/...` (individual symlinks)                      |
 
 ## Local overrides
 
@@ -177,6 +207,7 @@ Some config files support machine-local overrides - gitignored files that Ansibl
 
 | Base file | Local override | Applied by |
 | --------- | -------------- | ---------- |
+| `~/.zshrc` | `~/.zshrc.local` | `terminal/.zshrc` - sourced at the end of the repo-managed shell config |
 | `vscode/Library/Application Support/Code/User/settings.json` | `vscode/settings.local.json` | `tasks/vscode.yml` - deep-merges local on top of base, writes result to `~/Library/Application Support/Code/User/settings.json` |
 | `~/.claude/CLAUDE.md` | `~/.claude/CLAUDE.local.md` | Claude Code natively - loaded every session alongside `CLAUDE.md`, no Ansible required |
 | `~/.claude/settings.json` | `~/.claude/settings.local.json` | Claude Code natively - merged by the app itself, no Ansible required |
@@ -230,5 +261,9 @@ A few things can't be automated due to macOS GUI restrictions:
 [Dreams of Code](https://www.youtube.com/@dreamsofcode)
 
 - [Go DAP](https://www.youtube.com/watch?v=i04sSQjd-qo)
+
+[Karan Bansal](https://github.com/karanb192)
+
+- [Claude Code safety hooks](https://github.com/karanb192/claude-code-hooks)
 
 Terminal font created by [romaktv](https://github.com/romkatv/powerlevel10k-media/blob/master/MesloLGS%20NF%20Regular.ttf)
