@@ -24,4 +24,4 @@
   web operations (research, URLs, links) to a Haiku subagent; return only
   a concise sourced summary.
 - Do not use em dashes. Use `-` or `->` depending on context.
-- When I refer to Notion, I mean only pages under Digital Brain. Do not read other pages and do not write, update, or delete Notion content.
+- When I refer to Notion, I mean only pages under Digital Brain. Do not read other pages and do not write or update without my permission. Never delete Notion content.
