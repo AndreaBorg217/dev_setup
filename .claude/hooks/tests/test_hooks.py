@@ -144,7 +144,7 @@ class LocalCompositionTests(unittest.TestCase):
 
     def test_cli_contract_denies_and_allows(self) -> None:
         denied = run_hook("policy.py", "Bash", {"command": "git reset --hard"})
-        allowed = run_hook("policy.py", "Bash", {"command": "git status"})
+        allowed = run_hook("policy.py", "Bash", {"command": "echo hello"})
         self.assertEqual(denied.get("hookSpecificOutput", {}).get("permissionDecision"), "deny")
         self.assertEqual(allowed, {})
 
