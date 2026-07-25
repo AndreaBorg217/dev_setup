@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import os
+import re
 import subprocess
 import sys
 import tempfile
@@ -82,6 +84,22 @@ class DerivedHookBehaviorTests(unittest.TestCase):
             with self.subTest(command=command):
                 self.assertTrue(policy.check_dangerous_command(command)["blocked"])
 
+    def test_dangerous_command_text_false_positives_are_ignored(self) -> None:
+        safe_commands = (
+            'grep -rn "DELETE FROM" migrations/',
+            'git commit -m "add DELETE FROM cleanup script"',
+            'echo "remember: db.sessions.remove() clears stale sessions"',
+            'rg "kubectl delete pod" docs/',
+            'grep -rn "find . -type f -delete" docs/',
+            'bash -lc \'grep -rn "DELETE FROM" migrations/\'',
+        )
+        for command in safe_commands:
+            with self.subTest(command=command):
+                self.assertFalse(policy.check_dangerous_command(command)["blocked"])
+
+        self.assertTrue(policy.check_dangerous_command("psql -c 'DELETE FROM users'")["blocked"])
+        self.assertTrue(policy.check_dangerous_command("bash -lc 'kubectl delete pod example'")["blocked"])
+
     def test_protects_main_and_destructive_hosting_cli_operations(self) -> None:
         self.assertTrue(policy.check_git_command("git commit -m fix", "main")["blocked"])
         self.assertTrue(policy.check_git_command("gh pr merge 42", "feature")["blocked"])
@@ -110,10 +128,27 @@ class DerivedHookBehaviorTests(unittest.TestCase):
         self.assertFalse(policy.check_git_command("glab mr view 42", "feature")["blocked"])
         self.assertFalse(policy.check_git_command("glab ci cancel pipeline 123 --dry-run", "feature")["blocked"])
 
+    def test_protected_branch_refs_are_shell_tokens(self) -> None:
+        self.assertFalse(policy.check_git_command("git push origin feature/update-main-config", "feature")["blocked"])
+        self.assertFalse(policy.check_git_command("git push origin fix-master-branch-docs", "feature")["blocked"])
+        self.assertFalse(policy.check_git_command("git branch -d main-something-unrelated", "feature")["blocked"])
+        self.assertTrue(policy.check_git_command("git push origin main", "feature")["blocked"])
+        self.assertTrue(policy.check_git_command("git branch -d master", "feature")["blocked"])
+
+    def test_protected_branch_detection_uses_cwd(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            subprocess.run(["git", "init", "-b", "main"], cwd=directory, check=True, capture_output=True)
+            self.assertTrue(policy.check_git_command("git commit -m fix", cwd=directory)["blocked"])
+
     def test_protects_secrets_while_allowing_templates(self) -> None:
         self.assertTrue(policy.check_secrets("Read", {"file_path": ".env"})["blocked"])
         self.assertFalse(policy.check_secrets("Read", {"file_path": ".env.example"})["blocked"])
         self.assertTrue(policy.check_secrets("Bash", {"command": "cat credentials.json"})["blocked"])
+        self.assertTrue(policy.check_secrets("Read", {"file_path": "config/secrets.prod.yaml"})["blocked"])
+        self.assertFalse(policy.check_secrets("Read", {"file_path": "config/secrets.example.yaml"})["blocked"])
+        self.assertFalse(policy.check_secrets("Read", {"file_path": "credentials.json.template"})["blocked"])
+        self.assertFalse(policy.check_secrets("Read", {"file_path": "service-account.sample.json"})["blocked"])
+        self.assertFalse(policy.check_secrets("Bash", {"command": "cat secrets.example.yaml | wc -l"})["blocked"])
 
     def test_blocks_test_deletion_without_blocking_test_execution(self) -> None:
         self.assertTrue(policy.check_tests_tool("Bash", {"command": "rm tests/unit.test.js"})["blocked"])
@@ -246,6 +281,23 @@ class ConsolidatedPolicyTests(unittest.TestCase):
         self.assertEqual(overwritten["hookSpecificOutput"]["permissionDecision"], "deny")
         self.assertEqual(weakened["hookSpecificOutput"]["permissionDecision"], "deny")
 
+    def test_test_overwrite_check_uses_payload_cwd(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            tests_dir = Path(directory) / "tests"
+            tests_dir.mkdir()
+            test_file = tests_dir / "test_policy.py"
+            test_file.write_text("def test_policy():\n    assert value\n", encoding="utf-8")
+            output = policy.evaluate_pre_tool({
+                "tool_name": "Write",
+                "tool_input": {
+                    "file_path": "tests/test_policy.py",
+                    "content": "def test_policy():\n    assert True\n",
+                },
+                "cwd": directory,
+            })
+        self.assertEqual(output["hookSpecificOutput"]["permissionDecision"], "deny")
+        self.assertIn("[overwrite-test]", output["hookSpecificOutput"]["permissionDecisionReason"])
+
     def test_locks_configuration_edits_and_hot_reload(self) -> None:
         edit = run_hook(
             "policy.py",
@@ -259,6 +311,7 @@ class ConsolidatedPolicyTests(unittest.TestCase):
     def test_blocks_bash_access_to_protected_configuration(self) -> None:
         commands = (
             "cat ~/.claude/hooks/policy.py",
+            "cd ~/.claude && cat hooks/policy.py",
             "python3 -c 'open(\".claude/hooks/policy.py\", \"w\").write(\"\")'",
             "git checkout -- .claude/settings.json",
         )
@@ -313,6 +366,59 @@ class ConsolidatedPolicyTests(unittest.TestCase):
             output = policy.evaluate_pre_tool(payload)
         self.assertEqual(output, {})
 
+    def test_rtk_sees_original_unwrapped_command_and_trivial_commands_skip_rtk(self) -> None:
+        payload = {
+            "hook_event_name": "PreToolUse",
+            "tool_name": "Bash",
+            "tool_input": {"command": "npm install"},
+            "cwd": str(Path.cwd()),
+        }
+        with mock.patch.object(policy, "_run_rtk", return_value={}) as run_rtk:
+            output = policy.evaluate_pre_tool(payload)
+        run_rtk.assert_called_once()
+        self.assertEqual(run_rtk.call_args.args[1], "npm install")
+        updated = output["hookSpecificOutput"]["updatedInput"]["command"]
+        self.assertTrue(updated.startswith("set -o pipefail;"))
+
+        with mock.patch.object(policy, "_run_rtk", return_value={}) as run_rtk:
+            self.assertEqual(policy.evaluate_pre_tool({
+                "tool_name": "Bash",
+                "tool_input": {"command": "echo hello"},
+                "cwd": str(Path.cwd()),
+            }), {})
+        run_rtk.assert_not_called()
+
+    def test_verbose_wrapper_preserves_failure_and_tail(self) -> None:
+        with mock.patch.object(policy, "VERBOSE_COMMAND_RE", re.compile(r"^python3\b")):
+            command = policy._wrap_verbose_command(
+                "python3 -c 'import sys; [print(f\"line {i}\") for i in range(100)]; sys.exit(7)'"
+            )
+        result = subprocess.run(
+            command,
+            shell=True,
+            executable="/bin/bash",
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(result.returncode, 7)
+        self.assertIn("line 0", result.stdout)
+        self.assertIn("line 99", result.stdout)
+        self.assertIn("lines truncated by policy", result.stdout)
+        self.assertNotIn("line 50", result.stdout)
+
+    def test_safety_level_env_override_enables_strict_rules(self) -> None:
+        payload = {
+            "tool_name": "Bash",
+            "tool_input": {"command": "sudo rm /tmp/example"},
+            "cwd": str(Path.cwd()),
+        }
+        self.assertEqual(policy.evaluate_pre_tool(payload), {})
+        with mock.patch.dict(os.environ, {"CLAUDE_SAFETY_LEVEL": "strict"}):
+            output = policy.evaluate_pre_tool(payload)
+        self.assertEqual(output["hookSpecificOutput"]["permissionDecision"], "deny")
+        self.assertIn("[sudo-rm]", output["hookSpecificOutput"]["permissionDecisionReason"])
+
     def test_malformed_input_fails_closed(self) -> None:
         result = subprocess.run(
             [sys.executable, str(HOOKS_DIR / "policy.py")],
@@ -324,13 +430,19 @@ class ConsolidatedPolicyTests(unittest.TestCase):
         self.assertEqual(result.returncode, 2)
         self.assertIn("failed closed", result.stderr)
 
-    def test_web_tool_interception_prompts(self) -> None:
+    def test_web_tool_default_allows_and_ask_env_prompts_main_context(self) -> None:
         for tool in ("WebSearch", "WebFetch"):
             with self.subTest(tool=tool):
-                output = run_hook("policy.py", tool, {"query": "test"})
-                specific = output.get("hookSpecificOutput", {})
-                self.assertEqual(specific.get("permissionDecision"), "ask")
-                self.assertIn("Haiku", specific.get("permissionDecisionReason", ""))
+                payload = {"tool_name": tool, "tool_input": {"query": "test"}}
+                self.assertEqual(policy.evaluate_pre_tool(payload), {})
+                with mock.patch.dict(os.environ, {policy.WEB_TOOL_POLICY_ENV: "ask"}):
+                    output = policy.evaluate_pre_tool(payload)
+                    specific = output.get("hookSpecificOutput", {})
+                    self.assertEqual(specific.get("permissionDecision"), "ask")
+                    self.assertEqual(
+                        policy.evaluate_pre_tool({**payload, "parent_tool_use_id": "task-123"}),
+                        {},
+                    )
 
 
 if __name__ == "__main__":
