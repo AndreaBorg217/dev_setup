@@ -1,17 +1,15 @@
 {
     "$schema": "https://json.schemastore.org/claude-code-settings.json",
-  "env": {
-    "CLAUDE_CODE_EFFORT_LEVEL": "medium"
-  },
+    "effortLevel": "medium",
     "permissions": {
-    "deny": [
-      "Read(**/node_modules/**)",
-      "Read(**/.git/objects/**)",
-      "Read(**/dist/**)",
-      "Read(**/build/**)",
-      "Read(**/*.lock)",
-      "Read(**/*.log)"
-    ],
+        "deny": [
+            "Read(**/node_modules/**)",
+            "Read(**/.git/objects/**)",
+            "Read(**/dist/**)",
+            "Read(**/build/**)",
+            "Read(**/*.lock)",
+            "Read(**/*.log)"
+        ],
         "allow": [
             "Bash(ls *)",
             "Bash(find *)",
@@ -58,10 +56,21 @@
         "haiku",
         "opus"
     ],
+    "fallbackModel": [
+        "sonnet",
+        "haiku"
+    ],
+    "env": {
+        "CLAUDE_CODE_SUBAGENT_MODEL": "inherit",
+        "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "50",
+        "CLAUDE_CODE_DISABLE_TERMINAL_TITLE": "1",
+        "CLAUDE_CODE_EFFORT_LEVEL": "medium",
+        "MAX_MCP_OUTPUT_TOKENS": "10000"
+    },
     "hooks": {
         "PreToolUse": [
             {
-        "matcher": "Bash|Read|Edit|MultiEdit|Write|WebSearch|WebFetch",
+                "matcher": "Bash|Read|Edit|MultiEdit|Write|WebSearch|WebFetch",
                 "hooks": [
                     {
                         "type": "command",
@@ -79,7 +88,7 @@
                     }
                 ]
             }
-],
+        ],
         "ConfigChange": [
             {
                 "hooks": [
@@ -97,20 +106,13 @@
         "command": "bash ~/.claude/statusline.sh"
     },
     "enabledPlugins": {
-        "caveman@caveman": true,
-        "ponytail@ponytail": true
+        "caveman@caveman": true
     },
     "extraKnownMarketplaces": {
         "caveman": {
             "source": {
                 "source": "github",
                 "repo": "JuliusBrussee/caveman"
-            }
-        },
-        "ponytail": {
-            "source": {
-                "source": "github",
-                "repo": "DietrichGebert/ponytail"
             }
         }
     },
