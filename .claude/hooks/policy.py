@@ -7,6 +7,7 @@ import hashlib
 import json
 import os
 import re
+import shlex
 import shutil
 import subprocess
 import sys
@@ -20,6 +21,7 @@ LARGE_READ_BYTES = 128 * 1024
 MAX_READ_LINES = 400
 MAX_SINGLE_LINE_BYTES = 16 * 1024
 VERBOSE_OUTPUT_LINES = 80
+WEB_TOOL_POLICY_ENV = "CLAUDE_WEB_TOOL_POLICY"
 
 VERBOSE_COMMAND_RE = re.compile(
     r"^(?:brew\s+(?:install|upgrade|reinstall)\b"
@@ -34,6 +36,9 @@ VERBOSE_COMMAND_RE = re.compile(
 
 LEVELS = {"critical": 1, "high": 2, "strict": 3}
 SAFETY_LEVEL = "high"
+_REF_TOKEN = r"(?<![\w/-])(?:main|master)(?![\w/-])"
+_MAIN_REF_TOKEN = r"(?<![\w/-])main(?![\w/-])"
+_MASTER_REF_TOKEN = r"(?<![\w/-])master(?![\w/-])"
 
 PROTECTED_CONFIG_PARTS = (
     "hooks",
@@ -79,17 +84,51 @@ KNOWN_EXECUTABLES = (
     "mvnw",
 )
 
+TEXT_ONLY_COMMANDS = {
+    "cat",
+    "less",
+    "head",
+    "tail",
+    "more",
+    "bat",
+    "view",
+    "grep",
+    "rg",
+    "echo",
+    "printf",
+    "sed",
+    "awk",
+}
+TEXT_ONLY_GIT_SUBCOMMANDS = {"commit", "diff", "log", "show", "status"}
+SHELL_WRAPPERS = {"command", "builtin", "exec", "noglob"}
+SHELL_COMMANDS = {"bash", "sh", "zsh"}
+RTK_TRIVIAL_COMMANDS = {"pwd", "ls", "echo", "true", "false", ":", "date"}
+_PATH_BOUNDARY = r"(?=$|[\s'\";&|])"
+_PATH_PREFIX = r"(?:^|[\s'\";&|])(?:[^\s'\";&|]*/)?"
+
 # --- protect-secrets ---
 
 ALLOWLIST = (
-    re.compile(r"\.env\.example$", re.IGNORECASE),
-    re.compile(r"\.env\.sample$", re.IGNORECASE),
-    re.compile(r"\.env\.template$", re.IGNORECASE),
-    re.compile(r"\.env\.schema$", re.IGNORECASE),
-    re.compile(r"\.env\.defaults$", re.IGNORECASE),
-    re.compile(r"\.env\.op$", re.IGNORECASE),
-    re.compile(r"env\.example$", re.IGNORECASE),
-    re.compile(r"example\.env$", re.IGNORECASE),
+    re.compile(rf"\.env\.example{_PATH_BOUNDARY}", re.IGNORECASE),
+    re.compile(rf"\.env\.sample{_PATH_BOUNDARY}", re.IGNORECASE),
+    re.compile(rf"\.env\.template{_PATH_BOUNDARY}", re.IGNORECASE),
+    re.compile(rf"\.env\.schema{_PATH_BOUNDARY}", re.IGNORECASE),
+    re.compile(rf"\.env\.defaults{_PATH_BOUNDARY}", re.IGNORECASE),
+    re.compile(rf"\.env\.op{_PATH_BOUNDARY}", re.IGNORECASE),
+    re.compile(rf"env\.example{_PATH_BOUNDARY}", re.IGNORECASE),
+    re.compile(rf"example\.env{_PATH_BOUNDARY}", re.IGNORECASE),
+    re.compile(
+        rf"{_PATH_PREFIX}(?:secrets?|credentials?)\.(?:example|sample|template)\.(?:json|ya?ml|toml){_PATH_BOUNDARY}",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        rf"{_PATH_PREFIX}(?:secrets?|credentials?)(?:\.[^/\s'\";&|]+)?\.(?:json|ya?ml|toml)\.(?:example|sample|template){_PATH_BOUNDARY}",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        rf"{_PATH_PREFIX}service[_-]?account[^/\s'\";&|]*(?:\.(?:example|sample|template)\.json|\.json\.(?:example|sample|template)){_PATH_BOUNDARY}",
+        re.IGNORECASE,
+    ),
 )
 
 SENSITIVE_FILES = (
@@ -107,7 +146,7 @@ SENSITIVE_FILES = (
     {"level": "critical", "id": "p12-key", "regex": re.compile(r"\.(p12|pfx)$", re.IGNORECASE), "reason": "PKCS12 key file"},
     # HIGH
     {"level": "high", "id": "credentials-json", "regex": re.compile(r"(?:^|/)credentials\.json$", re.IGNORECASE), "reason": "Credentials file"},
-    {"level": "high", "id": "secrets-file", "regex": re.compile(r"(?:^|/)(secrets?|credentials?)\.(json|ya?ml|toml)$", re.IGNORECASE), "reason": "Secrets configuration file"},
+    {"level": "high", "id": "secrets-file", "regex": re.compile(r"(?:^|/)(secrets?|credentials?)(\.[^/]+)?\.(json|ya?ml|toml)$", re.IGNORECASE), "reason": "Secrets configuration file"},
     {"level": "high", "id": "service-account", "regex": re.compile(r"service[_-]?account.*\.json$", re.IGNORECASE), "reason": "GCP service account key"},
     {"level": "high", "id": "gcloud-creds", "regex": re.compile(r"(?:^|/)\.config/gcloud/.*(credentials|tokens)", re.IGNORECASE), "reason": "GCloud credentials"},
     {"level": "high", "id": "azure-creds", "regex": re.compile(r"(?:^|/)\.azure/(credentials|accessTokens)", re.IGNORECASE), "reason": "Azure credentials"},
@@ -137,7 +176,7 @@ BASH_PATTERNS = (
     {"level": "high", "id": "env-dump", "regex": re.compile(r"\bprintenv\b|(?:^|[;&|]\s*)env\s*(?:$|[;&|])"), "reason": "Environment dump may expose secrets"},
     {"level": "high", "id": "echo-secret-var", "regex": re.compile(r"\becho\b[^;|&]*\$\{?[A-Za-z_]*(?:SECRET|KEY|TOKEN|PASSWORD|PASSW|CREDENTIAL|API_KEY|AUTH|PRIVATE)[A-Za-z_]*\}?", re.IGNORECASE), "reason": "Echoing secret variable"},
     {"level": "high", "id": "printf-secret-var", "regex": re.compile(r"\bprintf\b[^;|&]*\$\{?[A-Za-z_]*(?:SECRET|KEY|TOKEN|PASSWORD|CREDENTIAL|API_KEY|AUTH|PRIVATE)[A-Za-z_]*\}?", re.IGNORECASE), "reason": "Printing secret variable"},
-    {"level": "high", "id": "cat-secrets-file", "regex": re.compile(r"\b(cat|less|head|tail|more)\s+[^|;]*(credentials?|secrets?)\.(json|ya?ml|toml)", re.IGNORECASE), "reason": "Reading secrets file"},
+    {"level": "high", "id": "cat-secrets-file", "regex": re.compile(r"\b(cat|less|head|tail|more)\s+[^|;]*(credentials?|secrets?)(?:\.[^/\s'\"]+)?\.(json|ya?ml|toml)", re.IGNORECASE), "reason": "Reading secrets file"},
     {"level": "high", "id": "cat-netrc", "regex": re.compile(r"\b(cat|less|head|tail|more)\s+[^|;]*\.netrc", re.IGNORECASE), "reason": "Reading .netrc credentials"},
     {"level": "high", "id": "source-env", "regex": re.compile(r"\bsource\s+[^|;]*\.env\b|(?:^|[;&|]\s*)\.\s+[^|;]*\.env\b|^\.\s+[^|;]*\.env\b", re.IGNORECASE), "reason": "Sourcing .env loads secrets"},
     {"level": "high", "id": "export-cat-env", "regex": re.compile(r"export\s+.*\$\(cat\s+[^)]*\.env", re.IGNORECASE), "reason": "Exporting secrets from .env"},
@@ -170,8 +209,8 @@ BASH_PATTERNS = (
 BASH_SENTINELS = re.compile(
     r"\.env\b|(?:id_rsa|id_ed25519|id_ecdsa|id_dsa)\b|authorized_keys|"
     r"\.aws/credentials|\.pem\b|\.key\b|\.netrc|printenv|/proc/"
-    r"|SECRET|KEY|TOKEN|PASSWORD|PASSW|CREDENTIAL|API_KEY|AUTH|PRIVATE"
-    r"|credential|secret",
+    r"|\$\{?[A-Za-z_]*(?:SECRET|KEY|TOKEN|PASSWORD|PASSW|CREDENTIAL|API_KEY|AUTH|PRIVATE)[A-Za-z_]*\}?"
+    r"|\b(?:SECRET|KEY|TOKEN|PASSWORD|PASSW|CREDENTIAL|API_KEY|AUTH|PRIVATE|credentials?|secrets?)\b",
     re.IGNORECASE,
 )
 
@@ -190,7 +229,7 @@ DANGEROUS_PATTERNS = (
     {"level": "critical", "id": "fork-bomb", "regex": re.compile(r":\(\)\s*\{.*:\s*\|\s*:.*&"), "reason": "fork bomb detected"},
     # HIGH
     {"level": "high", "id": "curl-pipe-sh", "regex": re.compile(r"\b(curl|wget)\b.+\|\s*(ba)?sh\b"), "reason": "piping URL to shell (RCE risk)"},
-    {"level": "high", "id": "git-force-main", "regex": re.compile(r"\bgit\s+push\b(?!.+--force-with-lease).+(--force|-f)\b.+\b(main|master)\b"), "reason": "force push to main/master"},
+    {"level": "high", "id": "git-force-main", "regex": re.compile(rf"\bgit\s+push\b(?!.+--force-with-lease).+(--force|-f)\b.+{_REF_TOKEN}"), "reason": "force push to main/master"},
     {"level": "high", "id": "git-reset-hard", "regex": re.compile(r"\bgit\s+reset\s+--hard"), "reason": "git reset --hard loses uncommitted work"},
     {"level": "high", "id": "git-clean-f", "regex": re.compile(r"\bgit\s+clean\s+(-\w*f|-f)"), "reason": "git clean -f deletes untracked files"},
     {"level": "high", "id": "chmod-777", "regex": re.compile(r"\bchmod\b.+\b777\b"), "reason": "chmod 777 is a security risk"},
@@ -236,9 +275,9 @@ DANGEROUS_PATTERNS = (
 PROTECTED_BRANCHES = ("main", "master")
 
 GIT_PATTERNS = (
-    {"level": "high", "id": "push-main", "regex": re.compile(r"\bgit\s+push\b.*\bmain\b"), "reason": "Pushing to main is not allowed"},
-    {"level": "high", "id": "push-master", "regex": re.compile(r"\bgit\s+push\b.*\bmaster\b"), "reason": "Pushing to master is not allowed"},
-    {"level": "high", "id": "branch-delete-protected", "regex": re.compile(r"\bgit\s+branch\s+.*(?:-[dD]|--delete)\s+(?:main|master)\b"), "reason": "Deleting a protected branch is not allowed"},
+    {"level": "high", "id": "push-main", "regex": re.compile(rf"\bgit\s+push\b.*{_MAIN_REF_TOKEN}"), "reason": "Pushing to main is not allowed"},
+    {"level": "high", "id": "push-master", "regex": re.compile(rf"\bgit\s+push\b.*{_MASTER_REF_TOKEN}"), "reason": "Pushing to master is not allowed"},
+    {"level": "high", "id": "branch-delete-protected", "regex": re.compile(rf"\bgit\s+branch\s+.*(?:-[dD]|--delete)\s+{_REF_TOKEN}(?:\s|$)"), "reason": "Deleting a protected branch is not allowed"},
     {"level": "high", "id": "commit-on-protected", "regex": re.compile(r"\bgit\s+commit\b"), "reason": "Committing directly on {branch} is not allowed", "branch_only": True},
     {"level": "high", "id": "merge-on-protected", "regex": re.compile(r"\bgit\s+merge\b"), "reason": "Merging into {branch} is not allowed", "branch_only": True},
     {"level": "high", "id": "rebase-on-protected", "regex": re.compile(r"\bgit\s+rebase\b"), "reason": "Rebasing {branch} is not allowed", "branch_only": True},
@@ -329,6 +368,234 @@ def is_allowlisted(file_path: str | None) -> bool:
     return bool(file_path and any(pattern.search(file_path) for pattern in ALLOWLIST))
 
 
+def _current_safety_level() -> str:
+    configured = os.environ.get("CLAUDE_SAFETY_LEVEL", SAFETY_LEVEL).strip().lower()
+    return configured if configured in LEVELS else SAFETY_LEVEL
+
+
+def _shell_segments(command: str) -> list[str]:
+    segments: list[str] = []
+    buffer: list[str] = []
+    quote = ""
+    escaped = False
+    index = 0
+    while index < len(command):
+        char = command[index]
+        if escaped:
+            buffer.append(char)
+            escaped = False
+            index += 1
+            continue
+        if char == "\\" and quote != "'":
+            buffer.append(char)
+            escaped = True
+            index += 1
+            continue
+        if quote:
+            buffer.append(char)
+            if char == quote:
+                quote = ""
+            index += 1
+            continue
+        if char in {"'", '"'}:
+            quote = char
+            buffer.append(char)
+            index += 1
+            continue
+        if command.startswith("&&", index) or command.startswith("||", index):
+            segment = "".join(buffer).strip()
+            if segment:
+                segments.append(segment)
+            buffer = []
+            index += 2
+            continue
+        if char in {";", "|", "\n"}:
+            segment = "".join(buffer).strip()
+            if segment:
+                segments.append(segment)
+            buffer = []
+            index += 1
+            continue
+        buffer.append(char)
+        index += 1
+    segment = "".join(buffer).strip()
+    if segment:
+        segments.append(segment)
+    return segments or ([command.strip()] if command.strip() else [])
+
+
+def _shell_tokens(segment: str) -> list[str]:
+    try:
+        return shlex.split(segment)
+    except ValueError:
+        return segment.split()
+
+
+def _is_assignment_token(token: str) -> bool:
+    return bool(re.match(r"^[A-Za-z_][A-Za-z0-9_]*=", token))
+
+
+def _segment_command_tokens(segment: str) -> list[str]:
+    tokens = _shell_tokens(segment)
+    index = 0
+    while index < len(tokens):
+        token = tokens[index]
+        if _is_assignment_token(token):
+            index += 1
+            continue
+        command = Path(token).name
+        if command in SHELL_WRAPPERS or command == "time":
+            index += 1
+            continue
+        if command == "sudo":
+            index += 1
+            while index < len(tokens) and tokens[index].startswith("-"):
+                option = tokens[index]
+                index += 1
+                if option in {"-u", "-g", "-h"} and index < len(tokens):
+                    index += 1
+            continue
+        if command == "env":
+            index += 1
+            while index < len(tokens) and (tokens[index].startswith("-") or _is_assignment_token(tokens[index])):
+                index += 1
+            continue
+        break
+    return tokens[index:]
+
+
+def _git_subcommand(tokens: list[str]) -> str:
+    index = 1
+    while index < len(tokens):
+        token = tokens[index]
+        if token == "-C":
+            index += 2
+            continue
+        if token in {"--git-dir", "--work-tree"}:
+            index += 2
+            continue
+        if token.startswith("--git-dir=") or token.startswith("--work-tree="):
+            index += 1
+            continue
+        if token.startswith("-"):
+            index += 1
+            continue
+        return token
+    return ""
+
+
+def _is_text_only_segment(segment: str) -> bool:
+    tokens = _segment_command_tokens(segment)
+    if not tokens:
+        return False
+    command = Path(tokens[0]).name
+    if command in TEXT_ONLY_COMMANDS:
+        return True
+    if command == "git":
+        return _git_subcommand(tokens) in TEXT_ONLY_GIT_SUBCOMMANDS
+    return False
+
+
+def _nested_shell_script(segment: str) -> str | None:
+    tokens = _segment_command_tokens(segment)
+    if not tokens or Path(tokens[0]).name not in SHELL_COMMANDS:
+        return None
+    for index, token in enumerate(tokens[1:], start=1):
+        if "c" in token.lstrip("-") and index + 1 < len(tokens):
+            return tokens[index + 1]
+    return None
+
+
+def _pattern_matches_executable_context(pattern: re.Pattern[str], command: str, depth: int = 0) -> bool:
+    for segment in _shell_segments(command):
+        nested = _nested_shell_script(segment) if depth < 2 else None
+        if nested is not None:
+            if _pattern_matches_executable_context(pattern, nested, depth + 1):
+                return True
+            continue
+        if not _is_text_only_segment(segment) and pattern.search(segment):
+            return True
+    return False
+
+
+def _mask_allowlisted_paths(command: str) -> str:
+    checked_command = command
+    for pattern in ALLOWLIST:
+        checked_command = pattern.sub(" <allowlisted-template>", checked_command)
+    return checked_command
+
+
+def _skip_rtk(command: str) -> bool:
+    if BASH_SENTINELS.search(command):
+        return False
+    segments = _shell_segments(command)
+    if not segments:
+        return True
+    for segment in segments:
+        tokens = _segment_command_tokens(segment)
+        if not tokens or Path(tokens[0]).name not in RTK_TRIVIAL_COMMANDS:
+            return False
+    return True
+
+
+def _effective_git_cwd(command: str, cwd: str | None) -> str | None:
+    for segment in _shell_segments(command):
+        tokens = _segment_command_tokens(segment)
+        if not tokens or Path(tokens[0]).name != "git":
+            continue
+        current_cwd = cwd
+        index = 1
+        while index < len(tokens):
+            token = tokens[index]
+            if token == "-C" and index + 1 < len(tokens):
+                current_cwd = str(_resolve_path(tokens[index + 1], current_cwd))
+                index += 2
+                continue
+            if token in {"--git-dir", "--work-tree"}:
+                index += 2
+                continue
+            if token.startswith("--git-dir=") or token.startswith("--work-tree="):
+                index += 1
+                continue
+            if token.startswith("-"):
+                index += 1
+                continue
+            break
+        return current_cwd
+    return cwd
+
+
+def _is_subagent_payload(payload: dict[str, Any]) -> bool:
+    marker_keys = {
+        "agent_id",
+        "agent_name",
+        "parent_agent_id",
+        "parent_task_id",
+        "parent_tool_use_id",
+        "parent_tool_call_id",
+        "subagent_id",
+        "subagent_type",
+        "task_tool_use_id",
+    }
+
+    def truthy(value: Any) -> bool:
+        if isinstance(value, str):
+            return value.strip().lower() not in {"", "0", "false", "none", "null"}
+        return bool(value)
+
+    if any(truthy(payload.get(key)) for key in marker_keys):
+        return True
+    for container_key in ("context", "tool_context", "execution_context", "agent_context"):
+        value = payload.get(container_key)
+        if isinstance(value, dict) and (
+            any(truthy(value.get(key)) for key in marker_keys)
+            or truthy(value.get("is_subagent"))
+            or truthy(value.get("subagent"))
+        ):
+            return True
+    return False
+
+
 def _check_file_path(file_path: str | None, safety_level: str = SAFETY_LEVEL) -> dict[str, Any]:
     if not file_path or is_allowlisted(file_path):
         return {"blocked": False, "pattern": None}
@@ -344,17 +611,16 @@ def _check_bash_secrets(command: str | None, safety_level: str = SAFETY_LEVEL) -
         return {"blocked": False, "pattern": None}
     if not BASH_SENTINELS.search(command):
         return {"blocked": False, "pattern": None}
-    checked_command = command
-    for pattern in ALLOWLIST:
-        checked_command = pattern.sub("<allowed-env-template>", checked_command)
+    checked_command = _mask_allowlisted_paths(command)
     threshold = LEVELS.get(safety_level, LEVELS["high"])
     for pattern in BASH_PATTERNS:
         if LEVELS[pattern["level"]] <= threshold and pattern["regex"].search(checked_command):
             return {"blocked": True, "pattern": pattern}
     sensitive_path = re.search(
         r"(?:^|[\s'\"])(?:[^\s'\"]*/)?"
-        r"(?:\.env(?:\.[^\s/'\"]+)?|credentials\.json|"
-        r"secrets?\.(?:json|ya?ml|toml)|\.aws/credentials|\.netrc|id_(?:rsa|ed25519|ecdsa|dsa)|"
+        r"(?:\.env(?:\.[^\s/'\"]+)?|credentials(?:\.[^\s/'\"]+)?\.json|"
+        r"(?:secrets?|credentials?)(?:\.[^\s/'\"]+)?\.(?:json|ya?ml|toml)|"
+        r"\.aws/credentials|\.netrc|id_(?:rsa|ed25519|ecdsa|dsa)|"
         r"[^\s/'\"]+\.(?:pem|key))(?:$|[\s'\"])",
         checked_command,
         re.IGNORECASE,
@@ -390,20 +656,21 @@ def check_secrets(tool_name: str, tool_input: dict[str, Any] | None, safety_leve
 def check_dangerous_command(command: str, safety_level: str = SAFETY_LEVEL) -> dict[str, Any]:
     threshold = LEVELS.get(safety_level, LEVELS["high"])
     for pattern in DANGEROUS_PATTERNS:
-        if LEVELS[pattern["level"]] <= threshold and pattern["regex"].search(command):
+        if LEVELS[pattern["level"]] <= threshold and _pattern_matches_executable_context(pattern["regex"], command):
             return {"blocked": True, "pattern": pattern}
     return {"blocked": False, "pattern": None}
 
 
 # --- git safety check ---
 
-def get_current_branch() -> str:
+def get_current_branch(cwd: str | None = None) -> str:
     try:
         result = subprocess.run(
             ["git", "branch", "--show-current"],
             check=True,
             capture_output=True,
             text=True,
+            cwd=cwd,
         )
         return result.stdout.strip()
     except (OSError, subprocess.SubprocessError):
@@ -414,6 +681,7 @@ def check_git_command(
     command: str,
     branch: str | None = None,
     safety_level: str = SAFETY_LEVEL,
+    cwd: str | None = None,
 ) -> dict[str, Any]:
     threshold = LEVELS.get(safety_level, LEVELS["high"])
     current_branch = branch
@@ -422,7 +690,7 @@ def check_git_command(
             continue
         if pattern.get("branch_only"):
             if not current_branch:
-                current_branch = get_current_branch()
+                current_branch = get_current_branch(cwd)
             if current_branch not in PROTECTED_BRANCHES:
                 continue
         reason = pattern["reason"].replace("{branch}", current_branch or "")
@@ -529,17 +797,33 @@ def is_protected_config_path(file_path: str | None, cwd: str | None = None) -> b
     return relative.parts[0] in PROTECTED_CONFIG_PARTS or relative.name in PROTECTED_CONFIG_FILES
 
 
-def _references_protected_config(command: str) -> bool:
+def _segment_cd_target(segment: str) -> str | None:
+    tokens = _segment_command_tokens(segment)
+    if not tokens or Path(tokens[0]).name not in {"cd", "pushd"}:
+        return None
+    for token in tokens[1:]:
+        if token == "--":
+            continue
+        if token.startswith("-"):
+            continue
+        return token
+    return str(Path.home())
+
+
+def _references_protected_config(command: str, cwd: str | None = None) -> bool:
     root = re.escape(str(_claude_root()))
     textual_root = re.escape(str(Path.home() / ".claude"))
     protected = r"(?:hooks|scripts|rules|skills)(?:/|\b)|(?:CLAUDE\.md|settings(?:\.local)?\.json|statusline\.sh)\b"
-    return bool(
-        re.search(
-            rf"(?:~|\$HOME|\$PWD)/\.claude/{protected}|"
-            rf"(?:^|[\s'\"(])(?:\./)?\.claude/{protected}|"
-            rf"(?:{root}|{textual_root})/{protected}",
-            command,
-        )
+    if re.search(
+        rf"(?:~|\$HOME|\$PWD)/\.claude/{protected}|"
+        rf"(?:^|[\s'\"(])(?:\./)?\.claude/{protected}|"
+        rf"(?:{root}|{textual_root})/{protected}",
+        command,
+    ):
+        return True
+    return any(
+        target is not None and is_protected_config_path(target, cwd)
+        for target in (_segment_cd_target(segment) for segment in _shell_segments(command))
     )
 
 
@@ -550,7 +834,7 @@ def normalize_for_safety(command: str) -> str:
     assignments = {
         match.group("name"): match.group("exe")
         for match in re.finditer(
-            rf"(?:^|[;]\s*)(?P<name>[A-Za-z_][A-Za-z0-9_]*)\s*=\s*['\"]?(?P<exe>{executable_group})['\"]?(?=\s*;)",
+            rf"(?:^|[;\n]|\&\&|\|\|)\s*(?P<name>[A-Za-z_][A-Za-z0-9_]*)\s*=\s*['\"]?(?P<exe>{executable_group})['\"]?(?=\s*(?:;|\&\&|\|\||\n|$))",
             normalized,
         )
     }
@@ -561,7 +845,11 @@ def normalize_for_safety(command: str) -> str:
     return normalized
 
 
-def _check_assertion_weakening(tool_name: str, tool_input: dict[str, Any]) -> dict[str, Any] | None:
+def _check_assertion_weakening(
+    tool_name: str,
+    tool_input: dict[str, Any],
+    cwd: str | None = None,
+) -> dict[str, Any] | None:
     edits: list[dict[str, Any]] = []
     file_path = tool_input.get("file_path", "")
     if not TEST_PATH.search(file_path):
@@ -571,7 +859,7 @@ def _check_assertion_weakening(tool_name: str, tool_input: dict[str, Any]) -> di
     elif tool_name == "MultiEdit" and isinstance(tool_input.get("edits"), list):
         edits = [edit for edit in tool_input["edits"] if isinstance(edit, dict)]
     elif tool_name == "Write":
-        resolved = _resolve_path(file_path, None)
+        resolved = _resolve_path(file_path, cwd)
         if resolved.exists():
             return deny("overwrite-test", "Write cannot replace an existing test file; use a reviewable Edit")
         if TAUTOLOGICAL_ASSERTION.search(str(tool_input.get("content", ""))):
@@ -619,23 +907,29 @@ def _bounded_read(tool_input: dict[str, Any], cwd: str | None) -> dict[str, Any]
 
 
 def _wrap_verbose_command(command: str) -> str:
-    stripped = command.strip()
-    if VERBOSE_COMMAND_RE.match(stripped):
-        n = VERBOSE_OUTPUT_LINES
-        return (
-            f"({command}) 2>&1 | "
-            f"awk 'NR<={n}{{print}} NR=={n + 1}{{print \"...[output truncated to {n} lines by policy]\"; exit}}'"
-        )
-    return command
+    if not any(VERBOSE_COMMAND_RE.match(segment.strip()) for segment in _shell_segments(command)):
+        return command
+    n = VERBOSE_OUTPUT_LINES
+    head = n // 2
+    tail = n - head
+    awk_script = (
+        "{lines[NR]=$0} END {"
+        f"if (NR<={n}) {{ for (i=1; i<=NR; i++) print lines[i] }} "
+        f"else {{ for (i=1; i<={head}; i++) print lines[i]; "
+        f"print \"...[\" NR-{n} \" lines truncated by policy]...\"; "
+        f"for (i=NR-{tail}+1; i<=NR; i++) print lines[i] }}"
+        "}"
+    )
+    return f"set -o pipefail; ({command}) 2>&1 | awk '{awk_script}'"
 
 
-def _run_rtk(payload: dict[str, Any], normalized_command: str) -> dict[str, Any]:
+def _run_rtk(payload: dict[str, Any], command: str) -> dict[str, Any]:
     if shutil.which("rtk") is None:
         return {}
     rtk_payload = dict(payload)
     original_input = payload.get("tool_input", {})
     rtk_input = dict(original_input) if isinstance(original_input, dict) else {}
-    rtk_input["command"] = normalized_command
+    rtk_input["command"] = command
     rtk_payload["tool_input"] = rtk_input
     result = subprocess.run(
         ["rtk", "hook", "claude"],
@@ -666,20 +960,25 @@ def evaluate_pre_tool(payload: dict[str, Any]) -> dict[str, Any]:
     tool_input = payload.get("tool_input")
     tool_input = tool_input if isinstance(tool_input, dict) else {}
     cwd = payload.get("cwd") if isinstance(payload.get("cwd"), str) else None
+    safety_level = _current_safety_level()
+    original_command = str(tool_input.get("command", ""))
 
     if tool_name in ("WebSearch", "WebFetch"):
-        return {
-            "hookSpecificOutput": {
-                "hookEventName": "PreToolUse",
-                "permissionDecision": "ask",
-                "permissionDecisionReason": "WebSearch/WebFetch in main context costs tokens. Already in a subagent? Hit allow. Otherwise: spawn a Haiku Agent instead.",
+        web_policy = os.environ.get(WEB_TOOL_POLICY_ENV, "allow").strip().lower()
+        if web_policy in {"ask", "prompt"} and not _is_subagent_payload(payload):
+            return {
+                "hookSpecificOutput": {
+                    "hookEventName": "PreToolUse",
+                    "permissionDecision": "ask",
+                    "permissionDecisionReason": f"WebSearch/WebFetch requires approval when {WEB_TOOL_POLICY_ENV}=ask outside a detected subagent context.",
+                }
             }
-        }
+        return {}
 
     checked_input = tool_input
     normalized = ""
     if tool_name == "Bash":
-        normalized = normalize_for_safety(str(tool_input.get("command", "")))
+        normalized = normalize_for_safety(original_command)
         checked_input = {**tool_input, "command": normalized}
 
     if tool_name in ("Edit", "MultiEdit", "Write") and not config_unlocked():
@@ -689,15 +988,15 @@ def evaluate_pre_tool(payload: dict[str, Any]) -> dict[str, Any]:
     secret_input = checked_input
     if tool_name in ("Read", "Edit", "MultiEdit", "Write") and isinstance(tool_input.get("file_path"), str):
         secret_input = {**checked_input, "file_path": str(_resolve_path(tool_input["file_path"], cwd))}
-    secret_result = check_secrets(tool_name, secret_input)
+    secret_result = check_secrets(tool_name, secret_input, safety_level)
     if secret_result.get("blocked"):
         pattern = secret_result["pattern"]
         return deny(pattern["id"], pattern["reason"])
 
-    test_result = check_tests_tool(tool_name, checked_input)
+    test_result = check_tests_tool(tool_name, checked_input, safety_level)
     if test_result.get("blocked"):
         return deny(test_result["id"], test_result["reason"])
-    assertion_result = _check_assertion_weakening(tool_name, tool_input)
+    assertion_result = _check_assertion_weakening(tool_name, tool_input, cwd)
     if assertion_result:
         return assertion_result
 
@@ -706,31 +1005,46 @@ def evaluate_pre_tool(payload: dict[str, Any]) -> dict[str, Any]:
     if tool_name != "Bash":
         return {}
 
-    command = str(tool_input.get("command", ""))
-    if not config_unlocked() and _references_protected_config(normalized):
+    command = original_command
+    if not config_unlocked() and _references_protected_config(normalized, cwd):
         return deny(
             "config-locked",
             f"Bash access to protected Claude configuration requires {CONFIG_UNLOCK_ENV}=1; use Read for inspection",
         )
 
-    dangerous_result = check_dangerous_command(normalized)
+    dangerous_result = check_dangerous_command(normalized, safety_level)
     if dangerous_result.get("blocked"):
         pattern = dangerous_result["pattern"]
         return deny(pattern["id"], pattern["reason"])
-    git_result = check_git_command(normalized)
+    git_result = check_git_command(
+        normalized,
+        safety_level=safety_level,
+        cwd=_effective_git_cwd(command, cwd),
+    )
     if git_result.get("blocked"):
         return deny(git_result["pattern"]["id"], git_result["reason"])
     for rule_id, pattern, reason in EXTRA_DANGEROUS_PATTERNS:
-        if pattern.search(normalized):
+        if _pattern_matches_executable_context(pattern, normalized):
             return deny(rule_id, reason)
 
-    command = _wrap_verbose_command(command)
-    try:
-        rtk_output = _run_rtk(payload, command)
-    except (OSError, subprocess.SubprocessError, ValueError, RuntimeError, json.JSONDecodeError):
-        rtk_output = {}
+    rtk_output = {}
+    if not _skip_rtk(command):
+        try:
+            rtk_output = _run_rtk(payload, command)
+        except (OSError, subprocess.SubprocessError, ValueError, RuntimeError, json.JSONDecodeError):
+            # rtk is an advisory rewrite layer; core policy checks above still fail closed.
+            rtk_output = {}
     if rtk_output:
+        output = rtk_output.get("hookSpecificOutput")
+        if isinstance(output, dict) and output.get("permissionDecision") != "deny":
+            updated = output.get("updatedInput")
+            if isinstance(updated, dict) and isinstance(updated.get("command"), str):
+                wrapped = _wrap_verbose_command(updated["command"])
+                if wrapped != updated["command"]:
+                    output["updatedInput"] = {**updated, "command": wrapped}
         return rtk_output
+
+    command = _wrap_verbose_command(command)
     original_command = str(tool_input.get("command", ""))
     if command != original_command:
         return {"hookSpecificOutput": {"updatedInput": {**tool_input, "command": command}}}
