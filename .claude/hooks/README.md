@@ -17,8 +17,12 @@ with local hooks that cover this setup's additional behavior.
 - `policy.py` is the registered fail-closed policy entry point. It composes the
   derived safety checks, adds configuration self-protection and bounded large
   reads, and invokes RTK before returning rewritten Bash input.
-- `subagent-routing.py` rewrites missing or mismatched non-Opus Agent routing in
-  place, avoiding retry turns. Opus remains unchanged and requires approval.
+- `subagent-routing.py` rewrites missing or mismatched Agent routing in place,
+  avoiding retry turns. Supported subagent models are only Opus, Sonnet, and
+  Haiku: Opus for planning and incident orchestration, Sonnet by default, and
+  Haiku for Explore, locate, log-search, web-search, docs/URL fetch, tests,
+  builds, dependency installs, checks, and curl/API probe tasks. Fable is
+  disabled and rewritten.
 
 RTK handles supported Bash command rewriting and noisy-output reduction through
 `policy.py`. Unsupported commands and RTK failures pass through unchanged. Set

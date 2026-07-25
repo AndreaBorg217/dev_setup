@@ -5,11 +5,15 @@
 - Batch related lookups into one dispatch instead of firing several tiny
   subagents; each subagent starts with a cold, independent cache.
 - Set the Agent `model` parameter explicitly. The routing hook deterministically
-  rewrites missing or mismatched models without another model turn: `haiku` for
-  search/read/noisy/research/triage/loops, and `sonnet` for planning,
-  implementation, or edits. It also replaces confidently mismatched generic
-  agents with the matching cavecrew or Plan agent. Opus is preserved but
-  requires explicit user permission for each Agent call.
+  rewrites missing or mismatched models without another model turn. The only
+  supported subagent models are `opus`, `sonnet`, and `haiku`: use `opus` for
+  planning and incident orchestration, `sonnet` by default, and `haiku` for
+  Explore, locate, log-search, web-search, docs/URL fetch, tests, builds,
+  dependency installs, checks, and curl/API probe tasks. `fable` is disabled
+  and rewritten.
+- Use the main thread for one small lookup or command whose output should stay
+  under roughly 1-2k tokens. Delegate noisy output, multiple files, web/log
+  research, dependency/test/build/check output, and parallelizable work.
 - Prefer caveman agents with compressed output when they fit the task.
 - For independent file edits (no cross-file dependencies), dispatch
   cavecrew-builder agents in parallel — each returns only a diff summary
