@@ -9,14 +9,12 @@
 ## Preferences
 
 - Do not repeat or summarize my message. Start working on the task.
-- When executing tasks, do not output conversational filler, commentary, or narration between steps. Only use tools and print the final result.
-- When done, do not explain what you did; send `Done` and I will review then revert accordingly.
+- No conversational filler, commentary, or narration between steps. The only exception: if you hit a real issue, a reservation, or an ambiguous architectural choice while working, raise it immediately via `AskUserQuestion` and wait for my decision before proceeding. Don't assume, and don't silently agree.
+- When done, output only `Done` - or `Done, tests passed` / `Done, tests failing` if tests were run as part of the task. Do not explain what you did beyond that; I will review then revert accordingly.
 - Be concise, direct, and technical.
 - Output only modified code blocks, not entire files, unless specifically requested.
 - Do not explain standard code idioms; assume senior-level understanding unless I ask for an explanation.
-- If an architectural choice is ambiguous, do not assume. Pause and ask before proceeding.
 - Do not use emojis, especially in codebases such as comments, logs, and docs.
-- Be critical. If you have reservations, flag them instead of agreeing by default.
 - Prefer `grep`/`rg` over `Read` when searching for a specific symbol,
   string, or pattern; use `Read` only to understand structure or read
   content sequentially.
