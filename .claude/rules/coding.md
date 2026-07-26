@@ -27,7 +27,7 @@ paths:
 - When writing tests, assume the implementation may be wrong rather than writing tests that merely confirm current behavior.
 - Get expectations from the specification, not from reading the implementation or its current outputs. If no written spec exists, ask what the intended behavior is rather than inferring it from the code.
 - Where possible, ask for real-world data rather than inventing test data. If none is available, use clearly-labeled synthetic data instead of stalling on the task.
-- Ask for clarification when an invariant or edge case has ambiguous behavior that would affect correctness — not for every stylistic uncertainty.
+- Ask for clarification when an invariant or edge case has ambiguous behavior that would affect correctness - not for every stylistic uncertainty.
 - Do not disable failing tests or modify them just to pass without approval.
 
 ## Exceptions
@@ -36,11 +36,11 @@ paths:
 - Catch specific exceptions.
 - Unless directed, let unexpected exceptions throw.
 - Exception handling is for unplanned error recovery, not branches the code should already plan for.
-- Do not use exceptions for control flow. Use `if`/`else` or guard clauses. This doesn't forbid idiomatic EAFP patterns (e.g. Python's `try/except KeyError` for dict or attribute access) — the rule targets using exceptions to skip validation you could reasonably do upfront, not language idioms.
+- Do not use exceptions for control flow. Use `if`/`else` or guard clauses. This doesn't forbid idiomatic EAFP patterns (e.g. Python's `try/except KeyError` for dict or attribute access) - the rule targets using exceptions to skip validation you could reasonably do upfront, not language idioms.
 
 ## Code Style
 
-- Comments explain why, not what — the reasoning behind a decision, not a restatement of the code. Why this approach and not the obvious alternative, what was tried and abandoned, and why. That reasoning lives in someone's head for a few weeks after the decision is made and then it's gone; the next person touching the code either remakes the same wrong choice or spends a week rediscovering it. AI-generated code has no memory of that reasoning at all, so writing it down matters more now, not less.
+- Comments explain why, not what - the reasoning behind a decision, not a restatement of the code. Why this approach and not the obvious alternative, what was tried and abandoned, and why. That reasoning only survives as long as someone's memory of it, or an agent's context window - a few weeks for a person, one session for an agent. Undocumented, the next person or the next agent either remakes the same wrong choice or spends a week rediscovering it.
 - Only add inline comments for non-trivial decisions that need justification. Don't comment what the code already makes obvious.
 - Every public/exported function needs a docstring covering purpose, parameters, return value, and side effects such as exceptions raised. Private/internal helpers only need one if their behavior isn't obvious from the name and signature.
 - All files must end with a trailing newline.
@@ -50,5 +50,5 @@ paths:
 ## Verification
 
 - Always run the project's configured linter (and formatter/type-checker, if present) before considering a change complete.
-- If no linter is configured for the language, say so and suggest installing one appropriate for the stack — don't skip the step silently.
+- If no linter is configured for the language, say so and suggest installing one appropriate for the stack - don't skip the step silently.
 - Run the full test suite once a task is complete in its entirety. Don't re-run it after every incremental edit mid-task.

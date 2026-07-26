@@ -1,6 +1,6 @@
 ---
 name: debugger
-description: Used when provided with a stack trace, error log, or symptom-based incident report (e.g. OOM, crash loop, restarts, high memory/CPU, unexpected behaviour) — or when explicitly asked to identify and resolve a system or code anomaly.
+description: Used when provided with a stack trace, error log, or symptom-based incident report (e.g. OOM, crash loop, restarts, high memory/CPU, unexpected behaviour) - or when explicitly asked to identify and resolve a system or code anomaly.
 ---
 
 ## Analysis & Triage
