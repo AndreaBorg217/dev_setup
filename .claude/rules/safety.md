@@ -12,8 +12,9 @@
 
 Do not run conclusive operations without my explicit QA and approval. These include:
 
-- Git commits.
-- GitLab merge requests.
+- Git commits and pushes.
+- Merge/pull requests (GitLab or GitHub).
 - Jira tickets.
 - Slack messages.
+- Notion writes (see interaction.md for scope).
 - Any operation that could trigger an email notification.
