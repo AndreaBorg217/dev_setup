@@ -24,7 +24,7 @@
 - Prefer `caveman` agents (installed plugin) with compressed output when they
   fit the task.
 - For independent file edits (no cross-file dependencies), dispatch
-  cavecrew-builder agents in parallel — each returns only a diff summary
+  cavecrew-builder agents in parallel - each returns only a diff summary
   to the main thread. Keep edits in the main thread only when one change
   depends on the output of another.
 - Ask subagents that run noisy commands or fetch docs to retain raw output in
