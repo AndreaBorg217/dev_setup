@@ -1,5 +1,6 @@
 # Andrea's Developer Setup
 
+![Last tested](https://img.shields.io/badge/last%20tested-2026--07--25-2ea44f?style=for-the-badge&logo=ansible&logoColor=white)
 ![Neovim](https://img.shields.io/badge/NeoVim-%2357A143.svg?&style=for-the-badge&logo=neovim&logoColor=white)
 ![Vim](https://img.shields.io/badge/VIM-%2311AB00.svg?style=for-the-badge&logo=vim&logoColor=white)
 ![Ansible](https://img.shields.io/badge/ansible-%231A1918.svg?style=for-the-badge&logo=ansible&logoColor=white)
@@ -25,7 +26,9 @@ To test the playbook before applying it to a machine use [Tart](https://tart.run
 ```bash
 brew install cirruslabs/cli/tart
 tart clone ghcr.io/cirruslabs/macos-sequoia-base:latest sequoia-base
-tart run sequoia-base
+tart clone sequoia-base test-dev-setup
+tart run test-dev-setup
+ssh admin@$(tart ip test-dev-setup)
 ```
 
 **DOCKER MAY NOT WORK!!**
