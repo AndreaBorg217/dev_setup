@@ -243,7 +243,7 @@ def permitted_high_tier_family(original_agent):
 
 
 def expected_model(subagent_type, text, permitted_family=None):
-    """Choose a model, giving an explicit agent role priority over keywords.
+    """Choose a model, giving noisy standalone work priority over high tiers.
 
     Opus is reserved for orchestration, Sonnet is the default execution model,
     and Haiku is reserved for search. Unsupported families such as Fable are
@@ -269,7 +269,6 @@ def expected_model(subagent_type, text, permitted_family=None):
 
     if role == "cavecrew-builder":
         return "sonnet"
-
     if role in {"cavecrew-investigator", "cavecrew-reviewer"}:
         if matches_any(text, LOCATE_PATTERNS):
             return "haiku"
