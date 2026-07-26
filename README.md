@@ -33,6 +33,16 @@ ssh admin@$(tart ip test-dev-setup)
 
 **DOCKER MAY NOT WORK!!**
 
+Run Claude hook tests from the repo root:
+
+```bash
+python3 -m unittest discover -s .claude/hooks/tests -p test_subagent_routing.py
+python3 -m unittest discover -s .claude/hooks/tests
+```
+
+The first command runs the targeted subagent-routing tests. The second command
+runs the full local hook test suite.
+
 ## Contents
 
 ### Terminal
@@ -181,8 +191,7 @@ Installs Claude Code and some token-saving utils. The following are tracked in t
 - `settings.json` - as implied
 - `skills` - a directory containing all the skills
 - `commands` - a directory containing some useful commands
-- `hooks` - safety, output-filtering, and subagent-routing hooks; see
-  [the hook documentation](.claude/hooks/README.md)
+- `hooks` - safety, output-filtering, and subagent-routing hooks
 - `scripts` - a directory containing scripts used by skills/commands
 - `statusline.sh` - a script that displays the current working directory, context, usage limits, model, and Git branch
 
