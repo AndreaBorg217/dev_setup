@@ -4,3 +4,4 @@
 - When a unit of work is complete, pause and ask me to review and commit before proceeding to the next unit.
 - Do not start broad refactors unless explicitly directed.
 - Keep work surgical and limited to the highlighted lines or files. If the task genuinely requires touching more, ask for approval first rather than expanding scope on your own.
+- On unrecoverable error or deny, stop immediately and ask the user rather than retrying the same operation.
