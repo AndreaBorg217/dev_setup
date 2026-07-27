@@ -50,7 +50,7 @@
       "Write(~/Documents/GitHub/dev_setup/.claude/**)"
     ]
   },
-    "model": "sonnet",
+    "model": "opusplan",
   "availableModels": [
     "sonnet",
     "haiku",
