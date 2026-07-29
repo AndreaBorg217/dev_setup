@@ -9,7 +9,7 @@
       "Read(**/build/**)",
       "Read(**/*.lock)",
       "Read(**/*.log)",
-      "Read(**/.env*)",
+      "Read(**/.env)",
       "Read(**/*.env)",
       "Read(~/.aws/**)",
       "Read(~/.azure/**)",
