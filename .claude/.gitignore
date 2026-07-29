@@ -22,6 +22,8 @@ hooks/**/*.py[cod]
 !output-styles/**
 !scripts/
 !scripts/**
+scripts/__pycache__/
+scripts/**/*.py[cod]
 !themes/
 !themes/**
 !workflows/

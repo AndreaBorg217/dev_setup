@@ -8,32 +8,70 @@
       "Read(**/dist/**)",
       "Read(**/build/**)",
       "Read(**/*.lock)",
-      "Read(**/*.log)"
+      "Read(**/*.log)",
+      "Read(**/.env*)",
+      "Read(**/*.env)",
+      "Read(~/.aws/**)",
+      "Read(~/.azure/**)",
+      "Read(~/.ssh/**)",
+      "Read(~/.kube/**)",
+      "Read(~/.config/gcloud/**)",
+      "Read(~/.config/gh/hosts.yml)",
+      "Read(~/.docker/config.json)",
+      "Read(~/.git-credentials)",
+      "Read(~/.pgpass)",
+      "Read(~/.terraform.d/credentials.tfrc.json)",
+      "Read(**/.netrc)",
+      "Read(**/.npmrc)",
+      "Read(**/application_default_credentials.json)",
+      "Read(**/*.pem)",
+      "Read(**/*.key)",
+      "Read(**/*.pfx)",
+      "Read(**/*.p12)",
+      "Read(**/terraform.tfstate*)",
+      "Read(**/*.enc.yaml)",
+      "Read(**/*.enc.yml)",
+      "Read(**/*.enc.json)",
+      "Read(/tmp/sops*)",
+      "Read(/tmp/op*)",
+      "Read(/tmp/bw*)",
+      "Read(/tmp/bws*)",
+      "Read(/tmp/secret*)",
+      "Read(/private/tmp/sops*)",
+      "Read(/private/tmp/op*)",
+      "Read(/private/tmp/bw*)",
+      "Read(/private/tmp/bws*)",
+      "Read(/private/tmp/secret*)",
+      "Bash(env)",
+      "Bash(env *)",
+      "Bash(printenv)",
+      "Bash(printenv *)",
+      "Bash(set)",
+      "Bash(export)",
+      "Bash(export *)",
+      "Bash(declare)",
+      "Bash(declare *)",
+      "Bash(op read *)",
+      "Bash(bw get *)",
+      "Bash(bws secret get *)",
+      "Bash(bws secret list *)",
+      "Bash(op run --no-masking *)",
+      "Bash(echo $*)",
+      "Bash(printf *$*)"
     ],
     "allow": [
       "Bash(ls *)",
       "Bash(find *)",
-      "Bash(cat *)",
-      "Bash(grep *)",
       "Bash(wc *)",
-      "Bash(head *)",
-      "Bash(tail *)",
-      "Bash(jq *)",
+      "Bash(grep -c *)",
       "Bash(git log *)",
       "Bash(git diff *)",
       "Bash(git status)",
       "Bash(git show *)",
       "Bash(git branch *)",
       "Bash(git remote *)",
-      "Bash(echo *)",
       "Bash(pwd)",
       "Bash(which *)",
-      "Bash(diff *)",
-      "Bash(sort *)",
-      "Bash(uniq *)",
-      "Bash(awk *)",
-      "Bash(cut *)",
-      "Bash(tr *)",
       "Bash(brew list *)",
       "Bash(brew info *)",
       "Bash(docker logs *)",
@@ -44,13 +82,12 @@
       "Bash(docker network ls)",
       "Bash(docker volume ls)",
       "Bash(docker compose ps *)",
-      "Bash(~/.claude/scripts/*)",
-      "Read(*)",
+      "Read(~/Documents/GitHub/**)",
       "Edit(~/Documents/GitHub/dev_setup/.claude/**)",
       "Write(~/Documents/GitHub/dev_setup/.claude/**)"
     ]
   },
-    "model": "opusplan",
+  "model": "opusplan",
   "availableModels": [
     "sonnet",
     "haiku",
@@ -94,9 +131,31 @@
           {
             "type": "command",
             "command": "rtk hook claude"
+          },
+          {
+            "type": "command",
+            "command": "python3 ~/Documents/GitHub/dev_setup/.claude/scripts/block-secret-exposure.py"
           }
         ]
-},
+      },
+      {
+        "matcher": "Read",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ~/Documents/GitHub/dev_setup/.claude/scripts/block-secret-exposure.py"
+          }
+        ]
+      },
+      {
+        "matcher": "Grep",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ~/Documents/GitHub/dev_setup/.claude/scripts/block-secret-exposure.py"
+          }
+        ]
+      },
       {
         "matcher": "Agent",
         "hooks": [
