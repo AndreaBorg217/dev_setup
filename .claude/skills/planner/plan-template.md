@@ -9,7 +9,10 @@ Literal skeleton `planner` fills in when composing `PLAN.md`. Copy this structur
 
 ## Execution Contract
 Orchestrator: sonnet. Dispatch each task to a subagent using the Model named
-in that task. Run tasks within a Parallelism group concurrently, in one
+in that task. Any additional sub-dispatch the orchestrator needs beyond a
+task's own Model (work the plan didn't itself enumerate) is the
+orchestrator's call - sonnet for building and debugging, haiku for noisy
+commands. Run tasks within a Parallelism group concurrently, in one
 message with multiple tool calls. Do not dispatch a task until every ID in
 its Dependencies field has Status DONE. Update each task's Status and
 Results fields in this file as work completes - this file is the only
