@@ -33,15 +33,11 @@ ssh admin@$(tart ip test-dev-setup)
 
 **DOCKER MAY NOT WORK!!**
 
-Run Claude hook tests from the repo root:
+Run the Claude secret-exposure hook matrix from the repo root:
 
 ```bash
-python3 -m unittest discover -s .claude/hooks/tests -p test_subagent_routing.py
-python3 -m unittest discover -s .claude/hooks/tests
+python3 .claude/scripts/test_secret_hooks.py
 ```
-
-The first command runs the targeted subagent-routing tests. The second command
-runs the full local hook test suite.
 
 ## Contents
 
@@ -194,6 +190,12 @@ Installs Claude Code and some token-saving utils. The following are tracked in t
 - `hooks` - safety, output-filtering, and subagent-routing hooks
 - `scripts` - a directory containing scripts used by skills/commands
 - `statusline.sh` - a script that displays the current working directory, context, usage limits, model, and Git branch
+
+The secret-exposure hook blocks common plaintext disclosure paths before Claude
+runs a tool: direct `op read`/`bw get`/`bws secret get`, SOPS/KSOPS decrypts to
+stdout, untrapped SOPS temp-file redirects, ksops-backed `kustomize build`
+output, `kubectl get secret -o yaml|json|jsonpath`, and direct Bash/Read
+access to known credential files.
 
 ### Routines
 
