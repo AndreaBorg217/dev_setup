@@ -46,6 +46,7 @@ paths:
 - All files must end with a trailing newline.
 - Avoid ternary operators; prefer explicit `if`/`else`.
 - Avoid nested `if`/`else` blocks but rather you must keep conditional checks linear and short favouring the early `return`/`throw`.
+- Never use magic numbers or hardcoded strings inside business logic. Extract all arbitrary values into named constants at the top of the file or enums or into an environment configuration.
 
 ## Verification
 
