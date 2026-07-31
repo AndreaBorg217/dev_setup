@@ -80,4 +80,4 @@ Repeat Steps 2-5 until every task is `DONE`, or execution halts on a `FAILED`/`B
 
 ## Step 7 - Report
 
-Once every task is `DONE`, summarize what shipped, cite the Manual-section checklist for any items the user still needs to confirm, and stop.
+Once every task is `DONE`, reply with 'Done,' citing the Manual-section checklist for any items the user still needs to confirm, and stop.
