@@ -45,7 +45,7 @@ paths:
 - Every public/exported function needs a docstring covering purpose, parameters, return value, and side effects such as exceptions raised. Private/internal helpers only need one if their behavior isn't obvious from the name and signature.
 - All files must end with a trailing newline.
 - Avoid ternary operators; prefer explicit `if`/`else`.
-- Python's `or` idiom is allowed as a default-substitution shorthand (`x = a or default`), but only when any falsy value should be treated as equivalent to missing. If `a` can legitimately be a valid falsy value (`0`, `""`, `[]`, `False`), use `x = a if a is not None else default` instead.
+- Avoid nested `if`/`else` blocks but rather you must keep conditional checks linear and short favouring the early `return`/`throw`.
 
 ## Verification
 
