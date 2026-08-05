@@ -68,6 +68,20 @@
     "gopls": {
         "formatting.gofumpt": true
     },
+    "[java]": {
+        "editor.defaultFormatter": "dokimos-dev.palantir-java-formatter",
+        "editor.codeActionsOnSave": {
+            "source.organizeImports": "always"
+        }
+    },
+    "java.completion.importOrder": [
+        "java",
+        "javax",
+        "org",
+        "com"
+    ],
+    "java.sources.organizeImports.starThreshold": 999,
+    "java.sources.organizeImports.staticStarThreshold": 999,
     // JAVASCRIPT/TYPESCRIPT/REACT Configuration
     "[javascript]": {
         "editor.defaultFormatter": "esbenp.prettier-vscode",
