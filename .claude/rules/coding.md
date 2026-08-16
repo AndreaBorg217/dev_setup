@@ -38,11 +38,9 @@ paths:
 
 ## Exceptions
 
-- Do not swallow exceptions with generic catch-all handling.
-- Catch specific exceptions.
+- Catch specific exceptions. Do not swallow exceptions with generic catch-all handling.
 - Unless directed, let unexpected exceptions throw.
-- Exception handling is for unplanned error recovery, not branches the code should already plan for.
-- Do not use exceptions for control flow. Use `if`/`else` or guard clauses. This doesn't forbid idiomatic EAFP patterns (e.g. Python's `try/except KeyError` for dict or attribute access) - the rule targets using exceptions to skip validation you could reasonably do upfront, not language idioms.
+- Exception handling is for unplanned error recovery, not branches the code should already plan for. Use `if`/`else` or guard clauses. This doesn't forbid idiomatic EAFP patterns (e.g. Python's `try/except KeyError` for dict or attribute access) - the rule targets using exceptions to skip validation you could reasonably do upfront, not language idioms.
 
 ## Code Style
 
@@ -52,10 +50,10 @@ paths:
 - Avoid nested `if`/`else` blocks but rather you must keep conditional checks linear and short favouring the early `return`/`throw`.
 - Extract non-obvious domain values and arbitrary literals from business logic into named constants, enums, or environment configuration. Do not create constants for self-explanatory literals.
 - Avoid method chaining in business logic, including `map` or `reduce`, when a simple loop is easier to read and debug. This does not apply to idiomatic Flink, Kafka Streams, or Spark pipelines.
-- Prefer code that a developer can trace step by step with a breakpoint. If that is impractical, the solution is too clever.
+- Prefer code that a developer can trace step by step with a breakpoint. If doing so impractical, the solution is too clever and should use more primitive coding constructs.
 
 ## Verification
 
-- Run the project's configured linter, formatter check, and type-checker, when present, before considering a change complete. Do not let a formatter rewrite files outside the approved scope.
+- Run the project's configured linter, formatter check, and type-checker, when present, before considering a change complete. Do not let a formatter rewrite files outside the approved scope (meaning a file that is currently not in git diff).
 - If no linter is configured for the language, say so and suggest installing one appropriate for the stack - don't skip the step silently.
 - Run the full test suite once a task is complete in its entirety. Don't re-run it after every incremental edit mid-task.
