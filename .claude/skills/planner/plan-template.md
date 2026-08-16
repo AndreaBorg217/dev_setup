@@ -2,6 +2,8 @@
 
 Use this literal structure for `plans/<kebab-name>/PLAN.md`. Replace every placeholder, delete optional bullets or sections that do not apply, and leave each planning-time `Results:` empty.
 
+Each `>>`-separated segment is one `plan-execute` invocation followed by a stop. For example, `t1 >> [t2, t3, t4] >> t5` means run `t1` and stop, concurrently run `t2`, `t3`, and `t4` in three separate subagents and stop, then run `t5` and stop. Use brackets only for mutually independent tasks that can run concurrently without overlapping Writes.
+
 ```markdown
 # <Concise plan title>
 

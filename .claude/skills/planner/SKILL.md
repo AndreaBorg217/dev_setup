@@ -64,7 +64,8 @@ Read `plan-template.md` before composing. Use its section order and task fields 
 - **Writes:** list comma-separated paths/globs the task may modify, or `None` for read-only work.
 - **Models:** assign the task model under `rules/subagents.md`; only `haiku` and `sonnet` are valid in a plan.
 - **Verification:** require an observable assertion such as an exit code, file state, query result, or table; never "looks correct."
-- **Blocks:** encode order once as `Blocks: <full-id> >> [<full-id>, <full-id>]`. Bracketed tasks must be independent and must not write the same path. Do not add per-task Dependencies.
+- **Blocks:** encode order once as `Blocks: <full-id> >> [<full-id>, <full-id>]`. Each `>>`-separated segment is exactly one `plan-execute` invocation followed by a stop. `t1 >> [t2, t3, t4] >> t5` means: run `t1` alone and stop; on the next invocation, dispatch `t2`, `t3`, and `t4` concurrently in three separate subagents and stop; on the next invocation, run `t5` alone and stop.
+- **Brackets:** use brackets only for tasks that are mutually independent, share no required intermediate output, and can run concurrently in separate subagents without overlapping Writes. Never bracket tasks that must run sequentially. Do not add per-task Dependencies.
 - **Fanout:** apply the probe-then-fanout pattern in `rules/subagents.md` and reference the probe's full task ID in consumer `How` fields.
 - **External effects:** include git operations, deployment, test-file changes, or documentation changes only when explicitly requested and record that inclusion under Boundaries and decisions.
 - **Deployment:** when explicitly requested, keep staging and production in separate sequential blocks; production uses and depends on the verified staging outcome.

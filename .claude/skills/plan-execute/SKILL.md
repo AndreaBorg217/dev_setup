@@ -32,16 +32,18 @@ Execute only the approved behavior in the plan. Repository evidence can establis
 
 The current block is the first `>>`-separated group containing a task whose Status is not `DONE`. Never start a later block and never execute more than one block per invocation.
 
+Interpret each unbracketed group as one task and each bracketed group as one mandatory parallel batch. `t1 >> [t2, t3, t4] >> t5` means: run `t1` alone and stop; on the next invocation, dispatch `t2`, `t3`, and `t4` concurrently in three separate subagents and stop; on the next invocation, run `t5` alone and stop.
+
 - Halt when any task in the current block is `FAILED` or `BLOCKED`; name the task and required user decision.
 - Recover repository-only `IN_PROGRESS` work by running its Verification first. If it passes, record Results and mark it `DONE`. If it fails, clear Results, set it to `PENDING`, and dispatch it with instructions to inspect and finish the existing partial artifact.
 - Do not automatically recover an `IN_PROGRESS` task that may have changed external state or is not idempotent. Ask the user to confirm the external state before retrying.
 - Select every `PENDING` task in the current block. Previously `DONE` tasks stay done and are not repeated.
 
-Before dispatch, confirm that bracketed tasks do not overlap in Writes. Reject any git operation, deployment, test-file change, or documentation change not explicitly included under Boundaries and decisions. When an included operation requires approval under `rules/safety.md`, obtain that approval before setting Status to `IN_PROGRESS` or dispatching it. A blocking Manual action also halts before dispatch.
+Before dispatch, confirm that bracketed tasks are mutually independent, require no intermediate output from one another, and do not overlap in Writes. If a bracketed group cannot run concurrently, halt for a plan amendment; never serialize it or collapse its tasks into one subagent. Reject any git operation, deployment, test-file change, or documentation change not explicitly included under Boundaries and decisions. When an included operation requires approval under `rules/safety.md`, obtain that approval before setting Status to `IN_PROGRESS` or dispatching it. A blocking Manual action also halts before dispatch.
 
 ## 3. Dispatch
 
-Set every selected task to `IN_PROGRESS` in `PLAN.md`, then send one message containing one Agent call per task; parallelize a bracketed group.
+Set every selected task to `IN_PROGRESS` in `PLAN.md`. For a bracketed group, send one message containing one Agent call per task so every task starts concurrently in its own subagent. Sequential dispatch of bracketed tasks is forbidden.
 
 - Route model, subagent type, and parallelism under `rules/subagents.md`. Pass the task's Model (`haiku` or `sonnet`) explicitly; the plan's value is authoritative.
 - Give each subagent the Objective, applicable Boundaries and decisions and Grounded facts, its Goal, Writes, How, Verification, and any earlier task Results referenced by full ID.
