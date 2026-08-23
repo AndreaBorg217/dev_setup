@@ -9,15 +9,14 @@ This file covers principles and decision rules. Full runnable code for every pat
 
 - A task should be a small idempotent piece of work that can be retried without side effects. Before looping over a list inside a task, consider `.expand()` instead - see "Serializing mapped instances" below for the case where instances must run strictly one after another.
 - Any `@task` used with `.expand()` needs `map_index_template` set, e.g. `map_index_template="""{{ task.parameters['date'] }}"""`, so each mapped instance shows a readable name in the UI instead of a bare index.
+- Name task parameters for the domain value they carry, e.g. `table_name: str` or `orders: List[Dict]`. Do not invent a vague `spec` container.
 - Always consider side effects of a retry -> alerts, writes to a sink, etc.
 - Use `max_active_tis_per_dag` to cap concurrent instances of one mapped task - across active runs of the DAG, not just within one run. See "Serializing mapped instances" for the `1`-instance case.
-- Use DAG-level `max_active_tasks` to cap concurrent task instances within a single DAG run. It does not limit concurrency across separate runs of the same DAG or across DAGs - use an Airflow Pool for that.
-- Use `get_current_context` inside the task body instead of passing context variables (e.g. `logical_date`) as a parameter. A task should only receive XComs it cannot compute itself, and only the ones it needs.
+- Use DAG-level `max_active_tasks` to cap concurrent task instances within a single DAG run.
+- Use `get_current_context` inside the task body instead of passing context variables (e.g. `logical_date`) as a parameter. A task should only receive XComs it cannot compute itself, and only the ones it needs. This by definition excludes context variables and Airflow variables defined as `AIRFLOW_VAR_*` or through UI.
 - Prefer TaskFlow decorators (`@task`, `@task.sensor`, `@task.branch`, `@task.short_circuit`, `@task_group`) for custom Python logic; use purpose-built operators/sensors when one already implements the required external-system behavior (e.g. `TriggerDagRunOperator`) rather than reimplementing it as a `@task`. Define the DAG with `with DAG(...)` syntax.
 - Default the `schedule` parameter to `CronTriggerTimetable`.
-- Default a DAG to `max_active_runs=1` unless it's specifically designed for multiple runs in flight (e.g. independent per-partition backfills). Without this cap, a slow run plus normal schedule cadence can pile up overlapping runs that race each other.
-
-See "Personal conventions" below for team style choices (inline-vs-function, pendulum, `typing`, etc) that are not Airflow requirements.
+- Default a DAG to `max_active_runs=1` unless it's specifically designed for multiple runs in flight.
 
 # Retries and backoff
 
@@ -27,9 +26,13 @@ See "Personal conventions" below for team style choices (inline-vs-function, pen
 
 # Serializing mapped instances
 
-`max_active_tis_per_dag=1` on a mapped (`.expand()`-ed) task holds each instance for its full runtime - the next instance cannot begin until the current one ends. Reach for this when instances must run strictly one after another, not just capped in number. Neither `TaskGroup` nor `@task_group` has an equivalent throttle for its own expanded children, so this task-level setting is the only lever.
+`max_active_tis_per_dag=1` on a mapped (`.expand()`-ed) task allows only one instance of that task to run at a time. The task holds that slot for its full runtime, so another mapped instance cannot overlap it.
 
-Keep an instance's internal steps as ordinary private functions called from that one `@task`, rather than one Airflow task per step - splitting them out would let Airflow schedule a later step of instance 2 before an earlier step of instance 1 finishes, defeating the point. `retries=0` is deliberate too: a mid-lifecycle failure means a retry could touch a resource (e.g. a DB connection) the failed attempt already touched - safer to fail the instance and let it be investigated or manually rerun than retry blind into a partial state.
+An expanded `@task_group` has no equivalent throttle that serializes a whole group instance. For a mapped chain `a >> b >> c`, the dependencies enforce `a[i] -> b[i] -> c[i]` within each instance, but do not add a cross-instance dependency from `c[0]` to `a[1]`. Airflow may therefore start `a[1]` before `c[0]` finishes. Putting `max_active_tis_per_dag=1` on each child only serializes copies of that child; it does not serialize the chain as one unit.
+
+When an expanded chain must run one logical instance at a time - `a[1]` cannot begin until `c[0]` has finished - implement the steps as ordinary helper functions called sequentially by one mapped `@task`, and set `max_active_tis_per_dag=1` on that outer task. Its task instance spans the entire chain, so the throttle serializes the logical instances rather than each step independently. This deliberately trades per-step Airflow visibility and retry control for chain-level serialization. Choose retry behavior based on whether the combined workflow is safe to rerun; the example uses `retries=0` to avoid blindly retrying a partially completed lifecycle.
+
+Use this workaround only for that cross-instance serialization constraint. For every other use case, keep the steps as Airflow tasks and use native dependencies, TaskGroups, pools and concurrency controls, retries, and setup/teardown as appropriate.
 
 See [examples.md#serializing-mapped-instances](examples.md#serializing-mapped-instances) for the pattern.
 
@@ -37,7 +40,7 @@ See [examples.md#serializing-mapped-instances](examples.md#serializing-mapped-in
 
 The two constructs have different jobs, and mixing them up (or wiring a `trigger_rule` around the seam) is where a DAG stops reading top-to-bottom as it runs.
 
-- **`@task.short_circuit()` means "halt the DAG here, full stop."** Leave `ignore_downstream_trigger_rules` at its default (`True`) always. If it returns `False`, everything downstream is skipped, unconditionally. Don't set `ignore_downstream_trigger_rules=False`, and don't put a `trigger_rule="none_failed_min_one_success"` join downstream of a short-circuit hoping it survives the skip - that trades a readable DAG for trigger-rule plumbing invisible from where the decision was made. Reserve short-circuit for genuine abort conditions: no new data to process, a required precondition entirely absent, a param that says "don't run today."
+- **`@task.short_circuit()` means "halt the DAG here, full stop."** Leave `ignore_downstream_trigger_rules` at its default (`True`) always. If it returns `False`, everything downstream is skipped, unconditionally. Don't set `ignore_downstream_trigger_rules=False`, and don't put a `trigger_rule="none_failed_min_one_success"` join downstream of a short-circuit. Reserve short-circuit for genuine abort conditions: no new data to process, a required precondition entirely absent, a param that says "don't run today."
 - **If the DAG should keep running but through one path rather than another, that's `@task.branch`'s job, not a short-circuit's.** A branch task returns the specific downstream `task_id`(s) to run next, so the decision and its consequence are both visible in the return value.
 - **Fan-in after a branch is the one place `trigger_rule="none_failed_min_one_success"` is the standard, expected pattern, not something to avoid.** `@task.branch` marks every unchosen path's tasks as skipped - that's how branching works - so a join task those paths funnel back into needs this trigger*rule, or the default `all_success` would leave it permanently skipped. This differs from the short-circuit anti-pattern above: there, the trigger_rule was making a task survive a \_halt-the-DAG* decision it was never meant to survive; here, it's acknowledging the normal outcome of "exactly one of these paths runs."
 - If the join needs to combine what different branches actually produced (not just synchronize), pull the branch-specific XComs by `task_ids` inside the join task's body (see "XCom" below) rather than routing a value through every branch unconditionally.
@@ -49,7 +52,6 @@ See [examples.md#branching-and-gating](examples.md#branching-and-gating).
 
 - Raise `AirflowFailException` with a descriptive f-string for "this should never happen" precondition guards - not expected/recoverable business exceptions.
 - Raise `AirflowSkipException` when a task genuinely has nothing to do (empty input list, no new data) and that's a normal, expected outcome. Prefer this over branching around the task when the "nothing to do" check only applies to one task.
-- Project convention, not an Airflow requirement: when classifying a run on ambiguous signals (e.g. "is this a recovery run"), require two independent signals to agree and document why in the docstring - a single signal can misclassify a run.
 - Idempotent-resource-creation pattern, for any task that provisions something external: read current state first; if it already exists in a "this task already succeeded" state, skip and return; if it exists in any other unexpected state, fail loud rather than silently overwriting. This makes retries safe.
 
 See [examples.md#fail-fast-validation](examples.md#fail-fast-validation).
@@ -58,14 +60,14 @@ See [examples.md#fail-fast-validation](examples.md#fail-fast-validation).
 
 The deciding question is whether cleanup must run **unconditionally**, no matter what happened upstream. That's the entire value `@task.teardown` provides, and it's also its limit.
 
-- **Use `@task.teardown` only when the resource must always be cleaned up, full stop.** Pair a `@task.setup` with a `@task.teardown` (`.as_setup()` / `.as_teardown(setups=...)`) for a resource - a temp table, a staging path, a scratch cluster - that has no legitimate reason to survive the run, regardless of whether the work between them succeeded, failed, or was skipped. Airflow runs the teardown whenever its paired setup ran, and by default its own outcome doesn't count toward the DAG run's success/failure (`on_failure_fail_dagrun=True` if it should). Don't reach for a manual try/finally or a `trigger_rule="all_done"` cleanup task to get this behavior - `@task.teardown` is built for exactly this.
-- **The moment cleanup becomes conditional on anything, don't use `@task.teardown` at all - route it with a plain `@task.branch` instead.** If teardown should be withheld under some condition (a verification check failed and the resource should be preserved for inspection, the DAG was triggered manually and the resource is meant to be reused, etc), that decision belongs in an ordinary branch task naming which downstream `task_id` to run - not inside a `@task.teardown`, and not behind a short-circuit (see "Branching and gating": short-circuit halts the whole DAG, it isn't a per-resource conditional). Baking a condition into a teardown (e.g. `AirflowSkipException` from inside it) fights the construct: a teardown that sometimes doesn't run is really just a regular task wearing a teardown decorator - a branch says the same thing more clearly.
+- **Use `@task.teardown` only when the resource must always be cleaned up, full stop.** Pair a `@task.setup` with a `@task.teardown` (`.as_setup()` / `.as_teardown(setups=...)`) for a resource (eg. a temp table) that has no legitimate reason to survive the run, regardless of whether the work between them succeeded, failed, or was skipped. Don't reach for a manual try/finally or a `trigger_rule="all_done"` cleanup task to get this behavior - `@task.teardown` is built for exactly this.
+- **The moment cleanup becomes conditional on anything, don't use `@task.teardown` at all - route it with a plain `@task.branch` instead.** If teardown should be withheld under some condition (a verification check failed and the resource should be preserved for inspection, the DAG was triggered manually and the resource is meant to be reused, etc), that decision belongs in an ordinary branch task naming which downstream `task_id` to run - not inside a `@task.teardown`. Do not bake a condition into a teardown (e.g. `AirflowSkipException` from inside it).
 
 See [examples.md#setup-and-teardown](examples.md#setup-and-teardown).
 
 # Exception handling
 
-- Default to letting a task throw. An uncaught exception fails the task instance, which triggers Airflow's own retry/alerting machinery (`retries`, `on_failure_callback`) - that machinery exists so tasks don't reimplement "log it and hope" themselves.
+- Default to letting a task throw. An uncaught exception fails the task instance, which triggers Airflow's own retry/alerting machinery.
 - Don't wrap a task body in a broad `try/except Exception` that logs and swallows the error to keep it "green" - that hides the failure from retries, alerting, and run history all at once.
 - Only catch a narrow, specifically-typed exception, and only when there's a real decision to make with it - re-raise unless you're doing one of:
     - The idempotent-resource-creation check from "Fail-fast validation," where the exception type itself is what signals "doesn't exist yet."
@@ -99,10 +101,8 @@ See [examples.md#params-config-and-constants](examples.md#params-config-and-cons
 - `@task(multiple_outputs=True)` when a task's dict return should unpack into multiple named XComs instead of one blob.
 - Don't push/pull a value through XCom if it can instead be read or computed directly from `get_current_context()` in the consumer - threading it through XCom adds a needless dependency edge and a serialized copy for something already available for free.
 - Same reasoning, different source: config values (a connection id, a constant) belong in a Variable or module-level constant, read directly by whichever task needs them - not pushed by an earlier task just so a later one can pull it.
-- Push scalars or small dicts only. Never a full DataFrame or raw API response - for real payloads, write to storage and XCom the pointer/path instead.
 - Push only what the next task actually consumes.
 - One XCom, one clear piece of data. If a task's return dict is turning into a general-purpose bag, split it into separate named XComs with `multiple_outputs=True`.
-- If the same value is passed unchanged through 3+ tasks, it belongs in a constant/Variable/context, not a relay chain of XComs.
 
 # TaskGroups
 
