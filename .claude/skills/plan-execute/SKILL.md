@@ -58,6 +58,16 @@ If a subagent errors, returns nothing, or lacks a required tool, credential, or 
 
 Run each task's Verification against the produced artifact; never accept the subagent's assertion as proof.
 
+For a final review task whose `How` invokes `.claude/skills/review-code/SKILL.md`,
+keep semantic verification out of the orchestrator: dispatch a fresh `sonnet`
+`general-purpose` subagent with the same review scope in verification mode and
+`Writes: None`, and pass the review task's original `Writes` as its correction
+scope. Independently rerun the configured linter, formatter check, type checker,
+and full test suite. Treat semantic verification as passing only when the fresh
+reviewer returns `PASS`, and treat `BLOCKED` as a halt requiring the reported
+decision or scope. This is verification within the current task, not a new
+execution block.
+
 - **Pass:** set Status to `DONE` and record compact Results.
 - **Fail:** allow one automatic repair only when the failure is ground-truth evidence for exactly one repair already permitted by Goal, Writes, How, Verification, and the global boundaries. Redispatch once and re-verify.
 - **Ask instead:** halt immediately when the repair is ambiguous, changes requirements or architecture, adds a dependency, exceeds Writes, affects uncertain external state, requires missing credentials, or contradicts the plan.
