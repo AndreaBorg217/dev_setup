@@ -1,6 +1,6 @@
 # Coding rule BAD/GOOD examples
 
-These selected examples clarify code-level rules in `../../../rules/coding.md`.
+These selected examples clarify code-level rules in `../../rules/coding.md`.
 They are interpretation aids, not syntax or framework mandates. Repository
 evidence and the canonical rule always take precedence.
 
