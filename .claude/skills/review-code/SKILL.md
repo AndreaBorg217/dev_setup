@@ -1,13 +1,13 @@
 ---
 name: review-code
-description: Review and repair a bounded code change for conformity with rules/coding.md in any programming language. Use for planner final passes and direct code-conformance reviews; not for general bug, performance, architecture, or product review.
+description: Review and repair a bounded code change for conformity with rules/coding.md in any programming language. Use for direct code-conformance reviews; not for general bug, performance, architecture, or product review.
 ---
 
 # Review Code
 
 Treat [the coding rules](../../rules/coding.md) as canonical for every
 programming language. Read them fully before each review. Consult the
-[BAD/GOOD examples](references/coding-rule-examples.md) only when a code-level
+[BAD/GOOD examples](examples.md) only when a code-level
 rule needs concrete interpretation; where an example and the canonical rule
 differ, follow the canonical rule.
 
@@ -19,15 +19,13 @@ orchestrator must pass the review scope, mode, authorized `Writes`, applicable
 requirements, and required checks. In verification mode it must also pass the
 original repair paths as the correction scope. The orchestrator must not review
 the code itself. When this skill is loaded inside an already delegated review
-task, including a planner-generated final pass or its independent verification,
-perform the review in that subagent and do not delegate again.
+task, perform the review in that subagent and do not delegate again.
 
 ## Scope
 
-Review only the code change named by the request or task. For a
-planner-generated pass, use the prior task Results, authorized `Writes`, and
-repository diff to identify the complete planned change. Do not attribute
-unrelated pre-existing work in a dirty worktree to the change.
+Review only the code change named by the request or task. Use the request,
+authorized `Writes`, and repository diff to identify the complete change. Do
+not attribute unrelated pre-existing work in a dirty worktree to the change.
 
 Inspect enough surrounding code, call sites, tests, configuration, and
 repository conventions to distinguish evidence from hypothetical concerns.
@@ -82,4 +80,4 @@ in-scope violation remains and every required check succeeds. In repair mode, do
 not return a correctable violation: make the change. In verification mode,
 return `FAIL` with numbered violations separated by `---` and ordered by
 descending impact when any remain. Include the reviewed scope and commands run.
-Return the result directly; planner executions persist it in `PLAN.md`.
+Return the result directly.

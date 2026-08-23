@@ -70,24 +70,7 @@ Read `plan-template.md` before composing. Use its section order and task fields 
 - **External effects:** include git operations, deployment, test-file changes, or documentation changes only when explicitly requested and record that inclusion under Boundaries and decisions.
 - **Deployment:** when explicitly requested, keep staging and production in separate sequential blocks; production uses and depends on the verified staging outcome.
 - **Manual actions:** add the optional section only for actions the user must perform.
-- **Final code-conformance pass:** when any task creates or modifies source code,
-  scripts, migrations, tests, infrastructure-as-code, or other executable logic,
-  add one final unbracketed `sonnet` task after every code-writing task. Its `How`
-  must require dispatch to one `general-purpose` review subagent and invocation
-  of `.claude/skills/review-code/SKILL.md` in repair mode over the complete
-  planned code change. The `How` must name every preceding code-writing task by
-  full ID and use their Results to distinguish planned changes from unrelated
-  dirty-worktree changes. It must require conformity with
-  `.claude/rules/coding.md` and then run the configured linter, formatter check,
-  type checker, and full test suite.
-  Give it `Writes` equal to the exact union of code paths/globs already
-  authorized for earlier tasks so it can remove findings without broadening
-  scope. Its `Verification` must rerun every configured check and invoke the
-  review skill in verification mode in a fresh `sonnet` `general-purpose`
-  subagent; all checks and that independent review must pass. Do not add a
-  separate final verification task, and do not permit any later task to modify
-  code; explicitly requested git or deployment work may follow only after this
-  pass. Writing or changing tests remains separate, explicit scope.
+- **Final verification:** for code changes, include a final read-only task that runs the configured checks required by `rules/coding.md`. Writing or changing tests remains separate, explicit scope.
 
 Do not create `PLAN.HUMAN.md`. `PLAN.md` is the sole plan and execution state.
 
