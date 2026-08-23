@@ -17,6 +17,9 @@ This file covers principles and decision rules. Full runnable code for every pat
 - Prefer TaskFlow decorators (`@task`, `@task.sensor`, `@task.branch`, `@task.short_circuit`, `@task_group`) for custom Python logic; use purpose-built operators/sensors when one already implements the required external-system behavior (e.g. `TriggerDagRunOperator`) rather than reimplementing it as a `@task`. Define the DAG with `with DAG(...)` syntax.
 - Default the `schedule` parameter to `CronTriggerTimetable`.
 - Default a DAG to `max_active_runs=1` unless it's specifically designed for multiple runs in flight.
+- Use `pendulum` throughout for all date/time handling (`pendulum.datetime(...)`, `pendulum.duration(...)`, `pendulum.now("UTC")`, `.to_datetime_string()`) rather than the stdlib `datetime`/`timedelta`.
+- Type-hint every task's parameters and return value using the stdlib `typing` module.
+- Unless code is repeated, prefer inline logic inside the task definition over extracting a function - see "Serializing mapped instances" for the one exception.
 
 # Retries and backoff
 
@@ -179,9 +182,3 @@ def enrich_orders(orders: List[Dict], users: Dict) -> dict:
 ```
 
 See [examples.md#docstrings](examples.md#docstrings) for a full multi-task chain showing how these contracts connect across tasks.
-
-# Personal conventions
-
-- Use `pendulum` throughout for all date/time handling (`pendulum.datetime(...)`, `pendulum.duration(...)`, `pendulum.now("UTC")`, `.to_datetime_string()`) rather than the stdlib `datetime`/`timedelta`.
-- Type-hint every task's parameters and return value using the stdlib `typing` module rather than bare built-in generics.
-- Unless code is repeated, prefer inline logic inside the task definition over extracting a function - see "Serializing mapped instances" for the one exception.
