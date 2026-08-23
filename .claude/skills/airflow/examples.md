@@ -4,31 +4,59 @@ Full runnable code for each pattern in [SKILL.md](SKILL.md). Section headers mat
 
 ## Serializing mapped instances
 
+Default - keep the steps as Airflow tasks and expand their TaskGroup:
+
 ```python
-def _get_db_conn(spec: dict):
+@task(map_index_template="""{{ task.parameters['table_name'] }}""")
+def create_table(table_name: str) -> None:
     ...
 
-def _query(conn, spec: dict) -> list:
+@task(map_index_template="""{{ task.parameters['table_name'] }}""")
+def verify_table(table_name: str) -> None:
     ...
 
-def _process(rows: list) -> None:
+@task(map_index_template="""{{ task.parameters['table_name'] }}""")
+def drop_table(table_name: str) -> None:
     ...
 
-def _close_conn(conn) -> None:
+@task_group
+def table_lifecycle(table_name: str) -> None:
+    created = create_table(table_name)
+    verified = verify_table(table_name)
+    dropped = drop_table(table_name)
+    created >> verified >> dropped
+
+table_lifecycle.expand(table_name=build_table_names())
+```
+
+This gives each mapped instance its own `create[i] >> verify[i] >> drop[i]` chain while allowing different instances to overlap. That is the expected Airflow behavior and should be preserved unless the workflow specifically requires the cross-instance dependency `drop[0] >> create[1]`.
+
+Exception - only when one entire logical instance must finish before another starts, collapse the steps into helper functions inside one throttled mapped task:
+
+```python
+def _create_table(table_name: str) -> None:
+    ...
+
+def _verify_table(table_name: str) -> None:
+    ...
+
+def _drop_table(table_name: str) -> None:
     ...
 
 @task(
     max_active_tis_per_dag=1,
     retries=0,
-    map_index_template="""{{ task.parameters['spec']['date'] }}""",
+    map_index_template="""{{ task.parameters['table_name'] }}""",
 )
-def run_one(spec: dict) -> None:
-    conn = _get_db_conn(spec)
-    _process(_query(conn, spec))
-    _close_conn(conn)
+def run_table_lifecycle(table_name: str) -> None:
+    _create_table(table_name)
+    _verify_table(table_name)
+    _drop_table(table_name)
 
-run_one.expand(spec=build_specs())
+run_table_lifecycle.expand(table_name=build_table_names())
 ```
+
+Do not use this workaround for ordinary dependency ordering, grouping, resource limits, retries, or cleanup. Keep separate Airflow tasks and use the corresponding native mechanisms for those concerns.
 
 ## Branching and gating
 
@@ -53,16 +81,16 @@ choose_processing_path() >> [fast_path(), full_path()] >> join_after_branch()
 
 ```python
 @task
-def ensure_resource_created(spec: dict) -> None:
-    existing = get_resource(spec["name"])
+def ensure_resource_created(resource_name: str) -> None:
+    existing = get_resource(resource_name)
     if existing is not None:
         if existing["status"] not in EXPECTED_TERMINAL_STATES:
             raise AirflowFailException(
-                f"Resource '{spec['name']}' already exists in unexpected "
+                f"Resource '{resource_name}' already exists in unexpected "
                 f"status '{existing['status']}'; refusing to proceed."
             )
         return
-    create_resource(spec)
+    create_resource(resource_name)
 ```
 
 ## Setup and teardown
