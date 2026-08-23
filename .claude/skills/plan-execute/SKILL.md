@@ -1,6 +1,6 @@
 ---
 name: plan-execute
-description: Use when the user asks to execute, run, resume, or continue a PLAN.md produced by planner - validates the plan, dispatches exactly one execution block, verifies results, and preserves resumable state in PLAN.md.
+description: Use when the user asks to execute, run, resume, or continue a PLAN.md produced by planner - dispatches exactly one execution block, verifies results, and preserves resumable state in PLAN.md.
 ---
 
 # Plan Execute
@@ -20,11 +20,7 @@ Resolve the plan:
 
 If an explicitly selected plan already has every task `DONE`, reply `Done` and stop.
 
-Resolve the repository root, then validate before loading work:
-
-`python3 "$root/.claude/scripts/validate-plan.py" "$plan_file" --phase execution`
-
-On validation failure, reply `Blocked on plan validation: <exact failure>` and stop. From the valid file, load the Objective, Boundaries and decisions, optional Grounded facts and Manual actions, Blocks groups, and every task's Status, Model, Goal, Writes, How, Verification, and Results.
+From the valid file, load the Objective, Boundaries and decisions, optional Grounded facts and Manual actions, Blocks groups, and every task's Status, Model, Goal, Writes, How, Verification, and Results.
 
 Execute only the approved behavior in the plan. Repository evidence can establish a technical fact but cannot broaden scope or supply a missing user preference.
 

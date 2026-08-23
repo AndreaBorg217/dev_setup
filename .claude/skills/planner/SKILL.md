@@ -1,17 +1,17 @@
 ---
 name: planner
-description: Use when the user asks to plan, scope, or break down multi-step work before implementation, or says "plan this" / "write a plan" - resolves technical blockers during planning and produces a validated, self-contained PLAN.md consumed by plan-execute.
+description: Use when the user asks to plan, scope, or break down multi-step work before implementation, or says "plan this" / "write a plan" - resolves technical blockers during planning and produces self-contained PLAN.md consumed by plan-execute.
 ---
 
 # Planner
 
-Run on Opus. Produce one validated `plans/<kebab-name>/PLAN.md` that a fresh Sonnet `plan-execute` session can execute without this conversation. Follow `rules/subagents.md` for any delegated investigation.
+Run on Opus. Produce one `plans/<kebab-name>/PLAN.md` that a fresh Sonnet `plan-execute` session can execute without this conversation. Follow `rules/subagents.md` for any delegated investigation.
 
 ## 1. Mode and intent
 
 Detect plan mode from the harness-assigned plan-file path in the system prompt.
 
-- **Plan mode:** use the harness file as the staging copy. Keep planning until it is complete, validate it, and call `ExitPlanMode`; do not ask for a separate signoff first. After approval, materialize that exact approved content at the repository plan path, validate it again, reply `Done`, and stop before implementation.
+- **Plan mode:** use the harness file as the staging copy. Keep planning until it is complete and call `ExitPlanMode`; do not ask for a separate signoff first. After approval, materialize that exact approved content at the repository plan path, reply `Done`, and stop before implementation.
 - **Other modes:** perform the same investigation and validation, present the completed plan once for explicit approval, then materialize it, reply `Done`, and stop. Warn once that the session may not be Opus.
 - Never dispatch Opus from this skill. Route Haiku/Sonnet work under `rules/subagents.md` and pass the model explicitly.
 
@@ -81,15 +81,12 @@ Before approval:
 1. Map every explicit requirement and boundary to the objective, a global decision, or a task.
 2. Confirm there are no open decisions, unresolved forecast blockers, unsupported assumptions, placeholders, vague verification gates, duplicate task IDs, missing tasks, or parallel write conflicts.
 3. Confirm a fresh executor needs neither this conversation nor repository rediscovery to perform each task.
-4. Set `validation_phase` to `planning` for a new plan or `execution` for an amendment that preserves completed state, then validate the staged plan:
 
-   `python3 "$root/.claude/scripts/validate-plan.py" "$plan_file" --phase "$validation_phase"`
+When amending an executed plan, preserve `DONE` and Results only for tasks whose Goal, Writes, How, and Verification are unchanged. Reset every changed task and every task in later blocks to `PENDING` with empty Results. Remove obsolete tasks, retain stable IDs for unchanged tasks.
 
-When amending an executed plan, preserve `DONE` and Results only for tasks whose Goal, Writes, How, and Verification are unchanged. Reset every changed task and every task in later blocks to `PENDING` with empty Results. Remove obsolete tasks, retain stable IDs for unchanged tasks, and validate the amended plan.
+In plan mode, call `ExitPlanMode` only after the audit and validation pass. After approval, create `$root/plans/<slug>/`, copy the exact approved staging content to `PLAN.md`, reply `Done`, and stop. Do not execute a task in the materialization turn.
 
-In plan mode, call `ExitPlanMode` only after the audit and validation pass. After approval, create `$root/plans/<slug>/`, copy the exact approved staging content to `PLAN.md`, validate the materialized file with the same phase, reply `Done`, and stop. Do not execute a task in the materialization turn.
-
-Outside plan mode, ask for approval only after the same audit and validation pass, then write and validate the approved `PLAN.md` directly.
+Outside plan mode, ask for approval only after the same audit and validation pass, then write the approved `PLAN.md` directly.
 
 ## Halt
 
