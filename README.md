@@ -33,12 +33,6 @@ ssh admin@$(tart ip test-dev-setup)
 
 **DOCKER MAY NOT WORK!!**
 
-Run the Claude secret-exposure hook matrix from the repo root:
-
-```bash
-python3 .claude/scripts/test_secret_hooks.py
-```
-
 ## Contents
 
 ### Terminal
@@ -181,15 +175,22 @@ Task: `tasks/apps.yml`
 
 Task: `tasks/claude.yml`
 
-Installs Claude Code and some token-saving utils. The following are tracked in the `.claude` directory:
+Installs Claude Code, caveman-code, and RTK. The following user-managed config is
+tracked in the `.claude` directory:
 
-- `CLAUDE.md` - behavioural settings for Claude
-- `settings.json` - as implied
-- `skills` - a directory containing all the skills
-- `commands` - a directory containing some useful commands
-- `hooks` - safety, output-filtering, and subagent-routing hooks
-- `scripts` - a directory containing scripts used by skills/commands
-- `statusline.sh` - a script that displays the current working directory, context, usage limits, model, and Git branch
+- `.gitignore` - excludes Claude's runtime state and other machine-local files
+- `CLAUDE.md` - core behavioural instructions
+- `settings.json` - permissions, hooks, models, plugins, and UI settings
+- `agents` - custom subagent definitions
+- `output-styles` - response style definitions
+- `rules` - focused behavioural and workflow instructions
+- `scripts` - hook and command-line helper scripts
+- `skills` - reusable task-specific instructions
+- `statusline.sh` - displays the current directory, context, usage limits, model, and Git branch
+
+Hooks are configured in `settings.json`; there is no tracked `hooks` directory.
+The current pre-tool hooks integrate RTK, guard against plaintext secret
+exposure, and prevent subagents from launching nested agents.
 
 The secret-exposure hook blocks common plaintext disclosure paths before Claude
 runs a tool: direct `op read`/`bw get`/`bws secret get`, SOPS/KSOPS decrypts to
@@ -204,6 +205,30 @@ Inspired by [this LinkedIn post](https://www.linkedin.com/posts/fabian-wesner_a-
 Go to [https://claude.ai/code/routines](https://claude.ai/code/routines) and create a routine as shown below:
 
 ![Align token refresh](resources/claude_limits_routine.png)
+
+## Codex
+
+Task: `tasks/codex.yml`
+
+```bash
+ansible-playbook setup.yml --tags codex
+```
+
+Installs Codex, Node, and RTK, then reuses the Claude configuration without
+duplicating its shared rules or skills:
+
+- renders `~/.codex/AGENTS.md` from `.claude/CLAUDE.md`, `.claude/rules/`, and a
+  small Codex adapter;
+- links `~/.agents/skills` to `.claude/skills`;
+- maps Claude workload roles to the GPT-5.6 family: Opus to Sol, Sonnet to
+  Terra, and Haiku to Luna;
+- initializes RTK's native Codex instructions; and
+- adds and installs the Codex-compatible Caveman and Ponytail plugins.
+
+The model mapping preserves each role rather than claiming exact model
+equivalence. Claude-specific hooks, tool names, status-line behavior, and
+transcript handling are translated when Codex has an equivalent; the shared
+workflow remains the source of truth.
 
 ## Dotfiles managed by Stow
 
@@ -242,9 +267,5 @@ Go to [https://claude.ai/code/routines](https://claude.ai/code/routines) and cre
 [Dreams of Code](https://www.youtube.com/@dreamsofcode)
 
 - [Go DAP](https://www.youtube.com/watch?v=i04sSQjd-qo)
-
-[Karan Bansal](https://github.com/karanb192)
-
-- [Claude Code safety hooks](https://github.com/karanb192/claude-code-hooks)
 
 Terminal font created by [romaktv](https://github.com/romkatv/powerlevel10k-media/blob/master/MesloLGS%20NF%20Regular.ttf)
