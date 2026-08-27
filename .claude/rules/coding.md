@@ -98,9 +98,9 @@ Before finishing, review each new helper, branch, guard, abstraction, parameter,
 - Match the repository's existing commit convention.
 - Keep commits small, logical, and reviewable.
 - Amend fixes into the commit they belong to rather than adding fixup commits: `git commit --amend --no-edit`.
-- Split unrelated or independently meaningful work into separate commits.
+- Split unrelated or independently meaningful work into separate commits, before you start coding the changes; don't code all the changes, then revert selectively to split into commits.
 - Rebase onto the target branch instead of merging it: `git fetch origin && git rebase origin/main`.
-- Keep final history linear and remove meaningless false starts or "address review" commits.
+- Keep final history linear and remove meaningless false starts or "address review" or "bugfix" commits.
 - Rewrite local history with interactive rebase when needed: `git rebase -i main`.
 - After use `git push --force-with-lease origin BRANCH-NAME`, never plain `--force`.
 - Commit locally as useful, but push in bulk to avoid unnecessary CI/CD churn.
