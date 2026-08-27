@@ -1,8 +1,44 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
-  "effortLevel": "medium",
-  "outputStyle": "Straight_to_the_Point",
+  "env": {
+    "CLAUDE_CODE_SUBAGENT_MODEL": "inherit",
+    "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "50",
+    "CLAUDE_CODE_DISABLE_TERMINAL_TITLE": "1",
+    "CLAUDE_CODE_EFFORT_LEVEL": "medium",
+    "MAX_MCP_OUTPUT_TOKENS": "10000",
+    "ANTHROPIC_DEFAULT_OPUS_MODEL": "claude-opus-5",
+    "ANTHROPIC_DEFAULT_SONNET_MODEL": "claude-sonnet-5",
+    "ANTHROPIC_DEFAULT_HAIKU_MODEL": "claude-haiku-4-5",
+    "PONYTAIL_DEFAULT_MODE": "full",
+    "CAVEMAN_DEFAULT_MODE": "full"
+  },
   "permissions": {
+    "allow": [
+      "Bash(ls *)",
+      "Bash(find *)",
+      "Bash(wc *)",
+      "Bash(grep -c *)",
+      "Bash(git log *)",
+      "Bash(git diff *)",
+      "Bash(git status)",
+      "Bash(git show *)",
+      "Bash(git branch *)",
+      "Bash(git remote *)",
+      "Bash(pwd)",
+      "Bash(which *)",
+      "Bash(brew list *)",
+      "Bash(brew info *)",
+      "Bash(docker logs *)",
+      "Bash(docker stats *)",
+      "Bash(docker ps *)",
+      "Bash(docker images *)",
+      "Bash(docker inspect *)",
+      "Bash(docker network ls)",
+      "Bash(docker volume ls)",
+      "Bash(docker compose ps *)",
+      "Read(~/Documents/GitHub/**)",
+      "Edit(~/Documents/GitHub/dev_setup/.claude/**)"
+    ],
     "deny": [
       "Read(**/node_modules/**)",
       "Read(**/.git/objects/**)",
@@ -59,82 +95,18 @@
       "Bash(op run --no-masking *)",
       "Bash(echo $*)",
       "Bash(printf *$*)"
-    ],
-    "allow": [
-      "Bash(ls *)",
-      "Bash(find *)",
-      "Bash(wc *)",
-      "Bash(grep -c *)",
-      "Bash(git log *)",
-      "Bash(git diff *)",
-      "Bash(git status)",
-      "Bash(git show *)",
-      "Bash(git branch *)",
-      "Bash(git remote *)",
-      "Bash(pwd)",
-      "Bash(which *)",
-      "Bash(brew list *)",
-      "Bash(brew info *)",
-      "Bash(docker logs *)",
-      "Bash(docker stats *)",
-      "Bash(docker ps *)",
-      "Bash(docker images *)",
-      "Bash(docker inspect *)",
-      "Bash(docker network ls)",
-      "Bash(docker volume ls)",
-      "Bash(docker compose ps *)",
-      "Read(~/Documents/GitHub/**)",
-      "Edit(~/Documents/GitHub/dev_setup/.claude/**)",
-      "Write(~/Documents/GitHub/dev_setup/.claude/**)"
     ]
   },
   "model": "opusplan",
+  "fallbackModel": [
+    "sonnet",
+    "haiku"
+  ],
   "availableModels": [
     "sonnet",
     "haiku",
     "opus"
   ],
-  "fallbackModel": [
-    "sonnet",
-    "haiku"
-  ],
-  "env": {
-    "CLAUDE_CODE_SUBAGENT_MODEL": "inherit",
-    "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "50",
-    "CLAUDE_CODE_DISABLE_TERMINAL_TITLE": "1",
-    "CLAUDE_CODE_EFFORT_LEVEL": "medium",
-    "MAX_MCP_OUTPUT_TOKENS": "10000",
-    "ANTHROPIC_DEFAULT_OPUS_MODEL": "claude-opus-5",
-    "ANTHROPIC_DEFAULT_SONNET_MODEL": "claude-sonnet-5",
-    "ANTHROPIC_DEFAULT_HAIKU_MODEL": "claude-haiku-4-5",
-    "PONYTAIL_DEFAULT_MODE": "full",
-    "CAVEMAN_DEFAULT_MODE": "full"
-  },
-  "statusLine": {
-    "type": "command",
-    "command": "bash ~/.claude/statusline.sh"
-  },
-  "enabledPlugins": {
-    "caveman@caveman": true,
-    "jdtls-lsp@claude-plugins-official": true,
-    "pyright-lsp@claude-plugins-official": true,
-    "ponytail@ponytail": true
-  },
-  "extraKnownMarketplaces": {
-    "caveman": {
-      "source": {
-        "source": "github",
-        "repo": "JuliusBrussee/caveman"
-      }
-    },
-    "ponytail": {
-      "source": {
-        "source": "github",
-        "repo": "DietrichGebert/ponytail"
-      }
-    }
-  },
-  "skipAutoPermissionPrompt": false,
   "hooks": {
     "PreToolUse": [
       {
@@ -178,5 +150,38 @@
         ]
       }
     ]
-  }
+  },
+  "enableArtifact": false,
+  "enableWorkflows": false,
+  "statusLine": {
+    "type": "command",
+    "command": "bash ~/.claude/statusline.sh"
+  },
+  "enabledPlugins": {
+    "caveman@caveman": true,
+    "jdtls-lsp@claude-plugins-official": true,
+    "pyright-lsp@claude-plugins-official": true,
+    "ponytail@ponytail": true
+  },
+  "extraKnownMarketplaces": {
+    "caveman": {
+      "source": {
+        "source": "github",
+        "repo": "JuliusBrussee/caveman"
+      }
+    },
+    "ponytail": {
+      "source": {
+        "source": "github",
+        "repo": "DietrichGebert/ponytail"
+      }
+    }
+  },
+  "outputStyle": "Straight_to_the_Point",
+  "feedbackDrafts": "quiet",
+  "effortLevel": "medium",
+  "awaySummaryEnabled": false,
+  "askUserQuestionTimeout": "never",
+  "editorMode": "normal",
+  "skipAutoPermissionPrompt": false
 }
