@@ -30,3 +30,6 @@
     - include_tasks: tasks/claude.yml
       tags:
         - claude
+    - include_tasks: tasks/codex.yml
+      tags:
+        - codex

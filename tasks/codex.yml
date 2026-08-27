@@ -1,0 +1,174 @@
+- name: Install node
+  homebrew:
+    name: node
+    state: present
+  tags:
+    - "codex"
+
+- name: Install Codex
+  homebrew_cask:
+    name: codex
+    state: present
+  tags:
+    - "codex"
+
+- name: Install rtk
+  homebrew:
+    name: rtk
+    state: present
+  tags:
+    - "codex"
+
+- name: Check Codex config path
+  stat:
+    path: "{{ ansible_facts.env.HOME }}/.codex"
+    follow: false
+  register: codex_config_path
+  tags:
+    - "codex"
+
+- name: Fail when Codex config path is a symlink
+  fail:
+    msg: "~/.codex is a symlink. Replace it with a real directory before running this task so runtime state and managed files remain separate."
+  when: codex_config_path.stat.islnk | default(false)
+  tags:
+    - "codex"
+
+- name: Create Codex config directory
+  file:
+    path: "{{ ansible_facts.env.HOME }}/.codex"
+    state: directory
+    mode: "0700"
+  tags:
+    - "codex"
+
+- name: Check Codex instructions path
+  stat:
+    path: "{{ ansible_facts.env.HOME }}/.codex/AGENTS.md"
+    follow: false
+  register: codex_instructions_path
+  tags:
+    - "codex"
+
+- name: Remove legacy Codex instructions symlink
+  file:
+    path: "{{ ansible_facts.env.HOME }}/.codex/AGENTS.md"
+    state: absent
+  when: codex_instructions_path.stat.islnk | default(false)
+  tags:
+    - "codex"
+
+- name: Initialize rtk for Codex
+  command:
+    argv:
+      - rtk
+      - init
+      - --global
+      - --codex
+  changed_when: false
+  tags:
+    - "codex"
+
+- name: Render Codex instructions from shared Claude rules
+  template:
+    src: "{{ playbook_dir }}/.codex/AGENTS.md.j2"
+    dest: "{{ ansible_facts.env.HOME }}/.codex/AGENTS.md"
+    mode: "0644"
+  tags:
+    - "codex"
+
+- name: Check shared agent config path
+  stat:
+    path: "{{ ansible_facts.env.HOME }}/.agents"
+    follow: false
+  register: agents_config_path
+  tags:
+    - "codex"
+
+- name: Fail when shared agent config path is a symlink
+  fail:
+    msg: "~/.agents is a symlink. Replace it with a real directory before running this task so only the managed skills link is replaced."
+  when: agents_config_path.stat.islnk | default(false)
+  tags:
+    - "codex"
+
+- name: Create shared agent config directory
+  file:
+    path: "{{ ansible_facts.env.HOME }}/.agents"
+    state: directory
+    mode: "0700"
+  tags:
+    - "codex"
+
+- name: Check Codex skills path
+  stat:
+    path: "{{ ansible_facts.env.HOME }}/.agents/skills"
+    follow: false
+  register: codex_skills_path
+  tags:
+    - "codex"
+
+- name: Fail when Codex skills path is a real directory
+  fail:
+    msg: "~/.agents/skills is a real directory. Move its contents before running this task; the managed path links to the shared .claude/skills directory."
+  when:
+    - codex_skills_path.stat.exists | default(false)
+    - not (codex_skills_path.stat.islnk | default(false))
+  tags:
+    - "codex"
+
+- name: Symlink shared Claude skills for Codex
+  file:
+    src: "{{ playbook_dir }}/.claude/skills"
+    dest: "{{ ansible_facts.env.HOME }}/.agents/skills"
+    state: link
+    force: true
+  tags:
+    - "codex"
+
+- name: Add Codex plugin marketplaces
+  command:
+    argv:
+      - codex
+      - plugin
+      - marketplace
+      - add
+      - "{{ item }}"
+      - --json
+  loop:
+    - JuliusBrussee/caveman
+    - DietrichGebert/ponytail
+  register: codex_marketplace_add
+  changed_when: not ((codex_marketplace_add.stdout | from_json).alreadyAdded | bool)
+  tags:
+    - "codex"
+
+- name: List installed Codex plugins
+  command:
+    argv:
+      - codex
+      - plugin
+      - list
+      - --json
+  register: codex_plugin_list
+  changed_when: false
+  tags:
+    - "codex"
+
+- name: Install Codex plugins
+  command:
+    argv:
+      - codex
+      - plugin
+      - add
+      - "{{ item.selector }}"
+      - --json
+  loop:
+    - name: caveman
+      selector: caveman@caveman
+    - name: ponytail
+      selector: ponytail@ponytail
+  when: item.name not in ((codex_plugin_list.stdout | from_json).installed | map(attribute='name') | list)
+  changed_when: true
+  tags:
+    - "codex"
