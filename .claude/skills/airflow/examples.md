@@ -7,15 +7,15 @@ Full runnable code for each pattern in [SKILL.md](SKILL.md). Section headers mat
 Default - keep the steps as Airflow tasks and expand their TaskGroup:
 
 ```python
-@task(map_index_template="""{{ task.parameters['table_name'] }}""")
+@task()
 def create_table(table_name: str) -> None:
     ...
 
-@task(map_index_template="""{{ task.parameters['table_name'] }}""")
+@task()
 def verify_table(table_name: str) -> None:
     ...
 
-@task(map_index_template="""{{ task.parameters['table_name'] }}""")
+@task()
 def drop_table(table_name: str) -> None:
     ...
 
@@ -46,7 +46,6 @@ def _drop_table(table_name: str) -> None:
 @task(
     max_active_tis_per_dag=1,
     retries=0,
-    map_index_template="""{{ task.parameters['table_name'] }}""",
 )
 def run_table_lifecycle(table_name: str) -> None:
     _create_table(table_name)
@@ -240,7 +239,7 @@ Supported params:
 ## .partial() + .expand()
 
 ```python
-@task(map_index_template="""{{ task.parameters['table'] }}""")
+@task
 def process_table(table: str, mode: str) -> None:
     ...
 

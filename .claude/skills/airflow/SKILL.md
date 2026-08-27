@@ -1,6 +1,6 @@
 ---
 name: airflow
-description: Use when authoring, reviewing, debugging, testing, or operating Apache Airflow DAGs, tasks, sensors, operators, scheduling, XComs, or task mapping.
+description: MANDATORY before touching any Airflow file (DAGs, tasks, sensors, operators, scheduling, XComs, task mapping) - invoke first even for a single-line edit (e.g. a schedule/cron change), not only full authoring sessions. Also use for reviewing, debugging, testing, or operating Airflow.
 ---
 
 This file covers principles and decision rules. Full runnable code for every pattern below lives in [examples.md](examples.md); operational/debugging reference lives in [reference.md](reference.md).
@@ -8,7 +8,6 @@ This file covers principles and decision rules. Full runnable code for every pat
 # Authoring principles
 
 - A task should be a small idempotent piece of work that can be retried without side effects. Before looping over a list inside a task, consider `.expand()` instead - see "Serializing mapped instances" below for the case where instances must run strictly one after another.
-- Any `@task` used with `.expand()` needs `map_index_template` set, e.g. `map_index_template="""{{ task.parameters['date'] }}"""`, so each mapped instance shows a readable name in the UI instead of a bare index.
 - Name task parameters for the domain value they carry, e.g. `table_name: str` or `orders: List[Dict]`. Do not invent a vague `spec` container.
 - Always consider side effects of a retry -> alerts, writes to a sink, etc.
 - Use `max_active_tis_per_dag` to cap concurrent instances of one mapped task - across active runs of the DAG, not just within one run. See "Serializing mapped instances" for the `1`-instance case.
