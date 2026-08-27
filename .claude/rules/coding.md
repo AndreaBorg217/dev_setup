@@ -89,6 +89,8 @@ Before completion, run the configured linter, formatter check, type checker, and
 
 Do not let formatters modify files outside the current scope. During development, use the smallest relevant verification commands rather than repeatedly running the full suite.
 
+When a language server is available for the language being edited, use it during exploration and implementation. Prefer language-server navigation and diagnostics for definitions, references, symbols, type information, and errors; use text search for non-symbolic content or when the language server cannot answer the query. Treat language-server results as code intelligence, not as a substitute for the repository's configured verification commands.
+
 If no linter exists, say so and suggest an appropriate one.
 
 Before finishing, review each new helper, branch, guard, abstraction, parameter, exception handler, fallback, comment, and dependency. If no requirement or repository evidence requires it, remove it. Every extra line of code is a penalty which we will need to maintain and potentially debug if it fails.

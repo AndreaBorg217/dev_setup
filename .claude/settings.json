@@ -116,6 +116,7 @@
   },
   "enabledPlugins": {
     "caveman@caveman": true,
+    "jdtls-lsp@claude-plugins-official": true,
     "pyright-lsp@claude-plugins-official": true,
     "ponytail@ponytail": true
   },
