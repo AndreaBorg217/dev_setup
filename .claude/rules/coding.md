@@ -50,8 +50,9 @@ Prefer basic constructs that can be traced step by step with a debugger.
 - Avoid ternaries except for simple assignments.
 - Simplicity means low cognitive load, not minimum character count.
 - Create constants only when the name adds domain meaning or a value must stay synchronized across multiple places.
-- Add comments only for non-obvious reasoning: why a decision exists, why an obvious alternative failed, or context another developer could not infer from the code.
-- Correct or remove stale comments and docstrings when editing nearby code.
+- Add comments only for stable, non-obvious reasoning: why a decision exists, why an obvious alternative failed, or context another developer could not infer from the code.
+- Do not comment on control flow, values, types, or behavior already expressed by the code; those comments drift.
+- Update or remove comments and docstrings in the same change when their behavior, assumptions, or constraints change.
 
 ## Exceptions
 
@@ -78,6 +79,8 @@ Do not disable or weaken failing tests without permission.
 Change only what is necessary for the requested task.
 
 Do not perform opportunistic refactors, rename or reformat unrelated code, reorganize modules unnecessarily, clean up unrelated code, or silently expand scope.
+
+Remove code made unused or unreachable by the current change. Do not leave commented-out implementations. Mention pre-existing dead code outside the task scope instead of removing it.
 
 Follow relevant repository conventions, but do not copy an abstraction merely because an example exists elsewhere.
 
