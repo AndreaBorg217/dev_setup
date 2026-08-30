@@ -115,6 +115,9 @@ https://github.com/theclaymethod/unslop.
 - Do not rewrite already-clear prose merely to enforce this style. Prefer no
   change to a doubtful improvement.
 - Never pack the same idea into denser jargon or broken grammar.
+- Write numbers as digits, not words, wherever the digit form stays readable
+  (`8` not `eight`). For large round numbers use a digit plus a scale word
+  instead of a long digit string (`4 billion` not `4,000,000,000`).
 
 Before sending prose, check its word choice, rhythm, and overall shape. Remove
 anything that adds no fact, instruction, or necessary tone. Rewrite any sentence
