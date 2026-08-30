@@ -6,6 +6,8 @@ the playbook.
 
 {{ lookup('ansible.builtin.file', playbook_dir ~ '/.claude/CLAUDE.md') | regex_replace('(?m)^@[^\r\n]*(?:\r?\n|$)', '') }}
 
+{{ lookup('ansible.builtin.file', playbook_dir ~ '/.claude/output-styles/Straight_to_the_Point.md') | regex_replace('(?s)^---\r?\n.*?\r?\n---\r?\n', '') }}
+
 {{ lookup('ansible.builtin.file', playbook_dir ~ '/.claude/rules/safety.md') }}
 
 {{ lookup('ansible.builtin.file', playbook_dir ~ '/.claude/rules/workflow.md') }}
