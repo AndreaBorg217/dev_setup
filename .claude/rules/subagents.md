@@ -1,5 +1,9 @@
 # Subagents
 
+- All human-facing drafts and file edits must follow `Straight_to_the_Point`.
+- Cavecrew is internal-only and must not author human-facing prose, including docs, reviews, comments, commit text, or MR text.
+- Main agents must rewrite or reject Cavecrew receipts before exposing them to a reader.
+
 - Use subagents for bounded delegated work, noisy commands, research, or context buffering. Keep the main conversation as the driver and orchestrator.
 - Pick a specific `subagent_type` instead of defaulting to `general-purpose`:
   `Explore` or `caveman:cavecrew-investigator` for locating code,

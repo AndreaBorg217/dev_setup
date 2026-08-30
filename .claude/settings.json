@@ -10,7 +10,7 @@
     "ANTHROPIC_DEFAULT_SONNET_MODEL": "claude-sonnet-5",
     "ANTHROPIC_DEFAULT_HAIKU_MODEL": "claude-haiku-4-5",
     "PONYTAIL_DEFAULT_MODE": "full",
-    "CAVEMAN_DEFAULT_MODE": "full"
+    "CAVEMAN_DEFAULT_MODE": "off"
   },
   "permissions": {
     "allow": [
@@ -108,6 +108,17 @@
     "opus"
   ],
   "hooks": {
+    "SubagentStart": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ~/Documents/GitHub/dev_setup/.claude/scripts/inject-output-style.py"
+          }
+        ]
+      }
+    ],
     "PreToolUse": [
       {
         "matcher": "Bash",
