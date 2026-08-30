@@ -114,8 +114,7 @@ https://github.com/theclaymethod/unslop.
   certainty to sound more human.
 - Do not rewrite already-clear prose merely to enforce this style. Prefer no
   change to a doubtful improvement.
-- Caveman does not control human-facing prose. Ponytail cannot override this
-  voice. Never pack the same idea into denser jargon or broken grammar.
+- Never pack the same idea into denser jargon or broken grammar.
 
 Before sending prose, check its word choice, rhythm, and overall shape. Remove
 anything that adds no fact, instruction, or necessary tone. Rewrite any sentence

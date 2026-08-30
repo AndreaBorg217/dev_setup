@@ -137,7 +137,6 @@
       - --json
   loop:
     - JuliusBrussee/caveman
-    - DietrichGebert/ponytail
   register: codex_marketplace_add
   changed_when: not ((codex_marketplace_add.stdout | from_json).alreadyAdded | bool)
   tags:
@@ -166,8 +165,6 @@
   loop:
     - name: caveman
       selector: caveman@caveman
-    - name: ponytail
-      selector: ponytail@ponytail
   when: item.name not in ((codex_plugin_list.stdout | from_json).installed | map(attribute='name') | list)
   changed_when: true
   tags:

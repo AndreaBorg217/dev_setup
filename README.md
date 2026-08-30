@@ -223,7 +223,7 @@ duplicating its shared rules or skills:
 - maps Claude workload roles to the GPT-5.6 family: Opus to Sol, Sonnet to
   Terra, and Haiku to Luna;
 - initializes RTK's native Codex instructions; and
-- adds and installs the Codex-compatible Caveman and Ponytail plugins.
+- adds and installs the Codex-compatible Caveman plugin.
 
 The model mapping preserves each role rather than claiming exact model
 equivalence. Claude-specific hooks, tool names, status-line behavior, and
