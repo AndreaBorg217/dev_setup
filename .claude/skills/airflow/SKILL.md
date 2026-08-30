@@ -1,6 +1,6 @@
 ---
 name: airflow
-description: MANDATORY before touching any Airflow file (DAGs, tasks, sensors, operators, scheduling, XComs, task mapping) - invoke first even for a single-line edit (e.g. a schedule/cron change), not only full authoring sessions. Also use for reviewing, debugging, testing, or operating Airflow.
+description: MANDATORY before touching any Airflow file (DAGs, tasks, sensors, operators, scheduling, XComs, task mapping) - invoke first even for a single-line edit (e.g. a schedule/cron change), not only full authoring sessions. Also use for reviewing, debugging, or testing DAGs, and for operating Airflow (trigger/backfill a DAG run, clear or mark task instances, pause/unpause a DAG, inspect logs or task state via UI/CLI/API).
 ---
 
 This file covers principles and decision rules. Full runnable code for every pattern below lives in [examples.md](examples.md); operational/debugging reference lives in [reference.md](reference.md).
