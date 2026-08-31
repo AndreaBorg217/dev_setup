@@ -65,7 +65,7 @@ Run each task's Verification against the produced artifact; never accept the sub
 
 In a parallel block, retain passing tasks as `DONE`. Never rerun them while resolving another task.
 
-Write Results directly in this compact form, omitting empty lines:
+Write Results in `Straight_to_the_Point` voice: plain, direct sentences, no filler, no padding. Write directly in this compact form, omitting empty lines:
 
 ```
 Outcome:
