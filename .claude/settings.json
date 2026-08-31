@@ -35,6 +35,13 @@
       "Bash(docker network ls)",
       "Bash(docker volume ls)",
       "Bash(docker compose ps *)",
+      "Bash(op --account * item get *)",
+      "Bash(op --account * item list *)",
+      "Bash(op --account * run *)",
+      "Bash(curl * airflow.prod.rootz.com*)",
+      "Bash(curl * airflow.stg.rootz.com*)",
+      "Bash(chmod +x /tmp/*.sh)",
+      "Bash(/tmp/*.sh)",
       "Read(~/Documents/GitHub/**)",
       "Edit(~/Documents/GitHub/dev_setup/.claude/**)"
     ],
@@ -164,13 +171,21 @@
   "enabledPlugins": {
     "caveman@caveman": true,
     "jdtls-lsp@claude-plugins-official": true,
-    "pyright-lsp@claude-plugins-official": true
+    "wildz-data@wildz-data": true,
+    "pyright-lsp@claude-plugins-official": true,
+    "wildz-core@wildz-data": true
   },
   "extraKnownMarketplaces": {
     "caveman": {
       "source": {
         "source": "github",
         "repo": "JuliusBrussee/caveman"
+      }
+    },
+    "wildz-data": {
+      "source": {
+        "source": "git",
+        "url": "git@gitlab.com:granturo/rootz/bi/data-skills.git"
       }
     }
   },

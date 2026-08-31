@@ -25,6 +25,10 @@ Preserve unrelated and pre-existing work. Do not overwrite, stage, restore, comm
 - After rewritten history, use force-with-lease. Never use an unguarded force update.
 - Commit at useful review boundaries and push in bulk to avoid unnecessary CI/CD churn.
 
+## Voice
+
+Write commit messages in `Straight_to_the_Point` voice: plain, direct sentences stating what changed and why. No filler, no padding.
+
 ## Approval
 
 Skill invocation does not authorize a mutation. Read-only inspection may run when relevant. Obtain explicit QA and approval immediately before commits, pushes, ref changes, stash removal, worktree removal, history rewrites, destructive recovery, remote configuration changes, and other conclusive operations.

@@ -9,6 +9,8 @@ Run this protocol only when explicitly invoked. Do not trigger it automatically 
 
 Do not write code or propose technical implementation while running this skill.
 
+Write all review feedback and the saved specification in `Straight_to_the_Point` voice - plain sentences, no filler, no padding.
+
 ## Step 1: Provide the Intake Template
 Present the following blank template to the user and ask them to fill it out completely:
 
