@@ -1,5 +1,6 @@
 *.env
 !.env.example
+.DS_Store
 vscode/settings.local.json
 __pycache__/
 *.py[cod]
