@@ -21,51 +21,43 @@ return {
 			},
 		})
 		mason_lspconfig.setup({
-			-- list of servers for mason to install
 			ensure_installed = {
-				"pyright", -- Python LSP
-				"gopls", -- Go LSP
-				"lua_ls", -- Lua LSP (for Neovim config)
-				"yamlls", -- YAML LSP
-				"dockerls", -- Dockerfile LSP
-				"docker_compose_language_service", -- Docker Compose LSP
-				"ts_ls", -- TypeScript LSP
-				"eslint",
-				"cssls", -- CSS LSP
-				"solidity_ls_nomicfoundation", -- Solidity LSP
+				"pyright",
+				"gopls",
+				"jdtls",
+				"lua_ls",
+				"yamlls",
+				"dockerls",
+				"docker_compose_language_service",
+			},
+			automatic_enable = {
+				"pyright",
+				"gopls",
+				"jdtls",
+				"lua_ls",
+				"yamlls",
+				"dockerls",
+				"docker_compose_language_service",
 			},
 		})
 		mason_tool_installer.setup({
 			ensure_installed = {
-				-- Python tools
-				"black", -- Python formatter
-				"isort", -- Python import sorter
-				"pylint", -- Python linter
-				"mypy", -- Python type checker
-
-				-- Go tools
-				"gofumpt", -- Go formatter (stricter than gofmt)
-				"goimports", -- Go import formatter
-				"golangci-lint", -- Go linter
-				"gomodifytags", -- Go struct tag modifier
-				"impl", -- Go interface implementation generator
-
-				-- YAML tools
-				"yamllint", -- YAML linter
-				"yamlfmt", -- YAML formatter
-
-				-- Docker tools
-				"hadolint", -- Dockerfile linter
-
-				-- Lua to tools
-				"stylua", -- Lua formatter
-
-				-- React
-				"eslint_d",
+				"ruff",
+				"gofumpt",
+				"goimports",
+				"golangci-lint",
+				"gomodifytags",
+				"impl",
+				"yamllint",
+				"yamlfmt",
+				"hadolint",
+				"cspell",
+				"stylua",
 				"prettier",
-
-				-- Solidity tools
-				"solhint", -- Solidity linter
+				"java-debug-adapter",
+				{ "java-test", version = "0.46.0" },
+				"palantir-java-format",
+				"vscode-spring-boot-tools",
 			},
 		})
 	end,
