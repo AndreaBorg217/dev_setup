@@ -40,6 +40,9 @@ opt.splitbelow = true -- split horizontal window to the bottom
 
 -- turn off swapfile
 opt.swapfile = false
+opt.autoread = true
+opt.endofline = true
+opt.fixendofline = true
 
 -- highlight on yank
 vim.api.nvim_create_autocmd("TextYankPost", {
@@ -50,5 +53,28 @@ vim.api.nvim_create_autocmd("TextYankPost", {
 			higroup = "IncSearch", -- highlight group
 			timeout = 200, -- duration in ms
 		})
+	end,
+})
+
+vim.api.nvim_create_autocmd({ "FocusGained", "BufEnter" }, {
+	group = vim.api.nvim_create_augroup("checktime", { clear = true }),
+	command = "checktime",
+})
+
+vim.api.nvim_create_autocmd("BufWritePre", {
+	group = vim.api.nvim_create_augroup("trim_trailing_whitespace", { clear = true }),
+	callback = function()
+		local view = vim.fn.winsaveview()
+		local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+
+		for index, line in ipairs(lines) do
+			lines[index] = line:gsub("%s+$", "")
+		end
+		while #lines > 1 and lines[#lines] == "" do
+			table.remove(lines)
+		end
+
+		vim.api.nvim_buf_set_lines(0, 0, -1, false, lines)
+		vim.fn.winrestview(view)
 	end,
 })
