@@ -21,12 +21,15 @@
     - include_tasks: tasks/vscode.yml
       tags:
         - vscode
-    - include_tasks: tasks/neovim.yml
-      tags:
-        - vim
+    # - include_tasks: tasks/neovim.yml
+    #   tags:
+    #     - vim
     - include_tasks: tasks/apps.yml
       tags:
         - apps
     - include_tasks: tasks/claude.yml
       tags:
         - claude
+    - include_tasks: tasks/codex.yml
+      tags:
+        - codex

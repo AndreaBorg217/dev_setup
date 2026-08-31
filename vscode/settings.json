@@ -68,10 +68,26 @@
     "gopls": {
         "formatting.gofumpt": true
     },
+    "[java]": {
+        "editor.defaultFormatter": "dokimos-dev.palantir-java-formatter",
+        "editor.codeActionsOnSave": {
+            "source.organizeImports": "always"
+        }
+    },
+    "java.completion.importOrder": [
+        "java",
+        "javax",
+        "org",
+        "com"
+    ],
+    "java.sources.organizeImports.starThreshold": 999,
+    "java.sources.organizeImports.staticStarThreshold": 999,
     // JAVASCRIPT/TYPESCRIPT/REACT Configuration
     "[javascript]": {
         "editor.defaultFormatter": "esbenp.prettier-vscode",
     },
+    "prettier.tabWidth": 4,
+    "prettier.useTabs": false,
     "[javascriptreact]": {
         "editor.defaultFormatter": "esbenp.prettier-vscode",
     },
@@ -157,6 +173,7 @@
     },
     // GITLENS Configuration
     "gitlens.currentLine.enabled": false,
+    "gitlens.codeLens.enabled": false,
     "gitlens.views.scm.grouped.views": {
         "commits": true,
         "branches": true,

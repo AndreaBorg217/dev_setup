@@ -28,6 +28,23 @@
   tags:
     - vscode
 
+- name: Create VSCode extensions directory
+  file:
+    path: "{{ ansible_facts.env.HOME }}/.vscode/extensions"
+    state: directory
+    mode: "0755"
+  tags:
+    - vscode
+
+- name: Symlink local VSCode copy-reference extension
+  file:
+    src: "{{ ansible_facts.env.HOME }}/Documents/GitHub/dev_setup/vscode/extensions/copy-reference"
+    dest: "{{ ansible_facts.env.HOME }}/.vscode/extensions/dev-setup.copy-reference-0.1.0"
+    state: link
+    force: yes
+  tags:
+    - vscode
+
 - name: Add VSCode to PATH in ~/.zprofile
   lineinfile:
     path: "{{ ansible_facts.env.HOME }}/.zprofile"

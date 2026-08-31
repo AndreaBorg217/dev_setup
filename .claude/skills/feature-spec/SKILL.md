@@ -1,11 +1,15 @@
 ---
 name: feature-spec
-description: Use whenever the user wants to build, plan, or scope a new feature. Prompts the user to fill out a strict specification template, then reviews their submission and pushes back (reverts) if it lacks necessary detail.
+description: Use only when the user explicitly invokes feature-spec or directly asks for a strict written feature specification and review. Collects a structured specification, rejects material gaps, and saves the accepted spec without invoking planner or implementation.
 ---
 
 # Feature Specification Protocol
 
-When the user indicates they want to start a new feature or task, you must enforce a strict two-step intake and review process. **Do not write any code or propose technical implementations until this protocol is satisfied and you are 99% confident on what the user is saying.**
+Run this protocol only when explicitly invoked. Do not trigger it automatically for an ordinary feature request, task, or `planner` session. Keep it independent from planning and implementation.
+
+Do not write code or propose technical implementation while running this skill.
+
+Write all review feedback and the saved specification in `Straight_to_the_Point` voice - plain sentences, no filler, no padding.
 
 ## Step 1: Provide the Intake Template
 Present the following blank template to the user and ask them to fill it out completely:
@@ -23,12 +27,12 @@ Present the following blank template to the user and ask them to fill it out com
 Wait for the user to reply with the filled-out template.
 
 ## Step 2: Review and Revert
-Once the user returns the filled-out template, you must act as a strict reviewer. Carefully analyze their submission against these criteria:
+Once the user returns the filled-out template, review it strictly against these criteria:
 * **Completeness:** Did they skip any sections or leave them vague?
 * **Testability:** Are the *Failure Modes* and *Invariants* specific enough that you can actually write tests or logic against them?
 * **Realism:** Is the *Performance Budget* clearly defined (e.g., specific latency limits) and achievable?
 * **Robustness:** Are the *Edge Cases* sufficiently detailed?
 
-If the specification fails any of these checks, push back, clearly identify the weak points or missing details, and ask the user to refine those specific sections. 
+If the specification fails any of these checks, push back, clearly identify the weak points or missing details, and ask the user to refine those specific sections.
 
-Only proceed to the implementation phase once the specification is robust, complete, and you have explicitly approved it. Ask me for a filename and save it as a markdown file before proceeding.
+Once the specification is robust and complete, ask for a filename if none was supplied, save the accepted specification as Markdown, reply `Done`, and stop. Do not invoke `planner` or begin implementation automatically.

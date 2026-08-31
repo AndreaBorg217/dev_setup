@@ -4,7 +4,7 @@ set -e  # Exit on error
 
 REPO_DIR="$HOME/Documents/GitHub/dev_setup"
 DOTFILES_REPO="https://github.com/AndreaBorg217/dev_setup.git"
-BRANCH="ansible-refactor"
+BRANCH="master"
 
 echo "========================================================"
 echo "Andrea's Developer Setup - Automated Installation"
@@ -108,7 +108,7 @@ echo ""
 cd "$REPO_DIR"
 
 echo "Running full setup (this may take a while)..."
-ansible-playbook setup.yml 
+ansible-playbook setup.yml
 
 # ============================================================================
 # COMPLETION
@@ -118,5 +118,3 @@ echo ""
 echo "========================================================"
 echo "Installation complete!"
 echo "========================================================"
-echo ""
-echo "Next steps: Refer to README.md for manual steps"

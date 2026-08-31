@@ -132,6 +132,22 @@
     "command": "workbench.action.replaceInFiles",
     "when": "vim.mode == 'Normal' && (editorTextFocus || !inputFocus)",
   },
+  // CLIPBOARD
+  {
+    "key": "space c n", // [C]opy file + line [N]umbers
+    "command": "copyReference.copy",
+    "when": "editorTextFocus && (vim.mode == 'Normal' || vim.mode == 'Visual' || vim.mode == 'VisualLine' || vim.mode == 'VisualBlock')",
+  },
+  {
+    "key": "space c r", // [C]opy [R]elative file path
+    "command": "copyRelativeFilePath",
+    "when": "editorTextFocus && (vim.mode == 'Normal' || vim.mode == 'Visual' || vim.mode == 'VisualLine' || vim.mode == 'VisualBlock')",
+  },
+  {
+    "key": "space c p", // [C]opy full file [P]ath
+    "command": "copyFilePath",
+    "when": "editorTextFocus && (vim.mode == 'Normal' || vim.mode == 'Visual' || vim.mode == 'VisualLine' || vim.mode == 'VisualBlock')",
+  },
 
   // LSP
   {

@@ -1,0 +1,25 @@
+{
+    "name": "copy-reference",
+    "displayName": "Copy Reference",
+    "description": "Copy the active file path, selected line range, and an optional note.",
+    "version": "0.1.0",
+    "publisher": "dev-setup",
+    "engines": {
+        "vscode": "^1.90.0"
+    },
+    "categories": [
+        "Other"
+    ],
+    "activationEvents": [
+        "onCommand:copyReference.copy"
+    ],
+    "main": "./extension.js",
+    "contributes": {
+        "commands": [
+            {
+                "command": "copyReference.copy",
+                "title": "Copy File Reference"
+            }
+        ]
+    }
+}
