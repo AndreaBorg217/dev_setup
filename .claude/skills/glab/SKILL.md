@@ -29,4 +29,6 @@ Skill invocation does not authorize a mutation. Read-only inspection may run whe
 
 Every final MR description must contain task-specific `Summary`, `Testing`, `Deployment`, `Rollback`, and `Considerations` content. State what actually ran and mark pending checks plainly. Use a mandatory repository template when present; otherwise use the bundled template.
 
+Write every section, comment, and reply in `Straight_to_the_Point` voice: plain sentences, no filler, no legalese, no padding a section out to look thorough. The template's headings are required content, not licence to write bureaucratic prose.
+
 Present the final title and rendered description for QA before creating or updating the MR.
