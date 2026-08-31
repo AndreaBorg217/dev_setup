@@ -1,5 +1,5 @@
 - name: Install stow
-  homebrew:
+  community.general.homebrew:
     name: stow
     state: present
   tags:

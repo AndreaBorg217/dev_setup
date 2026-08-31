@@ -1,36 +1,203 @@
 - name: Install vim
-  homebrew:
+  community.general.homebrew:
     name: vim
     state: present
   tags:
     - "vim"
 
 - name: Install fd
-  homebrew:
+  community.general.homebrew:
     name: fd
     state: present
   tags:
     - "vim"
 
 - name: Install ripgrep
-  homebrew:
+  community.general.homebrew:
     name: ripgrep
     state: present
   tags:
     - "vim"
 
-- name: Install neovim
-  homebrew:
-    name: neovim
-    state: present
+- name: Install Neovim 0.11.4
+  vars:
+    neovim_version: "0.11.4"
+    neovim_release_architecture: >-
+      {{ {'arm64': 'arm64', 'x86_64': 'x86_64'}[ansible_facts.architecture] }}
+    neovim_release_checksums:
+      arm64: "2de9623a4aa8cedf85c51e33bf8e85e05f6f291b923cd666c04704ccf164e8b7"
+      x86_64: "567b89138c29386f67a00fc8e26c6469c8bf0e5707dfea5e3fbaf4e21294d9eb"
+    neovim_install_directory: >-
+      {{ ansible_facts.env.HOME }}/.local/opt/neovim/{{ neovim_version }}
+    neovim_archive: >-
+      {{ ansible_facts.env.HOME }}/Library/Caches/neovim-{{ neovim_version }}-{{ neovim_release_architecture }}.tar.gz
+  tags:
+    - "vim"
+  block:
+    - name: Inspect Neovim installation directory
+      ansible.builtin.stat:
+        path: "{{ neovim_install_directory }}"
+      register: neovim_install_directory_state
+
+    - name: Create Neovim installation directory
+      ansible.builtin.file:
+        path: "{{ neovim_install_directory }}"
+        state: directory
+        mode: "0755"
+
+    - name: Download Neovim release
+      ansible.builtin.get_url:
+        url: >-
+          https://github.com/neovim/neovim/releases/download/v{{ neovim_version }}/nvim-macos-{{ neovim_release_architecture }}.tar.gz
+        dest: "{{ neovim_archive }}"
+        checksum: "sha256:{{ neovim_release_checksums[neovim_release_architecture] }}"
+        mode: "0644"
+
+    - name: Extract Neovim release
+      ansible.builtin.command:
+        argv:
+          - /usr/bin/tar
+          - -xzf
+          - "{{ neovim_archive }}"
+          - -C
+          - "{{ neovim_install_directory }}"
+          - --strip-components=1
+        creates: "{{ neovim_install_directory }}/bin/nvim"
+      when: >-
+        not ansible_check_mode or
+        neovim_install_directory_state.stat.isdir | default(false)
+
+    - name: Select installed Neovim version
+      ansible.builtin.file:
+        src: "{{ neovim_install_directory }}"
+        dest: "{{ ansible_facts.env.HOME }}/.local/opt/neovim/current"
+        state: link
+      when: >-
+        not ansible_check_mode or
+        neovim_install_directory_state.stat.isdir | default(false)
+
+- name: Inspect existing Neovim config
+  ansible.builtin.stat:
+    path: "{{ ansible_facts.env.HOME }}/.config/nvim"
+    follow: false
+  register: neovim_config
   tags:
     - "vim"
 
-- name: Stow neovim dotfiles
-  shell: |
-    cd "{{ ansible_facts.env.HOME }}/Documents/GitHub/dev_setup"
-    stow --restow --no-folding --verbose=2 --target="{{ ansible_facts.env.HOME }}" neovim
-  register: stow_neovim
-  changed_when: stow_neovim.stderr is search('LINK')
+- name: Unstow separately linked Neovim files
+  ansible.builtin.command:
+    argv:
+      - stow
+      - --delete
+      - --verbose=2
+      - "--target={{ ansible_facts.env.HOME }}"
+      - neovim
+    chdir: "{{ ansible_facts.env.HOME }}/Documents/GitHub/dev_setup"
+  register: unstow_neovim
+  changed_when: unstow_neovim.stderr is search('UNLINK:')
+  when: neovim_config.stat.exists and not neovim_config.stat.islnk
   tags:
     - "vim"
+
+- name: Inspect unstowed Neovim config
+  ansible.builtin.stat:
+    path: "{{ ansible_facts.env.HOME }}/.config/nvim"
+    follow: false
+  register: unstowed_neovim_config
+  tags:
+    - "vim"
+
+- name: Remove stale Neovim package links
+  ansible.builtin.command:
+    argv:
+      - find
+      - "{{ ansible_facts.env.HOME }}/.config/nvim"
+      - -type
+      - l
+      - -lname
+      - "*Documents/GitHub/dev_setup/neovim/*"
+      - -print
+      - -delete
+  register: remove_stale_neovim_links
+  changed_when: remove_stale_neovim_links.stdout | length > 0
+  when:
+    - neovim_config.stat.exists
+    - not neovim_config.stat.islnk
+    - unstowed_neovim_config.stat.exists
+  tags:
+    - "vim"
+
+- name: Remove empty Neovim config directories
+  ansible.builtin.command:
+    argv:
+      - find
+      - "{{ ansible_facts.env.HOME }}/.config/nvim"
+      - -depth
+      - -type
+      - d
+      - -empty
+      - -print
+      - -delete
+  register: remove_empty_neovim_directories
+  changed_when: remove_empty_neovim_directories.stdout | length > 0
+  when:
+    - neovim_config.stat.exists
+    - not neovim_config.stat.islnk
+    - unstowed_neovim_config.stat.exists
+  tags:
+    - "vim"
+
+- name: Check Neovim config migration
+  ansible.builtin.stat:
+    path: "{{ ansible_facts.env.HOME }}/.config/nvim"
+    follow: false
+  register: migrated_neovim_config
+  tags:
+    - "vim"
+
+- name: Protect local Neovim config files
+  ansible.builtin.assert:
+    that: not migrated_neovim_config.stat.exists
+    fail_msg: >-
+      ~/.config/nvim contains files not managed by Stow. Move them before
+      replacing the directory with a symlink.
+  when:
+    - neovim_config.stat.exists
+    - not neovim_config.stat.islnk
+    - not ansible_check_mode
+  tags:
+    - "vim"
+
+- name: Stow Neovim config directory
+  ansible.builtin.command:
+    argv:
+      - stow
+      - --stow
+      - --verbose=2
+      - "--target={{ ansible_facts.env.HOME }}"
+      - neovim
+    chdir: "{{ ansible_facts.env.HOME }}/Documents/GitHub/dev_setup"
+  register: stow_neovim
+  changed_when: stow_neovim.stderr is search('LINK:')
+  tags:
+    - "vim"
+
+- name: Inspect stowed Neovim config
+  ansible.builtin.stat:
+    path: "{{ ansible_facts.env.HOME }}/.config/nvim"
+    follow: false
+  register: stowed_neovim_config
+  tags:
+    - "vim"
+
+- name: Verify stowed Neovim config
+  ansible.builtin.assert:
+    that:
+      - stowed_neovim_config.stat.islnk
+      - >-
+        stowed_neovim_config.stat.lnk_source ==
+        ansible_facts.env.HOME + '/Documents/GitHub/dev_setup/neovim/.config/nvim'
+    fail_msg: ~/.config/nvim is not linked to the managed Neovim config.
+  tags:
+    - "vim"
+  when: not ansible_check_mode or neovim_config.stat.islnk

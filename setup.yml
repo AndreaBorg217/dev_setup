@@ -1,35 +1,47 @@
-- hosts: localhost
+- name: Configure local development environment
+  hosts: localhost
   tasks:
-    - include_tasks: tasks/git.yml
+    - name: Configure Git tools
+      ansible.builtin.include_tasks: tasks/git.yml
       tags:
         - git
-    - include_tasks: tasks/stow.yml
+    - name: Configure Stow
+      ansible.builtin.include_tasks: tasks/stow.yml
       tags:
         - stow
-    - include_tasks: tasks/terminal.yml
+    - name: Configure terminal tools
+      ansible.builtin.include_tasks: tasks/terminal.yml
       tags:
         - terminal
-    - include_tasks: tasks/python.yml
+    - name: Configure Python
+      ansible.builtin.include_tasks: tasks/python.yml
       tags:
         - python
-    - include_tasks: tasks/go.yml
+    - name: Configure Go
+      ansible.builtin.include_tasks: tasks/go.yml
       tags:
         - go
-    - include_tasks: tasks/docker.yml
+    - name: Configure Docker
+      ansible.builtin.include_tasks: tasks/docker.yml
       tags:
         - docker
-    - include_tasks: tasks/vscode.yml
+    - name: Configure VSCode
+      ansible.builtin.include_tasks: tasks/vscode.yml
       tags:
         - vscode
-    # - include_tasks: tasks/neovim.yml
-    #   tags:
-    #     - vim
-    - include_tasks: tasks/apps.yml
+    - name: Configure Neovim
+      ansible.builtin.include_tasks: tasks/neovim.yml
+      tags:
+        - vim
+    - name: Configure applications
+      ansible.builtin.include_tasks: tasks/apps.yml
       tags:
         - apps
-    - include_tasks: tasks/claude.yml
+    - name: Configure Claude Code
+      ansible.builtin.include_tasks: tasks/claude.yml
       tags:
         - claude
-    - include_tasks: tasks/codex.yml
+    - name: Configure Codex
+      ansible.builtin.include_tasks: tasks/codex.yml
       tags:
         - codex
