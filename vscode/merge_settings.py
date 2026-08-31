@@ -33,14 +33,20 @@ def deep_merge(base, override):
 
 def main():
     DEST.parent.mkdir(parents=True, exist_ok=True)
-    # Clear whatever is there (symlink or generated file) so we can switch modes freely.
-    if DEST.is_symlink() or DEST.exists():
-        DEST.unlink()
 
-    # No local overrides -> nothing to merge, symlink the base so edits are live.
     if not LOCAL.exists():
+        if DEST.is_symlink() and DEST.resolve() == BASE.resolve():
+            log.info("settings symlink is current")
+            print("changed=false")
+            return
+
         log.info("no local overrides, symlinking base -> %s", DEST)
-        DEST.symlink_to(BASE)
+        temporary = DEST.with_name(f".{DEST.name}.tmp")
+        if temporary.is_symlink() or temporary.exists():
+            temporary.unlink()
+        temporary.symlink_to(BASE)
+        temporary.replace(DEST)
+        print("changed=true")
         return
 
     log.info("base: %s", BASE)
@@ -49,8 +55,19 @@ def main():
     log.info("merging local overrides: %s", LOCAL)
     settings = deep_merge(settings, load_jsonc(LOCAL))
 
-    DEST.write_text(json.dumps(settings, indent=4) + "\n")
+    content = json.dumps(settings, indent=4) + "\n"
+    if not DEST.is_symlink() and DEST.exists() and DEST.read_text() == content:
+        log.info("merged settings are current")
+        print("changed=false")
+        return
+
+    temporary = DEST.with_name(f".{DEST.name}.tmp")
+    if temporary.is_symlink() or temporary.exists():
+        temporary.unlink()
+    temporary.write_text(content)
+    temporary.replace(DEST)
     log.info("wrote %d keys -> %s", len(settings), DEST)
+    print("changed=true")
 
 
 if __name__ == "__main__":

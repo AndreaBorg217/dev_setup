@@ -59,10 +59,12 @@ def install(extensions):
         log.info("installing: %s", ext)
         subprocess.run(["code", "--install-extension", ext], check=True)
     log.info("install done")
+    return bool(missing)
 
 
 def uninstall_all():
     remaining = get_installed()
+    changed = bool(remaining)
     log.info("uninstalling %d extensions", len(remaining))
     while remaining:
         for ext in sorted(remaining):
@@ -80,6 +82,7 @@ def uninstall_all():
         remaining = still_installed
     log.info("uninstall done")
     print_installed()
+    return changed
 
 
 def main():
@@ -102,14 +105,17 @@ def main():
     args = parser.parse_args()
 
     if args.install:
-        install(parse_extensions(EXTENSIONS_JSON))
+        changed = install(parse_extensions(EXTENSIONS_JSON))
     elif args.uninstall:
-        uninstall_all()
+        changed = uninstall_all()
     elif args.reinstall:
-        uninstall_all()
-        install(parse_extensions(EXTENSIONS_JSON))
+        changed = uninstall_all()
+        changed = install(parse_extensions(EXTENSIONS_JSON)) or changed
     elif args.list:
         print_installed()
+        return
+
+    print(f"changed={str(changed).lower()}")
 
 
 if __name__ == "__main__":

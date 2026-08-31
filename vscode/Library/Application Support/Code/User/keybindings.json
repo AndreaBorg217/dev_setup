@@ -2,8 +2,18 @@
 [
   // NAVIGATION
   {
-    "key": "space o s ",
+    "key": "space o s",
     "command": "revealFileInOS",
+    "when": "vim.mode == 'Normal' && editorTextFocus",
+  },
+  {
+    "key": "space e f",
+    "command": "workbench.files.action.showActiveFileInExplorer",
+    "when": "vim.mode == 'Normal' && editorTextFocus",
+  },
+  {
+    "key": "space e c",
+    "command": "workbench.files.action.collapseExplorerFolders",
     "when": "vim.mode == 'Normal' && editorTextFocus",
   },
   {
@@ -23,10 +33,6 @@
     "command": "workbench.action.navigateDown",
   },
   // SIDEBAR
-  {
-    "key": "ctrl-b",
-    "command": "workbench.action.toggleSidebarVisibility",
-  },
   {
     "key": "escape",
     "command": "workbench.action.closeSidebar",
@@ -84,6 +90,7 @@
   {
     "key": "ctrl-s",
     "command": "workbench.action.terminal.split", // split terminal
+    "when": "terminalFocus",
   },
   {
     "key": "ctrl-h",
@@ -158,7 +165,7 @@
   {
     "key": "space c a", // [C]ode [A]ction
     "command": "editor.action.codeAction",
-    "when": "vim.mode == 'Normal' && editorTextFocus",
+    "when": "editorTextFocus && (vim.mode == 'Normal' || vim.mode == 'Visual' || vim.mode == 'VisualLine' || vim.mode == 'VisualBlock')",
   },
   {
     "key": "space r n", // [R]e[n]ame
@@ -312,21 +319,16 @@
     "command": "explorer.newFolder",
     "when": "filesExplorerFocus && foldersViewVisible && !explorerResourceIsRoot && !explorerResourceReadonly && !inputFocus",
   },
-  {
-    "key": "s",
-    "command": "explorer.openToSide",
-    "when": "filesExplorerFocus && foldersViewVisible && !explorerResourceIsRoot && !explorerResourceReadonly && !inputFocus",
-  },
   // TABS
   {
     "key": "tab",
     "command": "workbench.action.nextEditorInGroup",
-    "when": "(vim.mode == 'Normal' || vim.mode == 'Visual') && (editorTextFocus || !inputFocus)",
+    "when": "vim.mode == 'Normal' && (editorTextFocus || !inputFocus)",
   },
   {
     "key": "shift-tab",
     "command": "workbench.action.previousEditorInGroup",
-    "when": "(vim.mode == 'Normal' || vim.mode == 'Visual') && (editorTextFocus || !inputFocus)",
+    "when": "vim.mode == 'Normal' && (editorTextFocus || !inputFocus)",
   },
   {
     "key": "space q",
@@ -393,12 +395,12 @@
   {
     "key": "tab",
     "command": "editor.action.indentLines",
-    "when": "vim.mode == 'VisualLine' && editorTextFocus",
+    "when": "editorTextFocus && (vim.mode == 'Visual' || vim.mode == 'VisualLine' || vim.mode == 'VisualBlock')",
   },
   {
     "key": "shift+tab",
     "command": "editor.action.outdentLines",
-    "when": "vim.mode == 'VisualLine' && editorTextFocus",
+    "when": "editorTextFocus && (vim.mode == 'Visual' || vim.mode == 'VisualLine' || vim.mode == 'VisualBlock')",
   },
   {
     "key": "shift+k",
@@ -420,27 +422,17 @@
     "command": "workbench.action.files.save",
     "when": "vim.mode == 'Normal' && editorTextFocus",
   },
-  // Copilot
-  {
-    "key": "ctrl-g",
-    "command": "workbench.action.chat.open",
-    "when": "(vim.mode == 'Normal' || vim.mode == 'VisualLine || vim.mode == 'Visual'') && !chatIsVisible",
-  },
+  // AI INLINE SUGGESTIONS
   {
     "key": "escape",
     "command": "workbench.action.toggleAuxiliaryBar",
     "when": "auxiliaryBarVisible",
   },
-  {
-    "key": "space g i",
-    "command": "inlineChat.start",
-    "when": "vim.mode == 'Normal' && editorTextFocus && !inlineChatVisible",
-  },
-  {
-    "key": "backspace",
-    "command": "editor.action.inlineSuggest.hide",
-    "when": "inlineSuggestionVisible && editorTextFocus",
-  },
+  // {
+  //   "key": "backspace",
+  //   "command": "editor.action.inlineSuggest.hide",
+  //   "when": "inlineSuggestionVisible && editorTextFocus",
+  // },
   // DIAGNOSTICS
   {
     "key": "shift-x",
