@@ -32,6 +32,7 @@ After the initial explanation, the user may ask follow-up questions without re-t
 
 ## Rules
 
+- **Voice**: Write all explanation and exported `.md` content in `Straight_to_the_Point` voice - plain sentences, no filler, no padding.
 - **Neutral diagrams**: Diagrams must use generic domain names (e.g. `orders`, `customers`, `payments`). Never use internal topic names, service names, or any company-specific identifiers - the user may be exporting diagrams to personal notes or a wiki.
 - **Neutral examples**: Code examples must also use generic domain names, never project-specific class names, topic names, or field names.
 - **Single file per explanation**: When exporting, one `.md` file per topic on the Desktop. If the user asks follow-up questions or requests additions, update that file in place rather than creating a new one.
