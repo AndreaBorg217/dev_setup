@@ -43,6 +43,8 @@
         // JAVA
         "vscjava.vscode-java-pack",
         "vmware.vscode-boot-dev-pack",
+        "ryanluker.vscode-coverage-gutters",
+        "dokimos-dev.palantir-java-formatter"
         // TERRAFORM
         // "hashicorp.terraform",
         // ANSIBLE

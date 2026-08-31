@@ -5,6 +5,53 @@
   tags:
     - "terminal"
 
+- name: Create user Fonts directory
+  file:
+    path: "{{ ansible_facts.env.HOME }}/Library/Fonts"
+    state: directory
+    mode: "0755"
+  tags:
+    - "terminal"
+
+- name: Install MesloLGS Nerd Font
+  copy:
+    src: "{{ ansible_facts.env.HOME }}/Documents/GitHub/dev_setup/MesloLGS NF Regular.ttf"
+    dest: "{{ ansible_facts.env.HOME }}/Library/Fonts/MesloLGS NF Regular.ttf"
+    mode: "0644"
+  tags:
+    - "terminal"
+
+- name: Create iTerm2 DynamicProfiles directory
+  file:
+    path: "{{ ansible_facts.env.HOME }}/Library/Application Support/iTerm2/DynamicProfiles"
+    state: directory
+    mode: "0755"
+  tags:
+    - "terminal"
+
+- name: Install iTerm2 Dev Setup profile
+  copy:
+    src: "{{ ansible_facts.env.HOME }}/Documents/GitHub/dev_setup/iterm2/dev-setup.json"
+    dest: "{{ ansible_facts.env.HOME }}/Library/Application Support/iTerm2/DynamicProfiles/dev-setup.json"
+    mode: "0644"
+  tags:
+    - "terminal"
+
+- name: Check iTerm2 default profile
+  command: defaults read com.googlecode.iterm2 "Default Bookmark Guid"
+  register: iterm_default_profile
+  changed_when: false
+  failed_when: false
+  tags:
+    - "terminal"
+
+- name: Set iTerm2 Dev Setup as the default profile
+  command: defaults write com.googlecode.iterm2 "Default Bookmark Guid" -string "EC1F54A1-BF6E-4C63-9F60-0E75E7950001"
+  changed_when: true
+  when: iterm_default_profile.stdout != "EC1F54A1-BF6E-4C63-9F60-0E75E7950001"
+  tags:
+    - "terminal"
+
 - name: Stow zsh dotfiles
   shell: |
     cd "{{ ansible_facts.env.HOME }}/Documents/GitHub/dev_setup"
@@ -121,5 +168,12 @@
     stow --restow --verbose=2 --target="{{ ansible_facts.env.HOME }}" tmux
   register: stow_tmux
   changed_when: stow_tmux.stderr is search('LINK')
+  tags:
+    - "terminal"
+
+- name: Install tmux plugins
+  command: "{{ ansible_facts.env.HOME }}/.tmux/plugins/tpm/bin/install_plugins"
+  register: tmux_plugins_install
+  changed_when: tmux_plugins_install.stdout is search('Installing') or tmux_plugins_install.stderr is search('Installing')
   tags:
     - "terminal"

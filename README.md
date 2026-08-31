@@ -1,5 +1,6 @@
 # Andrea's Developer Setup
 
+![Last tested](https://img.shields.io/badge/last%20tested-2026--07--25-2ea44f?style=for-the-badge&logo=ansible&logoColor=white)
 ![Neovim](https://img.shields.io/badge/NeoVim-%2357A143.svg?&style=for-the-badge&logo=neovim&logoColor=white)
 ![Vim](https://img.shields.io/badge/VIM-%2311AB00.svg?style=for-the-badge&logo=vim&logoColor=white)
 ![Ansible](https://img.shields.io/badge/ansible-%231A1918.svg?style=for-the-badge&logo=ansible&logoColor=white)
@@ -15,7 +16,7 @@
 
 ## How to run
 
-1. For each environment variable in _.env.example_, run `export VARIABLE_NAME=value` 
+1. For each environment variable in _.env.example_, run `export VARIABLE_NAME=value`
 2. Create and run `run.sh`
 
 ## Testing
@@ -25,7 +26,9 @@ To test the playbook before applying it to a machine use [Tart](https://tart.run
 ```bash
 brew install cirruslabs/cli/tart
 tart clone ghcr.io/cirruslabs/macos-sequoia-base:latest sequoia-base
-tart run sequoia-base
+tart clone sequoia-base test-dev-setup
+tart run test-dev-setup
+ssh admin@$(tart ip test-dev-setup)
 ```
 
 **DOCKER MAY NOT WORK!!**
@@ -54,8 +57,6 @@ This is a small tmux cheatsheet:
 | Rename window              | `CTRL a ,`              |
 
 `terminal/.zshrc` contains some aliases for _Python_ and _Docker_.
-
-**REQUIRES SOME MANUAL STEPS (SEE BELOW)**
 
 ### Neovim
 
@@ -107,10 +108,23 @@ It is effectively a replica of the Neovim configs above.
 
 `keybindings.json` is stowed (live symlink). `settings.json` is handled by `vscode/merge_settings.py`:
 
-- **No `settings.local.json`** -> base is symlinked, so edits are live (no re-run needed).
-- **`settings.local.json` present** -> base + local are deep-merged into a generated file (cannot be a symlink). Edits to either source are **not** live.
+- **No `vscode/settings.local.json`** -> base is symlinked, so edits are live (no re-run needed).
+- **`vscode/settings.local.json` present** -> base + local are deep-merged into a generated file (cannot be a symlink). Edits to either source are **not** live.
 
-After editing `settings.json` or `settings.local.json`, re-apply with:
+To override VSCode settings on one machine, create `vscode/settings.local.json` with only the keys you want to override; for example to disable Python autoformat on a specific machine:
+
+```json
+{
+    "[python]": {
+        "editor.formatOnSave": false,
+        "editor.codeActionsOnSave": {
+            "source.organizeImports": "never"
+        }
+    }
+}
+```
+
+After editing the base VSCode `settings.json` or `vscode/settings.local.json`, re-apply with:
 
 ```bash
 ansible-playbook setup.yml --tags vscode
@@ -124,6 +138,26 @@ python3 vscode/manage_extensions.py --uninstall  # uninstall all extensions
 python3 vscode/manage_extensions.py --reinstall  # uninstall all, then install from extensions.json
 python3 vscode/manage_extensions.py --list       # list installed extensions with versions
 ```
+
+Local extensions are kept in `vscode/extensions`. The VSCode task symlinks
+`vscode/extensions/copy-reference` into
+`~/.vscode/extensions/dev-setup.copy-reference-0.1.0`.
+
+The `copy-reference` extension contributes the `copyReference.copy` command
+(`Copy File Reference`), bound to `space c p` in Normal or Visual Vim mode. It
+copies a reference for the active editor to the clipboard:
+
+| Selection | Clipboard value |
+| --------- | --------------- |
+| No selection | `path/to/file.ext` |
+| Selected text | `path/to/file.ext:start_line:end_line` |
+
+Paths are workspace-relative for files inside the current workspace. Files
+outside a workspace use their absolute path, and non-file editors use their URI.
+The optional prompt support is currently disabled in the extension source.
+
+The command was inspired by
+[smnatale's copy command gist](https://gist.github.com/smnatale/b30dc21ff330495641fb59f36005562c).
 
 ### Apps
 
@@ -141,23 +175,60 @@ Task: `tasks/apps.yml`
 
 Task: `tasks/claude.yml`
 
-Installs Claude Code and some token-saving utils. The following are tracked in the `.claude` directory:
+Installs Claude Code, caveman-code, and RTK. The following user-managed config is
+tracked in the `.claude` directory:
 
-- `CLAUDE.md` - behavioural settings for Claude
-- `settings.json` - as implied
-- `skills` - a directory containing all the skills
-- `commands` - a directory containing some useful commands
-- `scripts` - a directory containing scripts used by skills/commands
-- `statusline.sh` - a script that displays the current working directory, context, usage limits, model, and Git branch
+- `.gitignore` - excludes Claude's runtime state and other machine-local files
+- `CLAUDE.md` - core behavioural instructions
+- `settings.json` - permissions, hooks, models, plugins, and UI settings
+- `agents` - custom subagent definitions
+- `output-styles` - response style definitions
+- `rules` - focused behavioural and workflow instructions
+- `scripts` - hook and command-line helper scripts
+- `skills` - reusable task-specific instructions
+- `statusline.sh` - displays the current directory, context, usage limits, model, and Git branch
 
-Claude Code natively supports machine-local overrides without any Ansible involvement (see [Local overrides](#local-overrides)):
+Hooks are configured in `settings.json`; there is no tracked `hooks` directory.
+The current pre-tool hooks integrate RTK, guard against plaintext secret
+exposure, and prevent subagents from launching nested agents.
 
-- `~/.claude/CLAUDE.local.md` - loaded automatically alongside `CLAUDE.md` every session ([docs](https://docs.anthropic.com/en/docs/claude-code/memory#choose-where-to-put-claude-md-files))
-- `~/.claude/settings.local.json` - merged on top of `settings.json` by Claude Code itself ([docs](https://docs.anthropic.com/en/docs/claude-code/settings))
+The secret-exposure hook blocks common plaintext disclosure paths before Claude
+runs a tool: direct `op read`/`bw get`/`bws secret get`, SOPS/KSOPS decrypts to
+stdout, untrapped SOPS temp-file redirects, ksops-backed `kustomize build`
+output, `kubectl get secret -o yaml|json|jsonpath`, and direct Bash/Read
+access to known credential files.
 
-### Skills
+### Routines
 
-Skills are stored in the `skills` directory.
+Inspired by [this LinkedIn post](https://www.linkedin.com/posts/fabian-wesner_a-quick-tip-on-claude-codes-5-hour-usage-activity-7468185272250281984-Dek0)
+
+Go to [https://claude.ai/code/routines](https://claude.ai/code/routines) and create a routine as shown below:
+
+![Align token refresh](resources/claude_limits_routine.png)
+
+## Codex
+
+Task: `tasks/codex.yml`
+
+```bash
+ansible-playbook setup.yml --tags codex
+```
+
+Installs Codex, Node, and RTK, then reuses the Claude configuration without
+duplicating its shared rules or skills:
+
+- renders `~/.codex/AGENTS.md` from `.claude/CLAUDE.md`, `.claude/rules/`, and a
+  small Codex adapter;
+- links `~/.agents/skills` to `.claude/skills`;
+- maps Claude workload roles to the GPT-5.6 family: Opus to Sol, Sonnet to
+  Terra, and Haiku to Luna;
+- initializes RTK's native Codex instructions; and
+- adds and installs the Codex-compatible Caveman plugin.
+
+The model mapping preserves each role rather than claiming exact model
+equivalence. Claude-specific hooks, tool names, status-line behavior, and
+transcript handling are translated when Codex has an equivalent; the shared
+workflow remains the source of truth.
 
 ## Dotfiles managed by Stow
 
@@ -167,43 +238,9 @@ Skills are stored in the `skills` directory.
 | `terminal/.p10k.zsh`                                            | `~/.p10k.zsh`                                              |
 | `tmux/.tmux.conf`                                               | `~/.tmux.conf`                                             |
 | `neovim/.config/nvim`                                           | `~/.config/nvim`                                           |
-| `vscode/Library/Application Support/Code/User/settings.json`    | `~/Library/Application Support/Code/User/settings.json` (generated, not stowed - see [Local overrides](#local-overrides)) |
+| `vscode/Library/Application Support/Code/User/settings.json`    | `~/Library/Application Support/Code/User/settings.json` (handled by `vscode/merge_settings.py`, not stowed) |
 | `vscode/Library/Application Support/Code/User/keybindings.json` | `~/Library/Application Support/Code/User/keybindings.json` |
-| `.claude`                                                      | `~/.claude`                                                |
-
-## Local overrides
-
-Some config files support machine-local overrides - gitignored files that Ansible merges on top of the base config at provision time. This lets a specific machine diverge from the shared defaults without touching the repo.
-
-| Base file | Local override | Applied by |
-| --------- | -------------- | ---------- |
-| `vscode/Library/Application Support/Code/User/settings.json` | `vscode/settings.local.json` | `tasks/vscode.yml` - deep-merges local on top of base, writes result to `~/Library/Application Support/Code/User/settings.json` |
-| `~/.claude/CLAUDE.md` | `~/.claude/CLAUDE.local.md` | Claude Code natively - loaded every session alongside `CLAUDE.md`, no Ansible required |
-| `~/.claude/settings.json` | `~/.claude/settings.local.json` | Claude Code natively - merged by the app itself, no Ansible required |
-
-**How to use:** create the `.local` file with only the keys you want to override. Example - disable Python autoformat on a specific machine:
-
-```json
-{
-    "[python]": {
-        "editor.formatOnSave": false,
-        "editor.codeActionsOnSave": {
-            "source.organizeImports": "never"
-        }
-    }
-}
-```
-
-Re-run `tasks/vscode.yml` after editing the local override to apply it.
-
-## Manual steps required
-
-A few things can't be automated due to macOS GUI restrictions:
-
-1. **Nerd Font** -> double click on the font file in the repo to register it
-1. **iTerm2 font size** —> `CMD ,` > Profiles > Text > set font size to 20 & apply the nerd font
-1. **iTerm2 colour scheme** —> `CMD ,` > Profiles > Colors > import `coolnight.itermcolors` from the repo root
-1. **tmux plugins** —> open a tmux session and press `CTRL+a r` then `CTRL+a SHIFT+i`
+| `.claude` tracked config files                                 | `~/.claude/...` (individual symlinks)                      |
 
 ## Credits
 
