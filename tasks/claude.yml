@@ -30,6 +30,8 @@
   ansible.builtin.command:
     argv:
       - "{{ ansible_facts.env.HOME }}/.cache/dev_setup/codegraph-install.sh"
+  environment:
+    DO_NOT_TRACK: "1"
   when: not ansible_check_mode
   changed_when: true
 
@@ -38,6 +40,8 @@
     argv:
       - "{{ ansible_facts.env.HOME }}/.local/bin/codegraph"
       - --version
+  environment:
+    DO_NOT_TRACK: "1"
   when: not ansible_check_mode
   changed_when: false
 
