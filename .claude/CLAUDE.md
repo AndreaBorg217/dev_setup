@@ -44,7 +44,5 @@ grep/Read calls; ~98% reduction via Context Mode sandboxing).
    paths; it never replaces required checks.
 
 Do not initialize CodeGraph without the user's approval. If no
-`.codegraph/` index answers, fall back to LSP/`rg` (cap with `-m 50` /
-`--max-count 50` or `| head -n 50`) and say so. This fallback is exempt
-from the `limit-output` strict `-m` deny when the index is absent.
+`.codegraph/` index answers, fall back to LSP/`rg` and say so.
 <!-- CODEGRAPH_END -->
