@@ -113,6 +113,24 @@
             "command": "python3 ~/Documents/GitHub/dev_setup/.claude/scripts/block-secret-exposure.py"
           }
         ]
+      },
+      {
+        "matcher": "Read",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ~/Documents/GitHub/dev_setup/.claude/hooks/check-file-size"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ~/Documents/GitHub/dev_setup/.claude/hooks/check-bash-read"
+          }
+        ]
       }
     ],
     "SessionStart": [
