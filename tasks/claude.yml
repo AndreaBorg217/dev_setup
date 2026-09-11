@@ -1,67 +1,125 @@
 - name: Install node
-  homebrew:
+  community.general.homebrew:
     name: node
     state: present
   tags:
     - "claude"
 
 - name: Install Claude Code
-  homebrew:
+  community.general.homebrew:
     name: claude-code
     state: present
   tags:
     - "claude"
 
 - name: Install caveman-code
-  npm:
+  community.general.npm:
     name: "@juliusbrussee/caveman-code"
-    global: yes
+    global: true
     state: present
   tags:
     - "claude"
 
 - name: Install rtk
-  homebrew:
+  community.general.homebrew:
     name: rtk
     state: present
   tags:
     - "claude"
 
+- name: List Claude plugin marketplaces
+  ansible.builtin.command:
+    argv:
+      - claude
+      - plugin
+      - marketplace
+      - list
+      - --json
+  register: claude_marketplaces
+  check_mode: false
+  changed_when: false
+  tags:
+    - "claude"
+
 - name: Add caveman plugin marketplace
-  shell: claude plugin marketplace add JuliusBrussee/caveman
+  ansible.builtin.command:
+    argv:
+      - claude
+      - plugin
+      - marketplace
+      - add
+      - JuliusBrussee/caveman
+  changed_when: true
+  when: "'caveman' not in (claude_marketplaces.stdout | from_json | map(attribute='name') | list)"
+  tags:
+    - "claude"
+
+- name: List Claude plugins
+  ansible.builtin.command:
+    argv:
+      - claude
+      - plugin
+      - list
+      - --json
+  register: claude_plugins
+  check_mode: false
   changed_when: false
   tags:
     - "claude"
 
 - name: Install caveman plugin
-  shell: claude plugin install caveman@caveman
-  changed_when: false
+  ansible.builtin.command:
+    argv:
+      - claude
+      - plugin
+      - install
+      - caveman@caveman
+  changed_when: true
+  when: "'caveman@caveman' not in (claude_plugins.stdout | from_json | map(attribute='id') | list)"
   tags:
     - "claude"
 
 - name: Initialize rtk globally
-  shell: rtk init -g
+  ansible.builtin.command:
+    argv:
+      - rtk
+      - init
+      - --global
   changed_when: false
   tags:
     - "claude"
 
 - name: Check Claude config path
-  stat:
+  ansible.builtin.stat:
     path: "{{ ansible_facts.env.HOME }}/.claude"
     follow: false
   register: claude_config_path
   tags:
     - "claude"
 
-- name: Fail when Claude config path is a symlink
-  fail:
-    msg: "~/.claude is a symlink. Replace it with a real directory before running this task so only managed files and directories are linked."
-  when: claude_config_path.stat.islnk | default(false)
+- name: Fail when Claude config path is an unmanaged symlink
+  ansible.builtin.fail:
+    msg: >-
+      ~/.claude links outside this repository. Replace it manually before
+      running this task.
+  when:
+    - claude_config_path.stat.islnk | default(false)
+    - claude_config_path.stat.lnk_source != playbook_dir + '/.claude'
+  tags:
+    - "claude"
+
+- name: Remove legacy managed Claude config symlink
+  ansible.builtin.file:
+    path: "{{ ansible_facts.env.HOME }}/.claude"
+    state: absent
+  when:
+    - claude_config_path.stat.islnk | default(false)
+    - claude_config_path.stat.lnk_source == playbook_dir + '/.claude'
   tags:
     - "claude"
 
 - name: Create Claude config directory
-  file:
+  ansible.builtin.file:
     path: "{{ ansible_facts.env.HOME }}/.claude"
     state: directory
     mode: "0755"
@@ -69,7 +127,7 @@
     - "claude"
 
 - name: Symlink Claude config files
-  file:
+  ansible.builtin.file:
     src: "{{ playbook_dir }}/.claude/{{ item }}"
     dest: "{{ ansible_facts.env.HOME }}/.claude/{{ item }}"
     state: link
@@ -79,11 +137,12 @@
     - CLAUDE.md
     - settings.json
     - statusline.sh
+  when: not (ansible_check_mode and claude_config_path.stat.islnk)
   tags:
     - "claude"
 
 - name: Check Claude config directories
-  stat:
+  ansible.builtin.stat:
     path: "{{ playbook_dir }}/.claude/{{ item }}"
   loop:
     - agents
@@ -100,11 +159,13 @@
     - "claude"
 
 - name: Symlink Claude config directories
-  file:
+  ansible.builtin.file:
     src: "{{ item.stat.path }}"
     dest: "{{ ansible_facts.env.HOME }}/.claude/{{ item.item }}"
     state: link
   tags:
     - "claude"
   loop: "{{ claude_config_dirs.results }}"
-  when: item.stat.isdir | default(false)
+  when:
+    - item.stat.isdir | default(false)
+    - not (ansible_check_mode and claude_config_path.stat.islnk)

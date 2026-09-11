@@ -5,35 +5,20 @@ return {
 		local conform = require("conform")
 		conform.setup({
 			formatters_by_ft = {
-				-- Python formatting
-				python = { "black" },
-				-- Go formatting
+				python = { "ruff_fix", "ruff_organize_imports", "ruff_format" },
 				go = { "goimports", "gofumpt" },
-				-- YAML formatting
 				yaml = { "yamlfmt" },
-				-- Lua formatting (for Neovim config)
 				lua = { "stylua" },
-				-- Markdown formatting
 				markdown = { "prettier" },
-				-- JSON formatting
 				json = { "prettier" },
-				-- JavaScript/TypeScript/React formatting
-				javascript = { "prettier" },
-				typescript = { "prettier" },
-				javascriptreact = { "prettier" },
-				typescriptreact = { "prettier" },
-				html = { "prettier" },
-				css = { "prettier" },
-				-- Use a separate prettier config for Solidity
-				solidity = { "prettier_solidity" },
+				java = { "palantir_java_format" },
 			},
 			formatters = {
-				-- Regular prettier (no solidity plugin)
-				prettier = {},
-				-- Prettier with Solidity plugin
-				prettier_solidity = {
-					command = "prettier",
-					prepend_args = { "--plugin", "prettier-plugin-solidity" },
+				palantir_java_format = {
+					command = "palantir-java-format",
+					args = { "--palantir", "--assume-filename", "$FILENAME", "-" },
+					stdin = true,
+					exit_codes = { 0 },
 				},
 			},
 			format_on_save = {

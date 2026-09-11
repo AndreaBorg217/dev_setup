@@ -1,6 +1,6 @@
 return {
 	"nvim-telescope/telescope.nvim",
-	branch = "0.1.x",
+	tag = "v0.1.9",
 	dependencies = {
 		"nvim-lua/plenary.nvim",
 		{ "nvim-telescope/telescope-fzf-native.nvim", build = "make" },
@@ -11,6 +11,36 @@ return {
 		local telescope = require("telescope")
 		local actions = require("telescope.actions")
 		local transform_mod = require("telescope.actions.mt").transform_mod
+		local generated_path_globs = {
+			"!**/.git/**",
+			"!**/.venv/**",
+			"!**/node_modules/**",
+			"!**/__pycache__/**",
+			"!**/.pytest_cache/**",
+			"!**/.mypy_cache/**",
+			"!**/.ruff_cache/**",
+			"!**/.tox/**",
+			"!**/.gradle/**",
+			"!**/target/**",
+			"!**/build/**",
+			"!**/dist/**",
+			"!**/coverage/**",
+			"!**/htmlcov/**",
+			"!**/.coverage",
+		}
+
+		local function generated_path_arguments()
+			local arguments = {}
+			for _, path_glob in ipairs(generated_path_globs) do
+				table.insert(arguments, "--glob")
+				table.insert(arguments, path_glob)
+			end
+
+			return arguments
+		end
+
+		local find_files_command = { "rg", "--files", "--hidden", "--no-ignore" }
+		vim.list_extend(find_files_command, generated_path_arguments())
 
 		local trouble = require("trouble")
 		local trouble_telescope = require("trouble.sources.telescope")
@@ -36,22 +66,13 @@ return {
 			},
 			pickers = {
 				find_files = {
-					hidden = true,
-					no_ignore = true,
-					file_ignore_patterns = {
-						"%.git/",
-						"%.venv/",
-						"node_modules/",
-					},
+					find_command = find_files_command,
 				},
 				live_grep = {
 					additional_args = function()
-						return { "--hidden", "--no-ignore" }
+						local arguments = { "--hidden", "--no-ignore" }
+						return vim.list_extend(arguments, generated_path_arguments())
 					end,
-					file_ignore_patterns = {
-						"%.git/",
-						"%.venv/",
-					},
 				},
 			},
 		})
@@ -62,14 +83,7 @@ return {
 		local keymap = vim.keymap -- for conciseness
 
 		keymap.set("n", "<leader>ff", "<cmd>Telescope find_files<cr>", { desc = "Find files in project" })
-		keymap.set("n", "<leader>fr", "<cmd>Telescope oldfiles<cr>", { desc = "Find recent files" })
 		keymap.set("n", "<leader>fs", "<cmd>Telescope live_grep<cr>", { desc = "Find string in project" })
-		keymap.set(
-			"n",
-			"<leader>fc",
-			"<cmd>Telescope grep_string<cr>",
-			{ desc = "Find string under cursor in project" }
-		)
 		keymap.set("n", "<leader>ft", "<cmd>TodoTelescope<cr>", { desc = "Find todos" })
 		keymap.set("n", "<leader>fk", "<cmd>Telescope keymaps<cr>", { desc = "Find keymaps" })
 	end,

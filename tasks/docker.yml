@@ -1,19 +1,19 @@
 - name: Install Docker CLI
-  homebrew:
+  community.general.homebrew:
     name: docker
     state: present
   tags:
     - "docker"
 
 - name: Install Docker Compose
-  homebrew:
+  community.general.homebrew:
     name: docker-compose
     state: present
   tags:
     - "docker"
 
 - name: Install Docker Desktop
-  homebrew_cask:
+  community.general.homebrew_cask:
     name: docker
     state: present
   tags:

@@ -1,29 +1,60 @@
 - name: Install Go
-  homebrew:
+  community.general.homebrew:
     name: go
-    state: latest
+    state: present
   tags:
     - "go"
 
-- name: Set Go binary path
-  set_fact:
-    go_bin_path: "/opt/homebrew/bin"
+- name: Find Homebrew prefix
+  ansible.builtin.command:
+    argv:
+      - brew
+      - --prefix
+  register: homebrew_prefix
+  check_mode: false
+  changed_when: false
+  tags:
+    - "go"
+
+- name: Set Go tooling versions and paths
+  ansible.builtin.set_fact:
+    delve_version: "1.27.1"
+    go_bin_path: "{{ homebrew_prefix.stdout }}/bin"
+  tags:
+    - "go"
+
+- name: Check Delve version
+  ansible.builtin.command:
+    argv:
+      - "{{ ansible_facts.env.HOME }}/go/bin/dlv"
+      - version
+  register: installed_delve
+  check_mode: false
+  changed_when: false
+  failed_when: false
   tags:
     - "go"
 
 - name: Install Delve debugger
-  shell: "{{ go_bin_path }}/go install github.com/go-delve/delve/cmd/dlv@latest"
+  ansible.builtin.command:
+    argv:
+      - "{{ go_bin_path }}/go"
+      - install
+      - "github.com/go-delve/delve/cmd/dlv@v{{ delve_version }}"
   environment:
     GOPATH: "{{ ansible_facts.env.HOME }}/go"
     HOME: "{{ ansible_facts.env.HOME }}"
+  changed_when: true
+  when: "'Version: ' + delve_version not in installed_delve.stdout"
   tags:
     - "go"
 
 - name: Add Go bin directory to PATH in .zprofile
-  lineinfile:
+  ansible.builtin.lineinfile:
     path: "{{ ansible_facts.env.HOME }}/.zprofile"
     line: 'export PATH="{{ go_bin_path }}:$HOME/go/bin:$PATH"'
-    create: yes
+    create: true
+    mode: "0644"
     state: present
   tags:
     - "go"

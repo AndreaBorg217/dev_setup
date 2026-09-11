@@ -5,6 +5,7 @@ fi
 
 # Path to your Oh My Zsh installation.
 export ZSH="$HOME/.oh-my-zsh"
+export PATH="$HOME/.local/opt/neovim/current/bin:$PATH"
 
 # Theme
 ZSH_THEME="powerlevel10k/powerlevel10k"
@@ -20,6 +21,25 @@ source $ZSH/oh-my-zsh.sh
 # ============================================================================
 # OTHER FUNCTIONS
 # ============================================================================
+
+dev() {
+    local session_name="${1:-${PWD:t}}"
+
+    if ! tmux has-session -t "=$session_name" 2>/dev/null; then
+        tmux new-session -d -s "$session_name" -n editor nvim
+        tmux new-window -t "=$session_name" -n shell
+        tmux new-window -t "=$session_name" -n claude claude
+        tmux select-window -t "=$session_name:editor"
+    fi
+
+    if [[ -n "$TMUX" ]]; then
+        tmux switch-client -t "=$session_name"
+    else
+        tmux attach-session -t "=$session_name"
+    fi
+}
+
+alias end-session='tmux kill-session -t "=${PWD:t}"'
 
 git() {
     # Intercept git push to protected branches

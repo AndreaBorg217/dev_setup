@@ -3,12 +3,25 @@ return {
 	dependencies = "nvim-tree/nvim-web-devicons",
 	config = function()
 		local nvimtree = require("nvim-tree")
+		local api = require("nvim-tree.api")
 
 		-- recommended settings from nvim-tree documentation
 		vim.g.loaded_netrw = 1
 		vim.g.loaded_netrwPlugin = 1
 
 		nvimtree.setup({
+			on_attach = function(buffer)
+				api.config.mappings.default_on_attach(buffer)
+				vim.keymap.set("n", "t", function()
+					local node = api.tree.get_node_under_cursor()
+					if node and node.nodes then
+						api.node.open.edit()
+					end
+				end, {
+					buffer = buffer,
+					desc = "Toggle folder",
+				})
+			end,
 			view = {
 				width = 40,
 				relativenumber = true,
@@ -70,6 +83,5 @@ return {
 		) -- toggle file explorer on current file
 		keymap.set("n", "<leader>ec", "<cmd>NvimTreeCollapse<CR>", { desc = "Collapse file explorer" }) -- collapse file explorer
 		keymap.set("n", "<leader>er", "<cmd>NvimTreeRefresh<CR>", { desc = "Refresh file explorer" }) -- refresh file explorer
-		keymap.set("n", "<leader>eo", "<cmd>NvimTreeFocus<CR>", { desc = "Focus file explorer" }) -- focus on file explorer
 	end,
 }

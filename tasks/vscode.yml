@@ -1,12 +1,12 @@
 - name: Install VSCode
-  homebrew_cask:
+  community.general.homebrew_cask:
     name: visual-studio-code
     state: present
   tags:
     - vscode
 
 - name: Create VSCode User directory
-  file:
+  ansible.builtin.file:
     path: "{{ ansible_facts.env.HOME }}/Library/Application Support/Code/User"
     state: directory
     mode: "0755"
@@ -14,22 +14,26 @@
     - vscode
 
 - name: Merge and write VSCode settings
-  command: >
-    python3 {{ ansible_facts.env.HOME }}/Documents/GitHub/dev_setup/vscode/merge_settings.py
+  ansible.builtin.command:
+    argv:
+      - python3
+      - "{{ ansible_facts.env.HOME }}/Documents/GitHub/dev_setup/vscode/merge_settings.py"
+  register: merge_vscode_settings
+  changed_when: "'changed=true' in merge_vscode_settings.stdout"
   tags:
     - vscode
 
 - name: Symlink VSCode keybindings
-  file:
+  ansible.builtin.file:
     src: "{{ ansible_facts.env.HOME }}/Documents/GitHub/dev_setup/vscode/Library/Application Support/Code/User/keybindings.json"
     dest: "{{ ansible_facts.env.HOME }}/Library/Application Support/Code/User/keybindings.json"
     state: link
-    force: yes
+    force: true
   tags:
     - vscode
 
 - name: Create VSCode extensions directory
-  file:
+  ansible.builtin.file:
     path: "{{ ansible_facts.env.HOME }}/.vscode/extensions"
     state: directory
     mode: "0755"
@@ -37,19 +41,20 @@
     - vscode
 
 - name: Symlink local VSCode copy-reference extension
-  file:
+  ansible.builtin.file:
     src: "{{ ansible_facts.env.HOME }}/Documents/GitHub/dev_setup/vscode/extensions/copy-reference"
     dest: "{{ ansible_facts.env.HOME }}/.vscode/extensions/dev-setup.copy-reference-0.1.0"
     state: link
-    force: yes
+    force: true
   tags:
     - vscode
 
 - name: Add VSCode to PATH in ~/.zprofile
-  lineinfile:
+  ansible.builtin.lineinfile:
     path: "{{ ansible_facts.env.HOME }}/.zprofile"
     line: "{{ item }}"
-    create: yes
+    create: true
+    mode: "0644"
   loop:
     - "# Add Visual Studio Code (code)"
     - 'export PATH="$PATH:/Applications/Visual Studio Code.app/Contents/Resources/app/bin"'
@@ -57,14 +62,41 @@
     - vscode
 
 - name: Install VSCode extensions
-  command: >
-    python3 {{ ansible_facts.env.HOME }}/Documents/GitHub/dev_setup/vscode/manage_extensions.py --install
+  ansible.builtin.command:
+    argv:
+      - python3
+      - "{{ ansible_facts.env.HOME }}/Documents/GitHub/dev_setup/vscode/manage_extensions.py"
+      - --install
   environment:
     PATH: "{{ ansible_facts.env.PATH }}:/Applications/Visual Studio Code.app/Contents/Resources/app/bin"
+  register: install_vscode_extensions
+  changed_when: "'changed=true' in install_vscode_extensions.stdout"
+  tags:
+    - vscode
+
+- name: Check press-and-hold in VSCode
+  ansible.builtin.command:
+    argv:
+      - defaults
+      - read
+      - com.microsoft.VSCode
+      - ApplePressAndHoldEnabled
+  register: vscode_press_and_hold
+  changed_when: false
+  failed_when: false
   tags:
     - vscode
 
 - name: Disable press-and-hold in VSCode (allows holding down keys for Vim hjkl)
-  shell: defaults write com.microsoft.VSCode ApplePressAndHoldEnabled -bool false
+  ansible.builtin.command:
+    argv:
+      - defaults
+      - write
+      - com.microsoft.VSCode
+      - ApplePressAndHoldEnabled
+      - -bool
+      - "false"
+  changed_when: true
+  when: vscode_press_and_hold.stdout not in ['0', 'false']
   tags:
     - vscode

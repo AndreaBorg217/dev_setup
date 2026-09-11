@@ -1,6 +1,7 @@
 -- https://tree-sitter.github.io/tree-sitter/
 return {
 	"nvim-treesitter/nvim-treesitter",
+	branch = "master",
 	event = { "BufReadPre", "BufNewFile" },
 	build = ":TSUpdate",
 	config = function()
@@ -17,8 +18,6 @@ return {
 			-- ensure these language parsers are installed
 			ensure_installed = {
 				"json",
-				"typescript",
-				"tsx",
 				"yaml",
 				"markdown",
 				"markdown_inline",
@@ -29,7 +28,9 @@ return {
 				"gitignore",
 				"python",
 				"go",
-				"solidity",
+				"gomod",
+				"gosum",
+				"java",
 			},
 			incremental_selection = {
 				enable = true,

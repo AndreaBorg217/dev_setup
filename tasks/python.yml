@@ -1,5 +1,5 @@
 - name: Install Python
-  homebrew:
+  community.general.homebrew:
     name: python
     state: present
   tags:
