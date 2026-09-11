@@ -29,6 +29,10 @@
         // MARKDOWN
         "yzhang.markdown-all-in-one",
         "bierner.github-markdown-preview",
+        // JAVASCRIPT, TYPESCRIPT & REACT
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "stylelint.vscode-stylelint",
         // GIT
         "mhutchie.git-graph",
         "eamodio.gitlens",

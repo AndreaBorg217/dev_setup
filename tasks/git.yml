@@ -1,28 +1,30 @@
 - name: Install GitHub Desktop
-  homebrew_cask:
+  community.general.homebrew_cask:
     name: github
     state: present
   tags:
     - "git"
 
 - name: Set git user name
-  git_config:
+  community.general.git_config:
     name: user.name
     scope: global
     value: "{{ lookup('env', 'GIT_USER_NAME') }}"
+  when: lookup('env', 'GIT_USER_NAME') | length > 0
   tags:
     - "git"
 
 - name: Set git user email
-  git_config:
+  community.general.git_config:
     name: user.email
     scope: global
     value: "{{ lookup('env', 'GIT_USER_EMAIL') }}"
+  when: lookup('env', 'GIT_USER_EMAIL') | length > 0
   tags:
     - "git"
 
 - name: Install lazygit
-  homebrew:
+  community.general.homebrew:
     name: lazygit
     state: present
   tags:

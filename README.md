@@ -17,7 +17,7 @@
 ## How to run
 
 1. For each environment variable in _.env.example_, run `export VARIABLE_NAME=value`
-2. Create and run `run.sh`
+2. Run the tracked `./run.sh`
 
 ## Testing
 
@@ -62,6 +62,16 @@ This is a small tmux cheatsheet:
 
 Task: `tasks/neovim.yml`
 
+The Neovim task is currently disabled because its `setup.yml` include is commented out. Enable it there, or deploy directly with:
+
+```bash
+stow --restow --no-folding --target "$HOME" neovim
+```
+
+Java support uses JDTLS with Spring Boot language-server extensions, debugging, tests, and Palantir formatting.
+
+Supermaven provides inline AI completions. Start with `:SupermavenUseFree`, or use `:SupermavenUsePro` for an existing Pro account.
+
 This is a small neovim cheatsheet:
 
 | Action                         | Command        |
@@ -69,10 +79,11 @@ This is a small neovim cheatsheet:
 | Search for file                | `space ff`     |
 | Search for string              | `space fs`     |
 | Toggle file-tree               | `space ee`     |
-| Focus file-tree                | `space eo`     |
 | Open file-tree on current file | `space ef`     |
+| Collapse file-tree             | `space ec`     |
+| Refresh file-tree              | `space er`     |
 | Toggle breakpoint              | `space db`     |
-| Start debugger                 | `space do`     |
+| Start debugger                 | `space dc`     |
 | Quit debugger                  | `space dq`     |
 | Step over                      | `space do`     |
 | Focus on code                  | `space d0`     |
@@ -81,21 +92,21 @@ This is a small neovim cheatsheet:
 | Focus on REPL                  | `space d5`     |
 | Create mark                    | `m <a-z>`      |
 | Go to mark                     | `' <a-z>`      |
-| Toggle comment                 | `gcc`          |
+| Toggle comment                 | `CTRL /` or `gcc` |
 | Format file                    | `space fmt`    |
 | Lint file                      | `space lf`     |
 | Code actions                   | `space ca`     |
 | Go to definition               | `space gd`     |
-| Show references                | `space gR`     |
+| Show references                | `space gr`     |
 | Rename symbol                  | `space rn`     |
 | Show docs                      | `K`            |
 | Next diagnostic                | `]d`           |
 | Previous diagnostic            | `[d`           |
-| Show workplace diagnostics     | `space xw`     |
-| Show document diagnostics      | `space xd`     |
+| Show workspace diagnostics     | `space xw`     |
 | Add file to Harpoon            | `space ha`     |
 | Clear Harpoon                  | `space hc`     |
-| Harpoon navigate               | `space h<1-5>` |
+| Harpoon navigate               | `space h<1-4>` |
+| Toggle rendered Markdown       | `space op`     |
 | Split vertically               | `space sv`     |
 | Split horizontally             | `space sh`     |
 | Close split                    | `space sx`     |
@@ -104,7 +115,7 @@ This is a small neovim cheatsheet:
 
 Task: `tasks/vscode.yml`
 
-It is effectively a replica of the Neovim configs above.
+VS Code uses separate keybindings and settings.
 
 `keybindings.json` is stowed (live symlink). `settings.json` is handled by `vscode/merge_settings.py`:
 
@@ -237,7 +248,7 @@ workflow remains the source of truth.
 | `terminal/.zshrc`                                               | `~/.zshrc`                                                 |
 | `terminal/.p10k.zsh`                                            | `~/.p10k.zsh`                                              |
 | `tmux/.tmux.conf`                                               | `~/.tmux.conf`                                             |
-| `neovim/.config/nvim`                                           | `~/.config/nvim`                                           |
+| `neovim/.config/nvim`                                           | `~/.config/nvim` (a real directory containing individual symlinks because Neovim uses `--no-folding`) |
 | `vscode/Library/Application Support/Code/User/settings.json`    | `~/Library/Application Support/Code/User/settings.json` (handled by `vscode/merge_settings.py`, not stowed) |
 | `vscode/Library/Application Support/Code/User/keybindings.json` | `~/Library/Application Support/Code/User/keybindings.json` |
 | `.claude` tracked config files                                 | `~/.claude/...` (individual symlinks)                      |
