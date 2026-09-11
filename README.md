@@ -72,6 +72,14 @@ Java support uses JDTLS with Spring Boot language-server extensions, debugging, 
 
 Supermaven provides inline AI completions. Start with `:SupermavenUseFree`, or use `:SupermavenUsePro` for an existing Pro account.
 
+Machine-specific Neovim settings belong in
+`neovim/.config/nvim/local.lua`, which is ignored by Git. For example, disable
+format-on-save while retaining manual formatting with:
+
+```lua
+vim.g.disable_autoformat = true
+```
+
 This is a small neovim cheatsheet:
 
 | Action                         | Command        |

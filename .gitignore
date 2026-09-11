@@ -2,5 +2,7 @@
 !.env.example
 .DS_Store
 vscode/settings.local.json
+neovim/.config/nvim/local.lua
 __pycache__/
 *.py[cod]
+.nvimlog
