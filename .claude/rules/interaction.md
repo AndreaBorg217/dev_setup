@@ -8,10 +8,11 @@
 
 ## Preferences
 
-- If you hit a real issue, a reservation, or an ambiguous architectural choice
-  while working, raise it immediately via `AskUserQuestion` and wait for my
-  decision before proceeding. Don't assume, and don't silently agree.
-- Prefer `grep`/`rg` over `Read` when searching for a specific symbol,
-  string, or pattern; use `Read` only to understand structure or read
-  content sequentially.
+- Resolve repository questions with evidence. Ask about only unresolved
+  user-owned choices whose answer would materially change the work, explain the
+  consequence, and wait rather than silently choosing.
+- Before a repository change workflow reads source for design or editing,
+  invoke the `git` skill once. Reuse a resumed plan's recorded baseline.
+- Do not repeat an unchanged read or search. Reuse the context already returned,
+  or make the next lookup narrower by path, symbol, pattern, range, or JSON key.
 - When I refer to Notion, I mean only pages under Digital Brain. Do not read other pages and do not write or update without my permission. Never delete Notion content.

@@ -1,6 +1,7 @@
 ---
 name: feature-spec
 description: Use only when the user explicitly invokes feature-spec or directly asks for a strict written feature specification and review. Collects a structured specification, rejects material gaps, and saves the accepted spec without invoking planner or implementation.
+disable-model-invocation: true
 ---
 
 # Feature Specification Protocol
@@ -8,8 +9,6 @@ description: Use only when the user explicitly invokes feature-spec or directly 
 Run this protocol only when explicitly invoked. Do not trigger it automatically for an ordinary feature request, task, or `planner` session. Keep it independent from planning and implementation.
 
 Do not write code or propose technical implementation while running this skill.
-
-Write all review feedback and the saved specification in `Straight_to_the_Point` voice - plain sentences, no filler, no padding.
 
 ## Step 1: Provide the Intake Template
 Present the following blank template to the user and ask them to fill it out completely:

@@ -17,20 +17,31 @@ Resolve the repository root, current branch, status, relevant diffs, remotes, up
 
 Preserve unrelated and pre-existing work. Do not overwrite, stage, restore, commit, or include it without explicit approval.
 
+## Synchronize before change work
+
+Before source discovery or edits for a new change, inspect the worktree, branch,
+upstream, and divergence, then fetch the verified upstream or target ref. Fetch
+does not authorize a pull or history rewrite. If the worktree is dirty, no
+upstream/target is established, the local branch is behind or diverged, or the
+next safe step could be pull, rebase, stash, reset, or conflict resolution, use
+`AskUserQuestion` with the observed state and consequences. Wait for the answer;
+never select a synchronization strategy because it is conventional.
+
 ## Keep history reviewable
 
-- Match the repository's commit convention. When a ticket key exists, use `TICKET: concise imperative summary` and preserve its casing.
+- Match the repository's established commit convention.
 - Keep commits small and logical. Amend corrections into their logical commit instead of retaining false-start or review-fix commits.
 - Rebase feature work onto the verified target. Do not merge the target into the feature branch.
 - After rewritten history, use force-with-lease. Never use an unguarded force update.
 - Commit at useful review boundaries and push in bulk to avoid unnecessary CI/CD churn.
 
-## Voice
-
-Write commit messages in `Straight_to_the_Point` voice: plain, direct sentences stating what changed and why. No filler, no padding.
-
 ## Approval
 
-Skill invocation does not authorize a mutation. Read-only inspection may run when relevant. Obtain explicit QA and approval immediately before commits, pushes, ref changes, stash removal, worktree removal, history rewrites, destructive recovery, remote configuration changes, and other conclusive operations.
+Skill invocation does not authorize a mutation. Read-only inspection and a
+fetch from an already-configured, verified remote/ref may run as synchronization
+preflight. Obtain explicit QA and approval immediately before commits, pushes,
+local branch/tag changes, stash removal, worktree removal, pull/rebase/history
+rewrites, destructive recovery, remote configuration changes, and other
+conclusive operations.
 
 Never expose credentials, tokens, private keys, or credential-bearing remote URLs.

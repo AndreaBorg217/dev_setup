@@ -11,13 +11,8 @@ failures, or infer a new objective. Select only required columns, use bounded
 time windows and row limits, filter JSON with `jq`, and cap command output at
 the source. Never return raw result sets.
 
-For example, analyse a large access log with `ctx_execute_file`, print only the
-requested status-code and IP counts, and keep the raw lines out of the response.
+Use `ctx_execute_file` for a large local artifact and print only the requested
+derived facts.
 
-Invoke every exact name on a supplied `Skills:` line before matching work. Treat
-`Skill context:` as caller-resolved answers and report the skills used. Stop if
-a listed skill is unavailable or requires unresolved context.
-
-Return at most 1,500 characters: exact query or command, requested counts or
-column-level facts, source/window, and any exact blocker. Interpretation and
-follow-up decisions belong to the caller.
+Return the exact query or command, requested facts, source or window, and any
+blocker. Interpretation and follow-up decisions belong to the caller.

@@ -7,51 +7,6 @@ description: Mandatory for programming work in any language, including reading o
 
 Load this skill before any code-facing tool. Keep it active for the task. Read
 [examples.md](examples.md) only when a rule needs a concrete BAD/GOOD example.
-Use the global routing in `rules/subagents.md`: keep code judgement and edits on
-Sonnet, and send broad/noisy read-only evidence gathering to a bounded local
-Haiku agent.
-
-## Code intelligence and affected tests
-
-When the repository has a `.codegraph/` index, use the `codegraph_explore` MCP
-tool before LSP, grep, or direct reads to locate and understand source, call
-paths, and blast radius. A subagent or non-MCP session uses the equivalent
-`codegraph explore` CLI. The MCP server keeps the shared index fresh; the CLI
-also provides focused automation such as `codegraph affected`. Treat returned
-line-numbered source as read; use LSP for type-aware navigation and diagnostics,
-and use grep/direct reads for configuration, documentation, unsupported files,
-or a specific gap in the graph result.
-
-Do not add a session-start or per-edit sync step. The MCP server reconciles the
-index when it connects and watches file changes. If a response identifies a
-stale file or disabled watcher, read only the named file directly and report
-the degraded index state.
-
-Before choosing an authorised targeted test command, pass the changed source
-paths to `codegraph affected --stdin --quiet`. `git diff --name-only HEAD`
-covers tracked staged and unstaged paths; add relevant untracked source paths
-explicitly. Use the result to narrow the test set, not as proof that omitted
-tests cannot fail, and preserve any repository-required or user-approved full
-suite.
-
-Use Context Mode's MCP tools for sandbox execution and normal in-session
-index/search work: `ctx_execute`, `ctx_execute_file`, `ctx_batch_execute`, and
-`ctx_search`. Its plugin bundle also contains CLI utilities for index, search,
-diagnostics, upgrade, and the status line, but a marketplace install does not
-require a separate CLI installation. There is no CLI substitute for the
-`ctx_execute*` sandbox tools. Run a noisy CodeGraph CLI command or authorised
-test inside a Context Mode MCP call so only derived or searched evidence enters
-the conversation.
-
-## Synchronize before source work
-
-For a new repository change workflow, invoke the `git` skill before reading
-source for design or editing. Establish branch, worktree, upstream, and
-divergence, then fetch the verified remote ref. If synchronization needs pull,
-rebase, stash, reset, conflict resolution, or a target/upstream choice, use
-`AskUserQuestion` and wait. Do not assume the strategy. When resuming an
-approved plan with partial edits, use its recorded baseline instead of fetching
-or rebasing through those edits.
 
 ## Simplicity
 
@@ -160,22 +115,6 @@ When a language server is available for the language being edited, use it during
 
 If no linter exists, say so and suggest an appropriate one.
 
-Before finishing, review each new helper, branch, guard, abstraction, parameter, exception handler, fallback, comment, and dependency. If no requirement or repository evidence requires it, remove it. Every extra line of code is a penalty which we will need to maintain and potentially debug if it fails.
-
-## Code review
-
-Review only the requested change. Use the request, permitted writes, and diff to
-separate it from unrelated dirty-worktree changes. Inspect enough surrounding
-code, call sites, tests, configuration, and local conventions to distinguish
-evidence from hypothetical concerns.
-
-Challenge every new helper, branch, guard, abstraction, parameter, exception
-handler, fallback, retry, comment, dependency, test, and changed file. Do not
-invent findings for hypothetical misuse, unreachable states, future
-requirements, or personal preferences.
-
-When repair is authorised, fix every in-scope violation and rerun only the
-declared targeted verification. When review is read-only, report each violation
-with its rule, exact path and line, concrete failure case, and smallest
-correction. Return `PASS` only when no in-scope violation remains; return
-`BLOCKED` when correction requires a user decision or writes outside scope.
+Before finishing, remove any new helper, branch, guard, abstraction, parameter,
+exception handler, fallback, comment, or dependency unsupported by a requirement
+or repository evidence.

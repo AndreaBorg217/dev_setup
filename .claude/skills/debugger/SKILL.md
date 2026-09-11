@@ -5,11 +5,8 @@ description: Used when provided with a stack trace, error log, or symptom-based 
 
 ## Step Zero: Get the Real Evidence First (not optional, not last)
 
-Keep diagnosis and repair judgement in the main Sonnet conversation. Delegate
-logs, monitoring, data queries, and other noisy runtime evidence to 1 bounded
-local `data-reader` with `model: haiku`. Delegate broad repository tracing to a
-bounded local `explorer` with `model: haiku`. Give each worker 1 question and a
-1,500-character receipt limit; use 2 only for independent questions.
+Keep diagnosis and repair judgement in the main conversation. Use `data-reader`
+for noisy runtime evidence and `explorer` for broad repository tracing.
 
 Before writing a single sentence of analysis, before reading any code, before checking
 commit history - fetch the actual evidence of the failure itself: logs, exception,
@@ -17,12 +14,6 @@ stack trace, task/job run output, monitoring data. If the failing thing is a
 scheduled job, pipeline task, or service, that means pulling its real execution
 record (logs/exception/state via its actual API or log store), not reasoning about
 it from the outside.
-
-For example, process one large local log with the Context Mode
-`ctx_execute_file` MCP tool and print only matching errors, identifiers, and
-counts. For several related commands, use `ctx_batch_execute` with all search
-queries in the same MCP call. Once the failure points to a source path or
-symbol, use CodeGraph for its callers, callees, and blast radius.
 
 - This is step one, not a final check before reporting. Reaching for code archaeology
   (commit dates, diffs, "this changed recently") before reaching for the actual
