@@ -1,6 +1,8 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
   "env": {
+    "ENABLE_TOOL_SEARCH": "true",
+    "CODEGRAPH_NO_PROMPT_HOOK": "1",
     "CLAUDE_CODE_DISABLE_TERMINAL_TITLE": "1",
     "CLAUDE_CODE_EFFORT_LEVEL": "medium",
     "MAX_MCP_OUTPUT_TOKENS": "10000",
@@ -110,12 +112,12 @@
         ]
       }
     ],
-    "UserPromptSubmit": [
+    "SessionStart": [
       {
         "hooks": [
           {
             "type": "command",
-            "command": "codegraph prompt-hook"
+            "command": "\"/Users/andrea.borg/.claude/hooks/context-mode-cache-heal.mjs\""
           }
         ]
       }
