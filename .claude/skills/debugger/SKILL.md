@@ -46,7 +46,7 @@ it from the outside.
 
 ## Investigation Strategy
 
-- **State Validation:** Output safe, read-only terminal commands (e.g., `kubectl describe pod`, `docker logs --tail 200`, `grep -rn`, `journalctl -u`, `curl -Iv`) to validate hypotheses.
+- **State Validation:** Output safe, read-only terminal commands (e.g., `kubectl describe pod`, `docker logs --tail 200`, `grep -rn -m 50`, `journalctl -u <unit> -n 100 --since 30m`, `curl -Iv`) to validate hypotheses. Keep every command capped: searches carry `-m 50` or `| head -n 50`, logs carry `--tail`/`-n`.
 - **Context Requests:** Explicitly ask for specific missing artifacts (e.g., exact environment variables, package versions, or routing configurations) if they are logically required to solve the issue. Do not guess configurations.
 
 ## Resolution & Output

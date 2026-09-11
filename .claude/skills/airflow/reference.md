@@ -14,20 +14,24 @@ TOKEN=$(curl -fsS --data-binary @- -H "Content-Type: application/json" \
 
 # Trigger a DAG run
 curl -fsS -X POST -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
-  -d '{"conf":{}}' "$AIRFLOW_HOST/api/v2/dags/$DAG_ID/dagRuns"
+  -d '{"conf":{}}' "$AIRFLOW_HOST/api/v2/dags/$DAG_ID/dagRuns" \
+  | jq .
 
 # Clear/retry a task instance (dry_run defaults true - confirm with the user before dry_run:false)
 curl -fsS -X POST -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
   -d '{"only_failed":true,"dry_run":true,"dag_run_id":"'"$RUN_ID"'"}' \
-  "$AIRFLOW_HOST/api/v2/dags/$DAG_ID/clearTaskInstances"
+  "$AIRFLOW_HOST/api/v2/dags/$DAG_ID/clearTaskInstances" \
+  | jq .
 
 # Fetch task logs (JSON by default; content is a list of events, not a string)
 curl -fsS -H "Authorization: Bearer $TOKEN" \
-  "$AIRFLOW_HOST/api/v2/dags/$DAG_ID/dagRuns/$RUN_ID/taskInstances/$TASK_ID/logs/$TRY_NUMBER"
+  "$AIRFLOW_HOST/api/v2/dags/$DAG_ID/dagRuns/$RUN_ID/taskInstances/$TASK_ID/logs/$TRY_NUMBER" \
+  | jq -c . | head -n 50
 
 # Fetch an XCom value
 curl -fsS -H "Authorization: Bearer $TOKEN" \
-  "$AIRFLOW_HOST/api/v2/dags/$DAG_ID/dagRuns/$RUN_ID/taskInstances/$TASK_ID/xcomEntries/return_value?deserialize=true"
+  "$AIRFLOW_HOST/api/v2/dags/$DAG_ID/dagRuns/$RUN_ID/taskInstances/$TASK_ID/xcomEntries/return_value?deserialize=true" \
+  | jq .
 ```
 
 Guardrails: clearing/retrying task instances, deleting runs, and pausing DAGs are destructive - always confirm with the user before running them with a non-dry-run/mutating payload.

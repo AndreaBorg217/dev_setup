@@ -104,11 +104,15 @@
   "hooks": {
     "PreToolUse": [
       {
-        "matcher": "Bash|Read|Grep",
+        "matcher": "Bash|Read|Grep|WebFetch",
         "hooks": [
           {
             "type": "command",
             "command": "python3 ~/Documents/GitHub/dev_setup/.claude/scripts/block-secret-exposure.py"
+          },
+          {
+            "type": "command",
+            "command": "python3 ~/Documents/GitHub/dev_setup/.claude/scripts/limit-output.py"
           }
         ]
       }
