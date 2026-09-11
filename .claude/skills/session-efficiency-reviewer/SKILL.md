@@ -63,7 +63,8 @@ general-purpose model. Use `--main-only` when subagent traces must be excluded.
 - Prioritize the largest repeated context payloads, then incorrect routing and
   avoidable work. A long trace is evidence that a task needs narrowing; do not
   recommend turn caps or continuation messages. Propose narrow changes such as
-  Haiku explorer/data-reader routing, `rg`/`jq` with source-side limits,
+  Haiku explorer routing, CodeGraph-first source discovery with Context Mode
+  sandboxing, `rg`/`jq` with source-side limits,
   targeted reads, compact CLI wrappers, batched inspection scripts, CI
   verification, or progressive skill disclosure.
 - Do not automatically edit hooks, skills, model settings, or project files.

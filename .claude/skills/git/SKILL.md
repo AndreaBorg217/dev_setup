@@ -13,7 +13,7 @@ Read the relevant section of [references/git-cli.md](references/git-cli.md) befo
 
 ## Establish the state
 
-Resolve the repository root, current branch, status, relevant diffs, remotes, upstream, target branch, stashes, and worktrees that the operation can affect. Derive the actual target from repository evidence. Never assume its name.
+Resolve the repository root, current branch, status, relevant diffs, remotes, upstream, target branch, stashes, and worktrees that the operation can affect. Derive the actual target from repository evidence. Never assume its name. Ask the user for branch name and commit prefix if unsure, never assume a default.
 
 Preserve unrelated and pre-existing work. Do not overwrite, stage, restore, commit, or include it without explicit approval.
 

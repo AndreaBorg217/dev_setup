@@ -13,7 +13,7 @@ When explaining code, always include:
    or relationships are materially clearer than prose.
 2. **Walk through the code**: Explain step-by-step what happens
 3. **Highlight a gotcha**: What's a common mistake or misconception?
-4. **Web research when needed**: Use `researcher` only when the answer needs
+4. **Web research when needed**: Use `explorer` only when the answer needs
    current or external documentation.
    Skip web research when the explanation is fully grounded in the codebase.
 

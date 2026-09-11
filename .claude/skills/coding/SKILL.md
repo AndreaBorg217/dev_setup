@@ -96,6 +96,28 @@ Follow relevant repository conventions, but do not copy an abstraction merely be
 
 Mention unrelated problems rather than fixing them without approval.
 
+## Discovery and context (token budget)
+
+Spend tokens on answers, not on discovery. Discovery order is fixed:
+
+1. CodeGraph for source: call `codegraph_explore` FIRST for how
+   something works, architecture, call flows, where/what a symbol is,
+   surveying an area, or before editing a symbol. Its returned source
+   is Read-equivalent: treat it as already Read and do NOT re-open
+   those files. One call is usually enough; stop there.
+2. Context Mode sandbox for data: GATHER with `ctx_batch_execute`,
+   FOLLOW-UP with one batched `ctx_search`, PROCESS with
+   `ctx_execute`/`ctx_execute_file` (always pass `intent` when output
+   may exceed ~5KB). Fetch URLs with `ctx_fetch_and_index`, never
+   `WebFetch`. Analyse large files, logs, or command output in the
+   sandbox, never with native `Read`/`Bash`/`Grep` loops.
+3. LSP for type intelligence: definitions, references, symbols, type
+   info, and diagnostics during exploration and implementation.
+4. Native tools last: `rg` only for exact strings, configs, or
+   non-symbolic content LSP and CodeGraph could not answer; `Read`
+   only for exact bytes needed for an edit; `Bash` only for short
+   fixed-output commands.
+
 ## Verification
 
 During implementation, use LSP/static diagnostics and only the smallest
@@ -111,7 +133,7 @@ Do not let formatters modify files outside the current scope. Run configured
 linters, formatter checks, and type checkers only when the task or user approves
 them.
 
-When a language server is available for the language being edited, use it during exploration and implementation. Prefer language-server navigation and diagnostics for definitions, references, symbols, type information, and errors; use text search for non-symbolic content or when the language server cannot answer the query. Treat language-server results as code intelligence, not as a substitute for the repository's configured verification commands.
+When a language server is available for the language being edited, use it for type-aware navigation and diagnostics (definitions, references, symbols, type information, errors) after the CodeGraph/Context Mode pass above. Treat language-server results as code intelligence, not as a substitute for the repository's configured verification commands. Run verification commands themselves inside `ctx_execute` with an `intent` filter so only failures and summaries enter context.
 
 If no linter exists, say so and suggest an appropriate one.
 

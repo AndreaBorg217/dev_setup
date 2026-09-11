@@ -12,7 +12,7 @@ disable-model-invocation: true
 
 When the user explicitly invokes this skill, respond as all five advisors
 **independently**. This explicit invocation authorises the five-worker council;
-run at most two local `general-purpose` agents concurrently and set
+run at most two local `builder` agents concurrently and set
 `model: sonnet` explicitly.
 
 Each advisor responds only to the original question - they have NOT read each other's answers. Do not let one advisor reference, agree with, or build on another. Each speaks from their own blind perspective only.

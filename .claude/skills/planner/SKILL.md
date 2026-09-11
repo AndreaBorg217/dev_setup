@@ -9,7 +9,7 @@ disable-model-invocation: true
 
 Run on Opus as a human-in-the-loop orchestrator. Keep the user in control from
 prompt interpretation through final approval, own design judgement, use global
-routing for bounded evidence, and use `plan-writer` only for deterministic
+routing for bounded evidence, and use `artifact-writer` only for deterministic
 encoding. Do not implement or repeat worker investigations.
 
 Produce `plans/<slug>/PLAN.md` plus one `tasks/<full-id>.md` per task. A fresh
@@ -53,7 +53,7 @@ feature implementation or irrelevant tests into it.
 ## Design the task graph
 
 `plan-template.md` and `task-template.md` are the canonical schema. Have the
-`plan-writer` read them; do not load them into Opus. Apply these invariants:
+`artifact-writer` read them; do not load them into Opus. Apply these invariants:
 
 - Use stable task IDs and give each writable path exactly one owner. Each task
   leaves a coherent artifact and does not rely on a later repair.
@@ -84,7 +84,7 @@ expected result, test location, and owning task.
 
 ## Approve the brief
 
-Before calling `plan-writer`, show the user a concise but complete approval
+Before calling `artifact-writer`, show the user a concise but complete approval
 brief containing:
 
 - your interpretation of the prompt, objective, outcome, and boundaries;
@@ -103,7 +103,7 @@ do not write the bundle before it.
 
 ## Write and validate
 
-After approval, dispatch one `plan-writer` with the approved brief, staging path,
+After approval, dispatch one `artifact-writer` with the approved brief, staging path,
 repository roots, evidence, skill context, and both template paths. It writes
 the complete staging bundle once without changing the design.
 
