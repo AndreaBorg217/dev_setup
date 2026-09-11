@@ -54,6 +54,8 @@ git diff --quiet -- PATH
 
 Three dots show feature work since the merge base. `--no-index` also compares untracked files. `--quiet` reports through its exit code.
 
+Scope before content: `--stat`/`--name-only` before full diffs; pipe a full `git diff`/`git show` through `head -n 100` or `diffstat`; `git grep -l` before `-n`, capped with `-m`/pipe to `head` (the hook denies unbounded `git grep`).
+
 Find historical changes without scanning every commit:
 
 ```bash
