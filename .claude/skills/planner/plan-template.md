@@ -1,56 +1,97 @@
-# PLAN.md schema
+# Plan bundle schema
 
-Use this literal structure for `plans/<kebab-name>/PLAN.md`. Replace every placeholder, delete optional bullets or sections that do not apply, and leave each planning-time `Results:` empty.
+New plans use schema 4. `PLAN.md` is a compact manifest that remains immutable
+during execution, and each task has one mutable file under `tasks/`. Replace
+every placeholder, delete optional bullets or sections that do not apply, and
+leave each planning-time `Results:` empty. Read `task-template.md` for the
+task-file schema.
 
-Each `>>`-separated segment is one `plan-execute` invocation followed by a stop. For example, `t1 >> [t2, t3, t4] >> t5` means run `t1` and stop, concurrently run `t2`, `t3`, and `t4` in three separate subagents and stop, then run `t5` and stop. Use brackets only for mutually independent tasks that can run concurrently without overlapping Writes.
+`plan-execute` runs 1 `>>`-separated reviewable block per invocation unless the
+user explicitly requests uninterrupted execution. For example, `t1 >> [t2, t3]
+>> t4` normally needs 3 invocations; the second runs the bracketed tasks
+concurrently. Use brackets only for at most 2 mutually independent tasks with
+disjoint Writes that do not consume facts or artifacts produced by a sibling.
+
+## Staging and approval format
+
+Before materialization, encode the complete bundle this way. Paths are relative
+to `plans/<kebab-name>/`. Include every file exactly once. The content inside
+each fence is the exact file content approved and materialized; the wrapper is
+not written to the plan directory.
+
+````markdown
+# Plan bundle: <Concise plan title>
+
+Target: plans/<kebab-name>/
+
+## File: PLAN.md
 
 ```markdown
 # <Concise plan title>
 
-Plan schema: 1
+Plan schema: 4
 
 ## Objective
 
 <Complete intended outcome and acceptance criteria.>
 
+## Repository baselines
+
+- `<repository root>`: fetched `<remote/ref>` at `<commit>` on `<branch>`; worktree `<clean, or exact user-approved pre-existing state>`.
+
 ## Boundaries and decisions
 
 - Excluded unless explicitly included below: git operations, deployment, test-file changes, and documentation changes.
-- Existing tests, lint, builds, and artifact checks may be run for verification.
-- Assumption: <Specific, falsifiable, user-approved constraint>; if false, <effect on the plan>.
-- Decision: <Selected option>; rejected <principal alternative> because <one-clause reason>.
+- Decision: Verification ownership is <CI, Manual, or explicitly approved targeted Local>; exhaustive build/test suites run only in CI.
+- Decision: <Explicit user choice and its scope>; rejected <principal alternative> because <one-clause reason>.
+
+## Risks and resolutions
+
+- <Prospective failure or ambiguity>: resolved by <user decision or exact evidence>; consequence addressed by <plan constraint/task>.
 
 ## Grounded facts
 
 - <Technical fact required by the plan>. Evidence: <exact path:line, command/result, configuration, test, or authoritative source>.
 
+## Test matrix
+
+| Scenario | Input/precondition | Expected result | Test/fixture location | Owning task |
+| --- | --- | --- | --- | --- |
+| <Case approved by the user> | <Exact setup> | <Observable result> | <Path> | <full-id> |
+
 ## Execution order
 
 Blocks: t1-first-task >> t2-independent-task
 
-## Tasks
+## Task index
 
-### t1-first-task
-Status: PENDING
-Model: sonnet
-Goal: <One-sentence outcome.>
-Writes: <Comma-separated paths/globs, or None.>
-How: <Self-contained implementation steps, exact paths and commands, and important function/type/interface signatures.>
-Verification: <Observable artifact assertion.>
-Results:
-
-### t2-independent-task
-Status: PENDING
-Model: haiku
-Goal: <One-sentence outcome.>
-Writes: None
-How: <Self-contained mechanical work.>
-Verification: <Observable artifact assertion.>
-Results:
+- `t1-first-task`: `tasks/t1-first-task.md`
+- `t2-independent-task`: `tasks/t2-independent-task.md`
 
 ## Manual actions
 
 - [ ] <Action only the user can perform.>
 ```
 
-`Assumption:` and `Decision:` bullets, `Grounded facts`, and `Manual actions` are optional. Deployment, git, test-file, and documentation tasks use the same task shape and appear only when explicitly included under Boundaries and decisions.
+## File: tasks/t1-first-task.md
+
+```markdown
+<Exact task file using task-template.md.>
+```
+
+## File: tasks/t2-independent-task.md
+
+```markdown
+<Exact task file using task-template.md.>
+```
+````
+
+`Decision:` bullets, `Grounded facts`, `Test matrix`, and `Manual actions` are
+optional only when they do not apply. `Repository baselines` is required; use
+`- None — no repository work.` only for a genuinely repository-free plan.
+`Risks and resolutions` is also required; use `- None — explicit assumption and
+prospective-failure audit found no material risk.` only after performing that
+audit. `Assumption:` entries and unresolved-question placeholders are forbidden.
+Deployment, git, test-file, and documentation tasks use the same task shape and
+appear only when explicitly included under Boundaries and decisions. Do not
+repeat task fields or execution state in `PLAN.md`.
