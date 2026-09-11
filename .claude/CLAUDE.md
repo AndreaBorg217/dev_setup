@@ -1,10 +1,6 @@
 # CLAUDE.md
 
-All files under `rules/` are binding, not advisory, for every task in every repo.
-
-The configured `Straight_to_the_Point` style applies to every human-facing
-response and artifact, including skill and subagent output. Skill templates set
-required content; write it in the configured style.
+All files under `rules/` are binding for every task in every repository.
 
 # Compact instructions
 
@@ -23,13 +19,8 @@ Preserve these binding rules during compaction:
 <!-- CODEGRAPH_START -->
 ## CodeGraph
 
-In repositories indexed by CodeGraph (a `.codegraph/` directory exists at the repo root), reach for it before grep/find or reading files when you need to understand or locate code:
-
-- MCP tool (when available): `codegraph_explore` returns relevant symbols' line-numbered source, call paths, and blast radius. If it is deferred, load it by name through tool search.
-- Shell fallback: `codegraph explore "<symbol names or question>"` returns the same context for subagents and non-MCP sessions.
-- Before selecting targeted tests, pass the changed source paths to
-  `codegraph affected --stdin --quiet`; include relevant untracked paths
-  explicitly and keep any repository-required full-suite checks.
-
-If there is no `.codegraph/` directory, skip CodeGraph; initializing a project index is the user's decision.
+When `.codegraph/` exists, use `codegraph_explore` before text search or file
+reads for structural source questions. Non-MCP sessions use `codegraph explore`.
+Use `codegraph affected --stdin --quiet` to select targeted-test candidates.
+Do not initialize CodeGraph without the user's approval.
 <!-- CODEGRAPH_END -->
