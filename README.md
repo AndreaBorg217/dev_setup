@@ -186,12 +186,13 @@ Task: `tasks/apps.yml`
 
 Task: `tasks/claude.yml`
 
-Installs Claude Code, caveman-code, and RTK. The following user-managed config is
-tracked in the `.claude` directory:
+Installs the stable Claude Code Homebrew cask, language servers, CodeGraph, and
+Context Mode. The following user-managed config is tracked in `.claude`:
 
 - `.gitignore` - excludes Claude's runtime state and other machine-local files
 - `CLAUDE.md` - core behavioural instructions
-- `settings.json` - permissions, hooks, models, plugins, and UI settings
+- `settings.json` - linked as `~/.claude/settings.json`; contains permissions,
+  models, plugins, hooks, environment, and UI settings
 - `agents` - custom subagent definitions
 - `output-styles` - response style definitions
 - `rules` - focused behavioural and workflow instructions
@@ -199,15 +200,94 @@ tracked in the `.claude` directory:
 - `skills` - reusable task-specific instructions
 - `statusline.sh` - displays the current directory, context, usage limits, model, and Git branch
 
-Hooks are configured in `settings.json`; there is no tracked `hooks` directory.
-The current pre-tool hooks integrate RTK, guard against plaintext secret
-exposure, and prevent subagents from launching nested agents.
+The tracked pre-tool hook blocks plaintext secret exposure. Context Mode owns
+its upstream hooks, including cache healing; Ansible installs the plugin instead
+of copying its hook implementation. CodeGraph's prompt hook is disabled so its
+instructions are not injected on every prompt. RTK is not integrated with
+Claude.
 
 The secret-exposure hook blocks common plaintext disclosure paths before Claude
 runs a tool: direct `op read`/`bw get`/`bws secret get`, SOPS/KSOPS decrypts to
 stdout, untrapped SOPS temp-file redirects, ksops-backed `kustomize build`
 output, `kubectl get secret -o yaml|json|jsonpath`, and direct Bash/Read
 access to known credential files.
+
+### Context and model routing
+
+`opusplan` uses Sonnet normally and Opus in Plan Mode. The manual `planner` skill
+is an Opus human-in-the-loop orchestrator: it keeps decisions, assumptions,
+doubts, the execution plan, and the test plan visible until the user approves a
+brief with no known gaps. A Haiku `plan-writer` then serializes that approved
+brief without making decisions. The Sonnet `plan-execute` orchestrator dispatches
+the tasks and never implements them itself.
+
+Model routing applies to normal work and planned execution. Haiku handles
+bounded deterministic work with complete inputs, such as evidence collection,
+approved documentation, or static fixtures from an approved test matrix.
+Sonnet handles source code, test logic, runtime configuration, debugging,
+ambiguity, and other semantic or higher-risk work. Every worker is a leaf and
+returns a compact receipt.
+
+### Context Mode
+
+Ansible adds the upstream `mksglu/context-mode` marketplace and installs
+`context-mode@context-mode`. The plugin registers its own local stdio MCP server,
+hooks, and SQLite/FTS5 storage; Ansible does not duplicate that setup.
+
+The permission policy allows local search, statistics, diagnostics, indexing,
+and CodeGraph reads; prompts for sandbox execution, network fetches, and
+deletion; and denies hosted Insight and upgrades. Secret-bearing paths remain
+denied, while ordinary logs and other large inputs are routed through Context
+Mode instead of being blocked.
+
+### CodeGraph
+
+Ansible runs CodeGraph's upstream standalone installer without a version pin, so
+each run installs the latest release. It registers the MCP through Claude's CLI;
+the machine-specific registration remains in untracked `~/.claude.json`.
+
+Initialize each code repository once:
+
+```bash
+codegraph init
+```
+
+Claude uses the MCP for fresh interactive source discovery and the CLI for
+subagents and automation. Before an authorised targeted test run, identify
+candidate tests from tracked and relevant untracked paths with:
+
+```bash
+{
+  git diff --name-only HEAD
+  git ls-files --others --exclude-standard
+} | codegraph affected --stdin --quiet
+```
+
+Affected-test output narrows validation; it does not replace required checks.
+There is no CodeGraph sync hook: the MCP catches up when it connects and watches
+the repository while running. `DO_NOT_TRACK=1` is set in Claude, the shell, and
+the CodeGraph installation environment.
+
+### Installation and checks
+
+Plugins are installed at user scope. The manual
+`session-efficiency-reviewer` audits local transcripts without emitting their
+prompt, command, or tool-result contents.
+
+Run the focused local checks with:
+
+```bash
+python3 -m unittest discover -s .claude/tests -p 'test_*.py'
+python3 -m py_compile \
+  .claude/skills/planner/scripts/materialize_plan_bundle.py \
+  .claude/skills/session-efficiency-reviewer/scripts/session_efficiency.py
+ansible-playbook --syntax-check setup.yml
+```
+
+See the [Context Mode guide](https://betterstack.com/community/guides/ai/context-mode-mcp/),
+[CodeGraph documentation](https://colbymchenry.github.io/codegraph/), and
+[Claude Code subagent documentation](https://code.claude.com/docs/en/sub-agents)
+for the upstream behaviour behind this setup.
 
 ### Routines
 
