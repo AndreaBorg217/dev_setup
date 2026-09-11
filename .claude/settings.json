@@ -1,6 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
   "env": {
+    "DO_NOT_TRACK": "1",
     "ENABLE_TOOL_SEARCH": "true",
     "CODEGRAPH_NO_PROMPT_HOOK": "1",
     "CLAUDE_CODE_DISABLE_TERMINAL_TITLE": "1",

@@ -5,7 +5,8 @@ fi
 
 # Path to your Oh My Zsh installation.
 export ZSH="$HOME/.oh-my-zsh"
-export PATH="$HOME/.local/opt/neovim/current/bin:$PATH"
+export PATH="$HOME/.local/bin:$HOME/.local/opt/neovim/current/bin:$PATH"
+export DO_NOT_TRACK=1
 
 # Theme
 ZSH_THEME="powerlevel10k/powerlevel10k"
