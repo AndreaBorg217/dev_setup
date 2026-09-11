@@ -201,12 +201,15 @@ def validate_tasks(
             for name, value in FIELD.findall(header_content)
             if name == "Model reason"
         ]
-        if fields["Model"] == "sonnet" and (len(reasons) != 1 or not reasons[0].strip()):
+        if schema == 4 and (len(reasons) != 1 or not reasons[0].strip()):
             raise BundleError(f"{task_id} requires one non-empty Model reason")
-        if fields["Model"] == "haiku" and reasons:
-            raise BundleError(f"{task_id} must not contain Model reason for Haiku")
-        if schema == 4 and fields["Writes"] != "None" and fields["Model"] != "sonnet":
-            raise BundleError(f"{task_id} assigns implementation Writes to Haiku")
+        if schema < 4:
+            if fields["Model"] == "sonnet" and (
+                len(reasons) != 1 or not reasons[0].strip()
+            ):
+                raise BundleError(f"{task_id} requires one non-empty Model reason")
+            if fields["Model"] == "haiku" and reasons:
+                raise BundleError(f"{task_id} must not contain Model reason for Haiku")
         nonempty = ["Skills", "Goal", "Writes", "How", "Verification"]
         if schema == 4:
             nonempty.extend(["Skill context", "Materialization", "Handoff"])

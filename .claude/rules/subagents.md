@@ -11,9 +11,12 @@ Delegate automatically when the work fits; the user need not ask.
 - Use Haiku `explorer` for repository evidence, `data-reader` for a specified
   read-only query, `researcher` for external sources, and `plan-writer` for
   deterministic plan encoding. They never implement.
-- Use `builder` for a bounded implementation with resolved requirements. Use
-  `general-purpose` only for one bounded Sonnet task requiring diagnosis or
-  semantic judgement that no specialist fits. All implementation uses Sonnet.
+- Use Haiku `artifact-writer` for a fully specified, low-risk non-source artifact
+  such as documentation rendered from approved facts or static fixture data
+  rendered from an approved test matrix.
+- Use Sonnet `builder` for source, test logic, configuration, or other semantic
+  implementation. Use Sonnet `general-purpose` only when no specialist fits.
+  Choose per task; writing a file alone does not require Sonnet.
 - Never use `WebSearch` or `WebFetch` in the main thread. Route external research
   through `researcher`.
 - Skill discovery is manual and on demand. Do not run a catalogue before a task

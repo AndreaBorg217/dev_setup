@@ -7,9 +7,9 @@ disable-model-invocation: true
 
 # Plan Execute
 
-Run on Sonnet outside plan mode. Parse state, enforce scope, dispatch workers,
-evaluate compact receipts, and update task files. Do not inspect source,
-implement, diagnose, repair, or run verification in the parent.
+Run on Sonnet outside plan mode as an orchestrator. Parse state, enforce scope,
+dispatch workers, evaluate compact receipts, and update task files. Do not
+inspect source, implement, diagnose, repair, or run verification in the parent.
 
 Schema 4 uses immutable `PLAN.md` context and mutable `tasks/<id>.md` files.
 Read schemas 2 and 3, but require amendment rather than inventing missing skill
@@ -29,10 +29,11 @@ context, materialization, or handoffs.
   task paths, collect statuses with one bounded search, and select only the first
   unfinished block. Read a task only when its block becomes current.
 - Read the [task template](../planner/task-template.md) once as the canonical
-  task and result schema. Reject
-  malformed tasks, unresolved decisions, undeclared scope, Haiku writes, or
-  broad local verification. Legacy tasks crossing an implicit artifact-readiness
-  boundary require schema-4 amendment.
+  task and result schema. Reject malformed tasks, unresolved decisions,
+  assumptions, doubts, placeholders, undeclared scope, unjustified model
+  selection, incomplete handoffs, or broad local verification. Do not fill a
+  planning gap during execution. Legacy tasks crossing an implicit
+  artifact-readiness boundary require schema-4 amendment.
 
 ## Dispatch one block
 
@@ -46,10 +47,11 @@ changing only their status lines.
 
 Route workers under `rules/subagents.md`: `builder` for bounded implementation,
 `general-purpose` for semantic judgement, and `explorer`, `researcher`, or
-`data-reader` for read-only work. Pass the explicit model plus the task's full
-contract, relevant baseline, decisions, dependencies, and earlier handoffs.
-Agent definitions and global rules are the worker contract; do not restate them
-in every prompt.
+`data-reader` for read-only work. Use `artifact-writer` for a Haiku task that
+writes approved documentation or static fixture data. Pass the explicit model,
+model reason, full task contract, relevant baseline, decisions, test-matrix
+rows, dependencies, and earlier handoffs. Agent definitions and global rules
+are the worker contract; do not restate them in every prompt.
 
 An incomplete worker is a failed dispatch. Checkpoint its evidence and stop;
 do not continue, replace, or repair it in the parent.

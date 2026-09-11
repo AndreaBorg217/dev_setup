@@ -7,9 +7,10 @@ disable-model-invocation: true
 
 # Planner
 
-Run on Opus. Own user dialogue and design judgement; use the global subagent
-routing for bounded evidence and the `plan-writer` for deterministic encoding.
-Do not repeat worker investigations.
+Run on Opus as a human-in-the-loop orchestrator. Keep the user in control from
+prompt interpretation through final approval, own design judgement, use global
+routing for bounded evidence, and use `plan-writer` only for deterministic
+encoding. Do not implement or repeat worker investigations.
 
 Produce `plans/<slug>/PLAN.md` plus one `tasks/<full-id>.md` per task. A fresh
 Sonnet `plan-execute` session must be able to run it without this conversation.
@@ -18,23 +19,36 @@ Sonnet `plan-execute` session must be able to run it without this conversation.
 
 1. Invoke the `git` skill before repository discovery. Record each repository's
    fetched ref, commit, branch, and approved worktree state as its baseline.
-2. Maintain one current objective. A user correction replaces conflicting older
-   scope, evidence, and candidate tasks; discovery never expands scope.
+2. Restate the objective, intended outcome, and boundaries. Ask the user to
+   correct any material ambiguity before relying on an interpretation. Maintain
+   one current objective: a user correction replaces conflicting older scope,
+   evidence, and candidate tasks; discovery never expands scope.
 3. Resolve repository facts with bounded workers. Invoke known applicable domain
    skills during design and record their exact names and resolved context. Skill
    catalogue discovery is optional and manual.
-4. Track every material assumption, missing contract, conflicting convention,
-   compatibility concern, and external-state risk. Resolve technical facts from
-   evidence and ask the user about choices that change the outcome. Batch at
-   most 3 related questions and never treat silence as a decision.
+4. Maintain an explicit register of decisions, assumptions, doubts, missing
+   contracts, conflicting conventions, compatibility concerns, and
+   external-state risks. Mark each item `resolved by evidence`, `resolved by
+   user`, or `open`. Resolve technical facts from evidence and consult the user
+   on preferences, trade-offs, standards, and any choice that changes the
+   outcome. Batch at most 3 related questions and never treat silence as a
+   decision.
 5. Use one Sonnet design probe only when architecture, stateful processing,
    generated contracts, migrations, or cross-repository sequencing needs
    semantic resolution. It must return a concrete API or artifact handoff, not
    another open investigation.
 
 Before drafting, audit scope, contracts, configuration precedence,
-compatibility, rollout, rollback, tests, repository state, and handoffs. A plan
-cannot contain unresolved assumptions or questions.
+compatibility, rollout, rollback, tests, repository state, dependencies, and
+handoffs. Continue the evidence-and-user-dialogue loop until the register has no
+open item and the plan has no known gap. Do not claim certainty about unknowable
+future events; instead make every material uncertainty an explicit resolved
+decision, mitigation, validation step, or blocker. A plan cannot contain an
+unresolved assumption, doubt, question, placeholder, or deferred design choice.
+
+An investigation plan is valid. Define its questions, evidence sources, stop
+conditions, output artifact or handoff, and validation criteria; do not force
+feature implementation or irrelevant tests into it.
 
 ## Design the task graph
 
@@ -43,6 +57,12 @@ cannot contain unresolved assumptions or questions.
 
 - Use stable task IDs and give each writable path exactly one owner. Each task
   leaves a coherent artifact and does not rely on a later repair.
+- Choose the least expensive capable model per task and record a concrete
+  `Model reason`. Use Haiku for bounded deterministic work with complete inputs,
+  including read-only collection, approved documentation rendering, and static
+  fixture data from an approved test matrix. Use Sonnet for semantic judgement,
+  source or test logic, runtime configuration, debugging, ambiguity, and
+  elevated-risk work. A write alone does not determine the model.
 - Verify referenced existing paths and symbols. Trace generated or shared
   contracts through production, materialization, and their first consumer; do
   not plan reflection, adapters, or fallbacks around missing contracts.
@@ -62,11 +82,30 @@ cannot contain unresolved assumptions or questions.
 For behaviour changes, add a test matrix naming each scenario, precondition,
 expected result, test location, and owning task.
 
+## Approve the brief
+
+Before calling `plan-writer`, show the user a concise but complete approval
+brief containing:
+
+- your interpretation of the prompt, objective, outcome, and boundaries;
+- every material decision, assumption, doubt, risk, and resolution;
+- ordered tasks with model, model reason, outcome, and dependencies;
+- the implementation plan, or the evidence and synthesis plan for an
+  investigation; and
+- the test plan with scenarios and verification ownership, or an explicit
+  reason tests do not apply.
+
+Ask the user to identify omissions, incorrect assumptions, or desired changes.
+Incorporate each correction, reopen any affected decisions and downstream
+tasks, and present the revised brief. Repeat until the register has no open item
+and the user explicitly approves the complete brief. Do not infer approval and
+do not write the bundle before it.
+
 ## Write and validate
 
-After all choices and handoffs are resolved, dispatch one `plan-writer` with the
-staging path, repository roots, decisions, evidence, task graph, skill context,
-and both template paths. It writes the complete staging bundle once.
+After approval, dispatch one `plan-writer` with the approved brief, staging path,
+repository roots, evidence, skill context, and both template paths. It writes
+the complete staging bundle once without changing the design.
 
 Validate without loading the bundle into Opus:
 
@@ -81,8 +120,8 @@ defect returns to user dialogue; do not add verifier or recovery agents.
 ## Approve and materialize
 
 In plan mode, copy the checked staging bundle unchanged to the harness plan
-file, validate that file, and call `ExitPlanMode`. Outside plan mode, request
-approval before creating the target plan directory.
+file, validate that file, and call `ExitPlanMode`. Outside plan mode, the brief
+approval authorizes materializing the checked bundle.
 
 After approval, materialize the same staging file without regeneration:
 

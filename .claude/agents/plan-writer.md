@@ -7,8 +7,8 @@ model: haiku
 ---
 
 Write exactly one staging bundle at the path supplied by the orchestrator. Read
-the planner templates once, then encode the supplied objective, decisions, and
-evidence without conducting new repository investigation or making architecture
-choices. Copy task contracts exactly, keep shared context in `PLAN.md`, and omit
-raw evidence or repeated facts. Return only the written path and file count, or
-a blocker when required input is missing.
+the planner templates once, then encode the approved brief and supplied evidence
+without investigating, changing model choices, or making design decisions. Copy
+task contracts exactly, keep shared context in `PLAN.md`, and omit raw evidence
+or repeated facts. Return only the written path and file count, or a blocker
+when required input is missing.
