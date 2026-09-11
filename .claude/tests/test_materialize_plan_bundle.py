@@ -90,12 +90,30 @@ class MaterializePlanBundleTests(unittest.TestCase):
         with self.assertRaisesRegex(materializer.BundleError, "invalid Skills"):
             materializer.parse_bundle(bundle(body))
 
-    def test_schema_4_rejects_haiku_implementation(self):
+    def test_schema_4_accepts_haiku_mechanical_artifact(self):
+        body = (
+            TASK_4.replace(
+                "Model: sonnet\nModel reason: Bounded source implementation requires Sonnet.",
+                "Model: haiku\nModel reason: Static fixture rendering is deterministic.",
+            )
+            .replace("Writes: pom.xml", "Writes: tests/fixtures/case.json")
+            .replace(
+                "How: Change the pinned dependency.",
+                "How: Render the approved matrix row as JSON.",
+            )
+            .replace(
+                "Materialization: Local — CLAUDE_PLAN_MATERIALIZATION=1 ./mvnw install -DskipTests creates version 1 locally.",
+                "Materialization: None",
+            )
+        )
+        materializer.parse_bundle(bundle(body))
+
+    def test_schema_4_requires_model_reason_for_haiku(self):
         body = TASK_4.replace(
             "Model: sonnet\nModel reason: Bounded source implementation requires Sonnet.",
             "Model: haiku",
         )
-        with self.assertRaisesRegex(materializer.BundleError, "Writes to Haiku"):
+        with self.assertRaisesRegex(materializer.BundleError, "Model reason"):
             materializer.parse_bundle(bundle(body))
 
     def test_schema_4_requires_a_concrete_fetched_baseline(self):

@@ -9,13 +9,13 @@ Results is empty.
 # t1-concise-task-title
 
 Status: PENDING
-Model: sonnet
-Model reason: <Name the implementation or required semantic judgement.>
+Model: <sonnet or haiku>
+Model reason: <Why this is the least expensive capable model for this task.>
 Skills: <Comma-separated known applicable invocation names, or None.>
 Skill context: <Resolved inputs/persona required by those skills, or None.>
 Goal: <One-sentence outcome.>
 Writes: <Comma-separated paths/globs, or None.>
-How: <Self-contained implementation steps, task-specific evidence, exact paths and commands, and important function/type/interface signatures.>
+How: <Self-contained steps, task-specific evidence or test-matrix rows, exact paths and commands, and important signatures.>
 Materialization: <None, or Local — exact implementation-time build/install/code-generation command and observable ready state.>
 Handoff: <Exact artifact/state later tasks may consume, or None.>
 Verification: <CI | Manual | Local> — <Exact command/action and observable result.>
@@ -55,7 +55,8 @@ their namespace, for example `streaming:kafka`. Catalogue discovery is manual
 and on demand. `Skill context` records resolved answers or operating mode that a
 skill requires. It is not permission to leave a skill decision unresolved.
 
-Use `Model: sonnet` for every implementation task and for read-only work needing
-semantic judgement or elevated-risk handling. The template above is the
-default. Use Haiku only for bounded noisy or menial read-only work; when changing
-to `Model: haiku`, remove the `Model reason` line.
+Every task requires `Model reason`. Use Haiku for bounded deterministic work
+with complete inputs: read-only collection, documentation rendered from approved
+facts, or static fixture data rendered from an approved test matrix. Use Sonnet
+for semantic judgement, source or test logic, runtime configuration, debugging,
+ambiguity, or elevated-risk work. A file write alone does not require Sonnet.
