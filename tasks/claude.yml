@@ -1,60 +1,117 @@
-- name: Install node
+- name: Install Claude Homebrew formulae
   community.general.homebrew:
-    name: node
+    name:
+      - node
+      - jdtls
+      - pyright
+      - gopls
     state: present
-  tags:
-    - "claude"
 
-- name: Install Claude Code
-  community.general.homebrew:
+- name: Install stable Claude Code
+  community.general.homebrew_cask:
     name: claude-code
     state: present
-  tags:
-    - "claude"
 
-- name: Install caveman-code
-  community.general.npm:
-    name: "@juliusbrussee/caveman-code"
-    global: true
-    state: present
-  tags:
-    - "claude"
+- name: Create CodeGraph installer cache directory
+  ansible.builtin.file:
+    path: "{{ ansible_facts.env.HOME }}/.cache/dev_setup"
+    state: directory
+    mode: "0700"
 
-- name: Install rtk
-  community.general.homebrew:
-    name: rtk
-    state: present
-  tags:
-    - "claude"
+- name: Download latest CodeGraph standalone installer
+  ansible.builtin.get_url:
+    url: https://raw.githubusercontent.com/colbymchenry/codegraph/main/install.sh
+    dest: "{{ ansible_facts.env.HOME }}/.cache/dev_setup/codegraph-install.sh"
+    mode: "0700"
+    force: true
+  when: not ansible_check_mode
 
-- name: List Claude plugin marketplaces
+- name: Install latest CodeGraph standalone bundle
   ansible.builtin.command:
     argv:
-      - claude
-      - plugin
-      - marketplace
-      - list
-      - --json
-  register: claude_marketplaces
-  check_mode: false
-  changed_when: false
-  tags:
-    - "claude"
+      - "{{ ansible_facts.env.HOME }}/.cache/dev_setup/codegraph-install.sh"
+  when: not ansible_check_mode
+  changed_when: true
 
-- name: Add caveman plugin marketplace
+- name: Verify CodeGraph installation
+  ansible.builtin.command:
+    argv:
+      - "{{ ansible_facts.env.HOME }}/.local/bin/codegraph"
+      - --version
+  when: not ansible_check_mode
+  changed_when: false
+
+- name: Create Claude config directory
+  ansible.builtin.file:
+    path: "{{ ansible_facts.env.HOME }}/.claude"
+    state: directory
+    mode: "0755"
+
+- name: Link managed Claude configuration
+  ansible.builtin.file:
+    src: "{{ playbook_dir }}/.claude/{{ item.source }}"
+    dest: "{{ ansible_facts.env.HOME }}/.claude/{{ item.target }}"
+    state: link
+    force: true
+  loop:
+    - source: .gitignore
+      target: .gitignore
+    - source: CLAUDE.md
+      target: CLAUDE.md
+    - source: settings.json
+      target: settings.json
+    - source: statusline.sh
+      target: statusline.sh
+    - source: agents
+      target: agents
+    - source: output-styles
+      target: output-styles
+    - source: rules
+      target: rules
+    - source: scripts
+      target: scripts
+    - source: skills
+      target: skills
+  loop_control:
+    label: "{{ item.target }}"
+
+- name: Add Context Mode marketplace
   ansible.builtin.command:
     argv:
       - claude
       - plugin
       - marketplace
       - add
-      - JuliusBrussee/caveman
-  changed_when: true
-  when: "'caveman' not in (claude_marketplaces.stdout | from_json | map(attribute='name') | list)"
-  tags:
-    - "claude"
+      - mksglu/context-mode
+  register: context_mode_marketplace
+  when: not ansible_check_mode
+  changed_when: "'Successfully added marketplace' in context_mode_marketplace.stdout"
 
-- name: List Claude plugins
+- name: Install Context Mode plugin
+  ansible.builtin.command:
+    argv:
+      - claude
+      - plugin
+      - install
+      - context-mode@context-mode
+  register: context_mode_install
+  when: not ansible_check_mode
+  changed_when: "'already installed' not in context_mode_install.stdout"
+
+- name: Add official Claude plugin marketplace
+  ansible.builtin.command:
+    argv:
+      - claude
+      - plugin
+      - marketplace
+      - add
+      - anthropics/claude-plugins-official
+  register: claude_official_marketplace
+  when: not ansible_check_mode
+  changed_when: >-
+    'Successfully added marketplace' in claude_official_marketplace.stdout
+
+- name: Read installed Claude plugins
   ansible.builtin.command:
     argv:
       - claude
@@ -64,108 +121,24 @@
   register: claude_plugins
   check_mode: false
   changed_when: false
-  tags:
-    - "claude"
 
-- name: Install caveman plugin
+- name: Install missing Claude plugins
   ansible.builtin.command:
     argv:
       - claude
       - plugin
       - install
-      - caveman@caveman
+      - "{{ item }}"
+  loop:
+    - jdtls-lsp@claude-plugins-official
+    - pyright-lsp@claude-plugins-official
+    - gopls-lsp@claude-plugins-official
+    - skill-creator@claude-plugins-official
+  when:
+    - not ansible_check_mode
+    - >-
+      item not in
+      (claude_plugins.stdout | from_json |
+       selectattr('scope', 'equalto', 'user') |
+       map(attribute='id') | list)
   changed_when: true
-  when: "'caveman@caveman' not in (claude_plugins.stdout | from_json | map(attribute='id') | list)"
-  tags:
-    - "claude"
-
-- name: Initialize rtk globally
-  ansible.builtin.command:
-    argv:
-      - rtk
-      - init
-      - --global
-  changed_when: false
-  tags:
-    - "claude"
-
-- name: Check Claude config path
-  ansible.builtin.stat:
-    path: "{{ ansible_facts.env.HOME }}/.claude"
-    follow: false
-  register: claude_config_path
-  tags:
-    - "claude"
-
-- name: Fail when Claude config path is an unmanaged symlink
-  ansible.builtin.fail:
-    msg: >-
-      ~/.claude links outside this repository. Replace it manually before
-      running this task.
-  when:
-    - claude_config_path.stat.islnk | default(false)
-    - claude_config_path.stat.lnk_source != playbook_dir + '/.claude'
-  tags:
-    - "claude"
-
-- name: Remove legacy managed Claude config symlink
-  ansible.builtin.file:
-    path: "{{ ansible_facts.env.HOME }}/.claude"
-    state: absent
-  when:
-    - claude_config_path.stat.islnk | default(false)
-    - claude_config_path.stat.lnk_source == playbook_dir + '/.claude'
-  tags:
-    - "claude"
-
-- name: Create Claude config directory
-  ansible.builtin.file:
-    path: "{{ ansible_facts.env.HOME }}/.claude"
-    state: directory
-    mode: "0755"
-  tags:
-    - "claude"
-
-- name: Symlink Claude config files
-  ansible.builtin.file:
-    src: "{{ playbook_dir }}/.claude/{{ item }}"
-    dest: "{{ ansible_facts.env.HOME }}/.claude/{{ item }}"
-    state: link
-    force: true
-  loop:
-    - .gitignore
-    - CLAUDE.md
-    - settings.json
-    - statusline.sh
-  when: not (ansible_check_mode and claude_config_path.stat.islnk)
-  tags:
-    - "claude"
-
-- name: Check Claude config directories
-  ansible.builtin.stat:
-    path: "{{ playbook_dir }}/.claude/{{ item }}"
-  loop:
-    - agents
-    - commands
-    - hooks
-    - output-styles
-    - rules
-    - scripts
-    - skills
-    - themes
-    - workflows
-  register: claude_config_dirs
-  tags:
-    - "claude"
-
-- name: Symlink Claude config directories
-  ansible.builtin.file:
-    src: "{{ item.stat.path }}"
-    dest: "{{ ansible_facts.env.HOME }}/.claude/{{ item.item }}"
-    state: link
-  tags:
-    - "claude"
-  loop: "{{ claude_config_dirs.results }}"
-  when:
-    - item.stat.isdir | default(false)
-    - not (ansible_check_mode and claude_config_path.stat.islnk)
