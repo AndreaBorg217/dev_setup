@@ -98,6 +98,8 @@
       target: statusline.sh
     - source: agents
       target: agents
+    - source: hooks
+      target: hooks
     - source: output-styles
       target: output-styles
     - source: rules
