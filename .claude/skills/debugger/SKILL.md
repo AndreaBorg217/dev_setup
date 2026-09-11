@@ -5,8 +5,9 @@ description: Used when provided with a stack trace, error log, or symptom-based 
 
 ## Step Zero: Get the Real Evidence First (not optional, not last)
 
-Keep diagnosis and repair judgement in the main conversation. Use `data-reader`
-for noisy runtime evidence and `explorer` for broad repository tracing.
+Keep diagnosis and repair judgement in the main conversation. Use `explorer`
+for noisy runtime evidence (Context Mode sandbox) and broad repository
+tracing (CodeGraph first).
 
 Before writing a single sentence of analysis, before reading any code, before checking
 commit history - fetch the actual evidence of the failure itself: logs, exception,

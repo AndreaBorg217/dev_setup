@@ -715,7 +715,7 @@ def analyze(
             warning(
                 "expensive_model_repo_search",
                 f"Sonnet/Opus spent {len(expensive)} request(s) on repository search",
-                "Use a bounded Haiku explorer or data-reader for discovery; keep the stronger model for decomposition and evaluation.",
+                "Use a bounded Haiku explorer for discovery; keep the stronger model for decomposition and evaluation.",
                 requests=len(expensive),
                 models=sorted(
                     {effective_request_model(request, resolved_models) for request in expensive}

@@ -45,10 +45,10 @@ Require preceding tasks to be `DONE` and every required materialization and
 handoff to report a concrete ready state. Set current tasks to `IN_PROGRESS` by
 changing only their status lines.
 
-Route workers under `rules/subagents.md`: `builder` for bounded implementation,
-`general-purpose` for semantic judgement, and `explorer`, `researcher`, or
-`data-reader` for read-only work. Use `artifact-writer` for a Haiku task that
-writes approved documentation or static fixture data. Pass the explicit model,
+Route workers under `rules/subagents.md`: `builder` for bounded implementation
+and semantic judgement, and `explorer` for read-only work. Use
+`artifact-writer` for a Haiku task that writes approved documentation, static
+fixture data, or the plan bundle. Pass the explicit model,
 model reason, full task contract, relevant baseline, decisions, test-matrix
 rows, dependencies, and earlier handoffs. Agent definitions and global rules
 are the worker contract; do not restate them in every prompt.
