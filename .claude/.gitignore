@@ -32,6 +32,8 @@ tests/**/*.py[cod]
 !themes/**
 !workflows/
 !workflows/**
+!shunt-evals/
+!shunt-evals/**
 !statusline.sh
 
 # Never track macOS Finder metadata, including inside re-included directories.
