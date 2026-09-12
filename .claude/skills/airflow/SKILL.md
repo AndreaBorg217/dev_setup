@@ -1,6 +1,6 @@
 ---
 name: airflow
-description: Mandatory before reading, changing, reviewing, debugging, testing, or operating Apache Airflow DAGs, tasks, sensors, operators, schedules, XComs, mapping, runs, or task instances. Do not use for unrelated Python orchestration or generic data pipelines.
+description: Manages Apache Airflow DAGs, tasks, operators, sensors and XComs. Use when reading, changing or operating Airflow workflows; not for generic Python orchestration.
 ---
 
 # Airflow

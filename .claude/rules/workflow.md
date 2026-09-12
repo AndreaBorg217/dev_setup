@@ -1,6 +1,6 @@
 # Workflow
 
-- Investigate before asking. Read the relevant code, tests, configuration, and dependency manifests first. Repository facts discoverable with a bounded search are research, not user questions; raise contradictions in the evidence instead of silently choosing one.
+- Investigate before asking. Gather only the evidence relevant to this edit via targeted CodeGraph/Context Mode lookups. Repository facts discoverable with a bounded search are research, not user questions; raise contradictions instead of silently choosing one. Do not pre-read full test/configuration manifests for surgical edits.
 - Ask only for unresolved user-owned decisions when a wrong assumption would materially change or discard the work. Include a recommended default.
 - Scale ceremony to blast radius. Let small changes with one obvious correct form proceed directly. Make assumptions, boundaries, and verification explicit for multi-step work and for changes involving schemas, authentication, money, migrations, deletion, or other high-risk state.
 - Structure implementation as small, coherent, reviewable behaviours or design
