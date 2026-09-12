@@ -7,8 +7,11 @@ disable-model-invocation: true
 
 # Planner
 
-Run on Opus as a human-in-the-loop orchestrator. Keep the user in control from
-prompt interpretation through final approval, own design judgement, use global
+Run on Opus as a human-in-the-loop orchestrator. The human owns decisions and
+spec disambiguation; Opus owns an unambiguous task graph (every task has
+resolved skills, agent/model, writes, handoff, and verification — unresolved
+context blocks the bundle). Keep the user in control from prompt
+interpretation through final approval, own design judgement, use global
 routing for bounded evidence, and use `artifact-writer` only for deterministic
 encoding. Do not implement or repeat worker investigations.
 
@@ -23,9 +26,8 @@ Sonnet `plan-execute` session must be able to run it without this conversation.
    correct any material ambiguity before relying on an interpretation. Maintain
    one current objective: a user correction replaces conflicting older scope,
    evidence, and candidate tasks; discovery never expands scope.
-3. Resolve repository facts with bounded workers. Invoke known applicable domain
-   skills during design and record their exact names and resolved context. Skill
-   catalogue discovery is optional and manual.
+3. Resolve repository facts with bounded workers. Run one bounded inventory of
+   available skills/agents (`.claude/skills/*/SKILL.md` + `tasks/claude.yml` plugin list) then invoke each applicable domain skill during design. Record its exact `name` and resolved context.
 4. Maintain an explicit register of decisions, assumptions, doubts, missing
    contracts, conflicting conventions, compatibility concerns, and
    external-state risks. Mark each item `resolved by evidence`, `resolved by
@@ -58,7 +60,7 @@ feature implementation or irrelevant tests into it.
 - Use stable task IDs and give each writable path exactly one owner. Each task
   leaves a coherent artifact and does not rely on a later repair.
 - Choose the least expensive capable model per task and record a concrete
-  `Model reason`. Use Haiku for bounded deterministic work with complete inputs,
+  `Model reason` — this implies the worker (`Haiku`→`explorer`/`artifact-writer`, `Sonnet`→`builder` per `rules/subagents.md`). Use Haiku for bounded deterministic work with complete inputs,
   including read-only collection, approved documentation rendering, and static
   fixture data from an approved test matrix. Use Sonnet for semantic judgement,
   source or test logic, runtime configuration, debugging, ambiguity, and
@@ -70,8 +72,7 @@ feature implementation or irrelevant tests into it.
   with disjoint writes and no sibling-produced input.
 - Keep shared evidence and decisions in `PLAN.md`; keep only execution-critical
   details in each task. Do not copy source, logs, or discovery narrative.
-- List exact applicable skills and resolved skill context. Include git,
-  deployment, tests, or documentation only when the user included them.
+- Recommend exact applicable skills (`name` from `SKILL.md:2`) and resolved `Skill context:` per `task-template.md:14-15` — unresolved context blocks the bundle. Include git, deployment, tests, or documentation only when the user included them.
 - Declare `Materialization` and `Handoff` when a later task needs locally built,
   installed, generated, published, or migrated state. Consumers run in a later
   block.

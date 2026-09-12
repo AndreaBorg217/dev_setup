@@ -38,8 +38,11 @@ context, materialization, or handoffs.
 ## Dispatch one block
 
 Process one block and stop unless the user explicitly requested uninterrupted
-execution. A bracketed block contains at most 2 independent tasks and must run
-concurrently; confirm disjoint writes and no sibling-produced input first.
+execution — single-block is the default because the orchestrator stays light
+(each task runs in its own subagent; the parent keeps only compact receipts)
+and checkpointing preserves failure isolation. A bracketed block contains at
+most 2 independent tasks and must run concurrently; confirm disjoint writes and
+no sibling-produced input first.
 
 Require preceding tasks to be `DONE` and every required materialization and
 handoff to report a concrete ready state. Set current tasks to `IN_PROGRESS` by
@@ -48,10 +51,12 @@ changing only their status lines.
 Route workers under `rules/subagents.md`: `builder` for bounded implementation
 and semantic judgement, and `explorer` for read-only work. Use
 `artifact-writer` for a Haiku task that writes approved documentation, static
-fixture data, or the plan bundle. Pass the explicit model,
-model reason, full task contract, relevant baseline, decisions, test-matrix
-rows, dependencies, and earlier handoffs. Agent definitions and global rules
-are the worker contract; do not restate them in every prompt.
+fixture data, or the plan bundle. The orchestrator stays light and only
+decides routing when the user gives no guidance; it never invents missing
+skill context. Pass the explicit model, model reason, full task contract,
+relevant baseline, decisions, test-matrix rows, dependencies, and earlier
+handoffs. Agent definitions and global rules are the worker contract; do not
+restate them in every prompt.
 
 An incomplete worker is a failed dispatch. Checkpoint its evidence and stop;
 do not continue, replace, or repair it in the parent.
