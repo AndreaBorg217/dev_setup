@@ -62,7 +62,7 @@ git() {
 alias python=python3
 alias pip=pip3
 
-# Create a new virtual environment 
+# Create a new virtual environment
 venvc() {
     python3 -m venv .venv
 }
@@ -139,6 +139,18 @@ docka() {
 # Show container resource usage stats
 docks() {
     docker stats
+}
+
+# Inspect image size
+imgsize() {
+    local image="$1"
+    echo "Total size for $image: $(docker images "$image" --format '{{.Size}}')"
+    docker history "$image" --no-trunc --format "table {{.Size}}\t{{.CreatedBy}}" > "${image//\//_}.txt"
+}
+
+# dockerignore effectiveness
+dockignore () {
+    docker build --no-cache --progress=plain -t test . 2>&1 | grep "transferring context"
 }
 
 # List all custom Docker networks and their subnets
