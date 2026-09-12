@@ -80,6 +80,24 @@ return {
 			require("lsp-file-operations").default_capabilities()
 		)
 
+		-- Suppress noisy STS MCP server info that causes "Press ENTER" on every spring file
+		do
+			local orig_show = vim.lsp.handlers["window/showMessage"]
+			vim.lsp.handlers["window/showMessage"] = function(err, result, ctx, config)
+				if result and result.message and result.message:match("MCP server") then
+					return
+				end
+				return orig_show(err, result, ctx, config)
+			end
+			local orig_log = vim.lsp.handlers["window/logMessage"]
+			vim.lsp.handlers["window/logMessage"] = function(err, result, ctx, config)
+				if result and result.message and result.message:match("MCP server") then
+					return
+				end
+				return orig_log(err, result, ctx, config)
+			end
+		end
+
 		vim.diagnostic.config({
 			virtual_text = true, -- Enable inline diagnostic messages
 			signs = {
