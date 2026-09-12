@@ -16,6 +16,18 @@ opt.autoindent = true -- copy indent from current line when starting new one
 
 opt.wrap = false
 
+-- soft wrap at viewport for markdown + plaintext
+vim.api.nvim_create_autocmd("FileType", {
+	group = vim.api.nvim_create_augroup("word_wrap_markdown_plaintext", { clear = true }),
+	pattern = { "markdown", "text" },
+	callback = function()
+		vim.opt_local.wrap = true
+		vim.opt_local.linebreak = true -- wrap at word boundaries
+		vim.opt_local.breakindent = true -- keep indent on wrapped lines
+		vim.opt_local.showbreak = "" -- no prefix; set to "↪ " if you want a visual indicator
+	end,
+})
+
 -- search settings
 opt.ignorecase = true -- ignore case when searching
 opt.smartcase = true -- if you include mixed case in your search, assumes you want case-sensitive
