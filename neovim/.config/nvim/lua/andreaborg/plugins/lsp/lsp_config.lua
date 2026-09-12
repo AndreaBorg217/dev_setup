@@ -90,7 +90,7 @@ return {
 					[vim.diagnostic.severity.INFO] = " ",
 				},
 			},
-			update_in_insert = false, -- Don't show diagnostics while in insert mode
+			update_in_insert = true, -- instant like VS Code (was false)
 			underline = true, -- Underline the problematic code
 			severity_sort = true, -- Sort by severity
 			float = {
@@ -103,6 +103,7 @@ return {
 
 		vim.lsp.config("*", {
 			capabilities = capabilities,
+			flags = { debounce_text_changes = 50 }, -- instant like VS Code (default 150)
 		})
 
 		vim.lsp.config("pyright", require("andreaborg.plugins.lsp.servers.pyright"))
