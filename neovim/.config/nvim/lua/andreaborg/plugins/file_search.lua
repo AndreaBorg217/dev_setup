@@ -27,6 +27,13 @@ return {
 			"!**/coverage/**",
 			"!**/htmlcov/**",
 			"!**/.coverage",
+			"!**/.DS_Store",
+			"!**/*.o",
+			"!**/*.a",
+			"!**/*.out",
+			"!**/*.class",
+			"!**/vendor/**",
+			"!**/bin/**",
 		}
 
 		local function generated_path_arguments()
@@ -55,6 +62,30 @@ return {
 		telescope.setup({
 			defaults = {
 				path_display = { "smart" },
+				file_ignore_patterns = {
+					"%.git/",
+					"%.venv/",
+					"%.tox/",
+					"%.mypy_cache/",
+					"%.pytest_cache/",
+					"%.ruff_cache/",
+					"%.gradle/",
+					"__pycache__/",
+					"node_modules/",
+					"target/",
+					"build/",
+					"dist/",
+					"coverage/",
+					"htmlcov/",
+					"%.DS_Store",
+					"%.coverage",
+					"%.o",
+					"%.a",
+					"%.out",
+					"%.class",
+					"vendor/",
+					"bin/",
+				},
 				mappings = {
 					i = {
 						["<C-k>"] = actions.move_selection_previous, -- move to prev result
