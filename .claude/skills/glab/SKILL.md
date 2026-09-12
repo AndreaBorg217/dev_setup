@@ -1,6 +1,6 @@
 ---
 name: glab
-description: Use when any GitLab operation is requested, including read-only inspection (glab status, MR/issue view, pipeline status, API GET) and mutations (create/update/merge/close MR, post comments/discussions, trigger/retry/cancel CI pipelines, manage labels/approvals).
+description: Manages GitLab via glab - MRs, issues, pipelines and API calls. Use when working with GitLab MRs, pipelines or discussions.
 ---
 
 # GitLab with glab

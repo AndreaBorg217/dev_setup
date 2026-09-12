@@ -1,6 +1,6 @@
 ---
 name: session-efficiency-reviewer
-description: Audit Claude Code JSONL sessions for context waste, model routing, repeated reads, oversized output, continuation churn, redundant verifiers, broad local test runs, and legacy Shunt use. Use for session-cost or agent-efficiency reviews, not code-correctness reviews.
+description: Audits Claude Code JSONL sessions for efficiency - context waste, routing and verifier churn. Use for session-cost or agent-efficiency reviews, not code-correctness reviews.
 disable-model-invocation: true
 ---
 

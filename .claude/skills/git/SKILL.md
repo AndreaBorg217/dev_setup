@@ -1,6 +1,6 @@
 ---
 name: git
-description: Use when any Git operation is requested, including read-only repository inspection (status, log, diff, blame) and history changes (commit, revert, reset, rebase, amend, cherry-pick, stash, force-push, branch/tag delete).
+description: Manages Git operations - status, diff, commits, branches and history rewrites. Use when inspecting or mutating Git state.
 ---
 
 # Git
