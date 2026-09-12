@@ -30,7 +30,7 @@ thread is a thin orchestrator: fan out, then fan in receipts only.
   not require Sonnet.
 - Never use `WebSearch` or `WebFetch` in the main thread. Route external research
   through `explorer`.
-- Skill discovery is manual and on demand. Do not run a catalogue before a task
+- Skill discovery is manual and on demand — planner's one bounded inventory at plan time is the only exception. Do not run a catalogue before a task
   or reject work because matching was not performed. Pass each applicable
   skill's exact name and resolved context to the worker.
 - Workers invoke every skill named in their prompt, treat supplied skill context
