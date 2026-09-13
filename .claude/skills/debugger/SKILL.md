@@ -26,6 +26,7 @@ Pull everything relevant and available — don't stop at the first thing that re
 - **Stack traces / exceptions** — the full trace, not a truncated one-liner. Keep raw trace in the sandbox; return only the failing frame + 20 lines of context via `ctx_search`.
 - **Pod / container state** — `kubectl describe pod`, `kubectl get events`, restart counts, exit codes, resource requests/limits vs. actual usage, node conditions. Capped reads via `ctx_batch_execute` + `intent` filter prevent full describe flooding.
 - **Metrics** — via the `prometheus` skill (or equivalent) for memory/CPU/latency/error-rate around the failure window. Load the skill once before the first PromQL query. Look for the metric that moved _first_, not just the one that alarmed. Use range queries with bounded windows.
+- **Other sources** - For example Airflow API, Schema Registry API, database queries etc
 - **Reproduction attempt** — try to reproduce the failure locally or in a sandbox with the same inputs/state (`ctx_execute` with `intent`). A live repro is the strongest evidence available: it lets you inspect real state instead of inferring it, and it doubles as your verification harness in Phase 4. If it reproduces, capture the exact input/state that triggers it. If it doesn't, say so explicitly — that's a signal too (env-specific, race condition, data-dependent).
 
 Keep diagnosis and repair judgement in the main conversation — use `explorer` for the noisy legwork, not for the call on what it means.
