@@ -92,15 +92,28 @@ keymap.set({ "n", "v" }, "<leader>cp", function()
 	copy_to_clipboard(current_file_path())
 end, { desc = "Copy absolute path" })
 
-keymap.set("n", "<C-/>", function()
+local function toggle_comment_normal()
 	require("lazy").load({ plugins = { "Comment.nvim" } })
 	require("Comment.api").toggle.linewise.current()
-end, { desc = "Toggle comment" })
-keymap.set("v", "<C-/>", function()
+end
+local function toggle_comment_visual()
 	local escape = vim.api.nvim_replace_termcodes("<Esc>", true, false, true)
 	vim.api.nvim_feedkeys(escape, "nx", false)
 	require("lazy").load({ plugins = { "Comment.nvim" } })
 	require("Comment.api").toggle.linewise(vim.fn.visualmode())
-end, { desc = "Toggle comment" })
+end
+-- VS Code: Cmd+/ (macOS editor.action.commentLine) -> map all variants that terminals actually send
+-- <C-/> (intended), <C-_> (terminal Ctrl+/ -> 0x1F), <D-/> (Cmd+/ in GUI/kitty/wezterm/iTerm2 with Cmd passthrough)
+for _, lhs in ipairs({ "<C-/>", "<C-_>", "<D-/>" }) do
+	keymap.set("n", lhs, toggle_comment_normal, { desc = "Toggle comment" })
+	keymap.set("v", lhs, toggle_comment_visual, { desc = "Toggle comment" })
+	keymap.set("i", lhs, function()
+		toggle_comment_normal()
+		-- stay in insert after toggle like VS Code
+		vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Esc>", true, false, true), "n", false)
+		vim.cmd("startinsert")
+	end, { desc = "Toggle comment" })
+end
+-- VS Code also shows `gcc`/`gc` fallback - Comment.nvim already provides gcc/gbc/gc via its setup
 
 keymap.set("n", "<leader>x", delete_unmodified_buffers, { desc = "Delete unmodified buffers" })
