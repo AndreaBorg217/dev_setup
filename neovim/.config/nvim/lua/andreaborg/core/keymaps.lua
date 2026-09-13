@@ -124,4 +124,4 @@ for _, lhs in ipairs({ "<C-/>", "<C-_>", "<D-/>" }) do
 end
 -- VS Code also shows `gcc`/`gc` fallback - Comment.nvim already provides gcc/gbc/gc via its setup
 
-keymap.set("n", "<leader>x", delete_unmodified_buffers, { desc = "Delete unmodified buffers" })
+keymap.set("n", "<leader>X", delete_unmodified_buffers, { desc = "Delete unmodified buffers" })
