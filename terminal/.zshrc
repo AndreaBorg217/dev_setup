@@ -27,8 +27,8 @@ dev() {
     local session_name="${1:-${PWD:t}}"
 
     if ! tmux has-session -t "=$session_name" 2>/dev/null; then
-        tmux new-session -d -s "$session_name" -n dev -c "$PWD" nvim
-        tmux split-window -h -t "=$session_name:dev" -c "$PWD" claude
+        tmux new-session -d -s "$session_name" -n dev -c "$PWD" "zsh -c 'nvim; exec zsh'"
+        tmux split-window -h -t "=$session_name:dev" -c "$PWD" "zsh -c 'claude; exec zsh'"
         tmux split-window -v -t "=$session_name:dev.1" -c "$PWD"
         tmux select-pane -t "=$session_name:dev.0"
     fi
@@ -40,7 +40,7 @@ dev() {
     fi
 }
 
-end-session() {
+function end_session {
     tmux kill-session -t "=${1:-${PWD:t}}"
 }
 
@@ -193,7 +193,7 @@ gbc () {
 # Clean unused Neovim plugins and LSPs (lua spec removed ≠ uninstalled)
 # - Lazy: `python = {}` in linter.lua stays installed until `Lazy clean`
 # - Mason: `ensure_installed` in mason.lua doesn't auto-uninstall old servers (e.g. removed pyright)
-nvim-clean() {
+function nvim_clean {
     echo "→ Lazy: removing unused plugins (no longer in lua spec)..."
     nvim --headless "+Lazy! clean" +qa 2>/dev/null
     echo ""
@@ -211,4 +211,4 @@ nvim-clean() {
     echo ""
     echo "  Verify with :Mason and :LspInfo"
 }
-alias clean-nvim=nvim-clean
+alias clean_nvim=nvim_clean
