@@ -48,11 +48,7 @@ Examples:
 - A collection known to be non-empty does not need an empty guard.
 - An established invariant does not need repeated validation.
 
-## Code Style
-
-Prefer basic constructs that can be traced step by step with a debugger.
-
-- Use descriptive names and avoid unclear abbreviations.
+- Use descriptive names and avoid unclear abbreviations. Avoid `item` when a parameter is a `table_name` or `agg` when an aggregate is `minTimestamp`.
 - Prefer explicit intermediate variables when they aid debugging.
 - Prefer simple loops over `map`, `reduce`, dense comprehensions, or method chains when easier to follow.
 - Avoid clever reflection, dynamic dispatch, or language-specific tricks unless they materially simplify the code.
