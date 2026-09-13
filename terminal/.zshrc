@@ -187,3 +187,26 @@ lsg () {
 gbc () {
     git branch "$@" && git checkout "$@"
 }
+
+# Clean unused Neovim plugins and LSPs (lua spec removed ≠ uninstalled)
+# - Lazy: `python = {}` in linter.lua stays installed until `Lazy clean`
+# - Mason: `ensure_installed` in mason.lua doesn't auto-uninstall old servers (e.g. removed pyright)
+nvim-clean() {
+    echo "→ Lazy: removing unused plugins (no longer in lua spec)..."
+    nvim --headless "+Lazy! clean" +qa 2>/dev/null
+    echo ""
+    echo "→ Mason: uninstalling packages not in mason.lua ensure_installed..."
+    # actual Mason package dir names (mason-lspconfig maps lua_ls->lua-language-server etc.)
+    local keep="pyright ruff gopls jdtls lua-language-server yaml-language-server dockerfile-language-server docker-compose-language-service gofumpt goimports golangci-lint gomodifytags impl yamllint yamlfmt hadolint cspell stylua prettier java-debug-adapter java-test palantir-java-format vscode-spring-boot-tools"
+    for pkg in $(ls -1 ~/.local/share/nvim/mason/packages 2>/dev/null); do
+        if ! echo "$keep" | tr ' ' '\n' | grep -qx "$pkg"; then
+            echo "  - MasonUninstall $pkg (not in ensure_installed)"
+            nvim --headless "+MasonUninstall $pkg" +qa 2>/dev/null
+        else
+            echo "  ✓ keep $pkg"
+        fi
+    done
+    echo ""
+    echo "  Verify with :Mason and :LspInfo"
+}
+alias clean-nvim=nvim-clean
