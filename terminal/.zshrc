@@ -27,10 +27,10 @@ dev() {
     local session_name="${1:-${PWD:t}}"
 
     if ! tmux has-session -t "=$session_name" 2>/dev/null; then
-        tmux new-session -d -s "$session_name" -n editor nvim
-        tmux new-window -t "=$session_name" -n shell
-        tmux new-window -t "=$session_name" -n claude claude
-        tmux select-window -t "=$session_name:editor"
+        tmux new-session -d -s "$session_name" -n dev -c "$PWD" nvim
+        tmux split-window -h -t "=$session_name:dev" -c "$PWD" claude
+        tmux split-window -v -t "=$session_name:dev.1" -c "$PWD"
+        tmux select-pane -t "=$session_name:dev.0"
     fi
 
     if [[ -n "$TMUX" ]]; then
@@ -40,7 +40,9 @@ dev() {
     fi
 }
 
-alias end-session='tmux kill-session -t "=${PWD:t}"'
+end-session() {
+    tmux kill-session -t "=${1:-${PWD:t}}"
+}
 
 git() {
     # Intercept git push to protected branches
