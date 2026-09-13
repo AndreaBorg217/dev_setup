@@ -62,7 +62,15 @@ local function delete_unmodified_buffers()
 	vim.notify(string.format("Preserved %d modified buffer(s)", preserved_count))
 end
 
-keymap.set("n", "<Esc>", "<cmd>nohlsearch<CR>", { desc = "Clear search highlights" })
+keymap.set("n", "<Esc>", function()
+	-- VS Code: Esc closes sidebar/file explorer when visible, else clears highlights
+	local ok, api = pcall(require, "nvim-tree.api")
+	if ok and api.tree.is_visible() then
+		api.tree.close()
+		return
+	end
+	vim.cmd("nohlsearch")
+end, { desc = "Close file explorer if open, else clear search highlights" })
 vim.keymap.set("i", "<S-Tab>", "<C-d>", { noremap = true, silent = true })
 vim.keymap.set("n", "-", "$", { noremap = true, silent = true })
 vim.keymap.set("n", "`", "^", { noremap = true, silent = true })

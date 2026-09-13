@@ -21,6 +21,10 @@ return {
 					buffer = buffer,
 					desc = "Toggle folder",
 				})
+				-- VS Code: Esc closes file explorer when focused
+				vim.keymap.set("n", "<Esc>", function()
+					api.tree.close()
+				end, { buffer = buffer, desc = "Close file explorer" })
 			end,
 			view = {
 				width = 40,
