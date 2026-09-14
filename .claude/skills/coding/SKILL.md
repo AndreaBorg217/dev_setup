@@ -48,16 +48,14 @@ Examples:
 - A collection known to be non-empty does not need an empty guard.
 - An established invariant does not need repeated validation.
 
-## Code Style
-
-Prefer basic constructs that can be traced step by step with a debugger.
-
-- Use descriptive names and avoid unclear abbreviations.
+- Use descriptive names and avoid unclear abbreviations. Avoid `item` when a parameter is a `table_name` or `agg` when an aggregate is `minTimestamp`.
 - Prefer explicit intermediate variables when they aid debugging.
 - Prefer simple loops over `map`, `reduce`, dense comprehensions, or method chains when easier to follow.
 - Avoid clever reflection, dynamic dispatch, or language-specific tricks unless they materially simplify the code.
 - Prefer linear conditionals and early returns over nesting.
 - Avoid ternaries except for simple assignments.
+- Always use braces for `if`/`for`/`while`, even for single-line bodies.
+- Group and space the lines. Put related lines together. Order them the way they run. Add blank lines between steps. Keep one idea per line. When a function has 3+ distinct checks, use brief `//` section headers to mark them and split compound conditions into explicit intermediates so each block reads at a glance.
 - Simplicity means low cognitive load, not minimum character count.
 - Create constants only when the name adds domain meaning or a value must stay synchronized across multiple places.
 - Add comments only for stable, non-obvious reasoning: why a decision exists, why an obvious alternative failed, or context another developer could not infer from the code.

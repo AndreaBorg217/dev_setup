@@ -468,6 +468,104 @@ if failed_attempts >= MAX_LOGIN_ATTEMPTS:
     lock_account()
 ```
 
+### C9. Group and space — blank lines between steps, split compound checks
+
+**BAD** — dense, no grouping, compound condition inline:
+
+```typescript
+function enPassantTarget(history: Move[], pawn: Pawn): Position | undefined {
+    const last = history[history.length - 1];
+    if (history.length && last.piece.colour !== pawn.colour && last.piece.kind === "pawn" && Math.abs(last.fromRow - last.toRow) === 2 && last.toRow === pawn.row && Math.abs(last.toCol - pawn.col) === 1) return new Position(pawn.row + pawn.direction, last.toCol);
+    return undefined;
+}
+```
+
+**GOOD** — ordered as it runs, one idea per line, blank line between steps:
+
+```typescript
+function enPassantTarget(history: Move[], pawn: Pawn): Position | undefined {
+    if (!history.length) {
+        return undefined;
+    }
+
+    const last = history[history.length - 1];
+
+    const isOpponent = last.piece.colour !== pawn.colour;
+    const isPawn = last.piece.kind === "pawn";
+    const isTwoSquares = Math.abs(last.fromRow - last.toRow) === 2;
+    if (!(isOpponent && isPawn && isTwoSquares)) {
+        return undefined;
+    }
+
+    const isSameRow = last.toRow === pawn.row;
+    const isAdjacent = Math.abs(last.toCol - pawn.col) === 1;
+    if (!(isSameRow && isAdjacent)) {
+        return undefined;
+    }
+
+    return new Position(pawn.row + pawn.direction, last.toCol);
+}
+```
+
+**BAD** — multi-step validation with no section headers:
+
+```typescript
+function enPassantTarget(history: Move[], pawn: Pawn): Position | undefined {
+    if (!history.length) {
+        return undefined;
+    }
+    const last = history[history.length - 1];
+    if (last.piece.colour === pawn.colour) {
+        return undefined;
+    }
+    if (last.piece.kind !== "pawn") {
+        return undefined;
+    }
+    if (Math.abs(last.fromRow - last.toRow) !== 2) {
+        return undefined;
+    }
+    if (last.toRow !== pawn.row) {
+        return undefined;
+    }
+    if (Math.abs(last.toCol - pawn.col) !== 1) {
+        return undefined;
+    }
+    return new Position(pawn.row + pawn.direction, last.toCol);
+}
+```
+
+**GOOD** — brief `//` headers mark each step:
+
+```typescript
+function enPassantTarget(history: Move[], pawn: Pawn): Position | undefined {
+    if (!history.length) {
+        return undefined;
+    }
+
+    // last move must be opponent two-square pawn advance
+    const last = history[history.length - 1];
+    if (last.piece.colour === pawn.colour) {
+        return undefined;
+    }
+    if (last.piece.kind !== "pawn") {
+        return undefined;
+    }
+    if (Math.abs(last.fromRow - last.toRow) !== 2) {
+        return undefined;
+    }
+
+    // pawn must be adjacent
+    if (last.toRow !== pawn.row) {
+        return undefined;
+    }
+    if (Math.abs(last.toCol - pawn.col) !== 1) {
+        return undefined;
+    }
+
+    return new Position(pawn.row + pawn.direction, last.toCol);
+}
+```
+
 ## Exceptions
 
 ### E1. Catch a specific exception only for meaningful recovery

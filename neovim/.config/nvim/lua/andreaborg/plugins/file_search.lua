@@ -46,7 +46,7 @@ return {
 			return arguments
 		end
 
-		local find_files_command = { "rg", "--files", "--hidden", "--no-ignore" }
+		local find_files_command = { "rg", "--files", "--hidden" }
 		vim.list_extend(find_files_command, generated_path_arguments())
 
 		local trouble = require("trouble")
@@ -101,7 +101,7 @@ return {
 				},
 				live_grep = {
 					additional_args = function()
-						local arguments = { "--hidden", "--no-ignore" }
+						local arguments = { "--hidden" }
 						return vim.list_extend(arguments, generated_path_arguments())
 					end,
 				},
