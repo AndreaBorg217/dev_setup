@@ -26,7 +26,7 @@ Sonnet `plan-execute` session must be able to run it without this conversation.
    correct any material ambiguity before relying on an interpretation. Maintain
    one current objective: a user correction replaces conflicting older scope,
    evidence, and candidate tasks; discovery never expands scope.
-3. Resolve repository facts with bounded workers. Consult only the domain skills relevant to this objective and record each used skill's exact `name` and resolved context. Run a full inventory of available skills only for cross-cutting or ambiguous scopes.
+3. Resolve repository facts and data queries with bounded workers. Route all evidence gathering — repository reads, MCP queries, external sources — through `explorer` workers. Never run MCP queries or data lookups in the main thread between subagent batches; batch unresolved questions and re-delegate them together. Consult only the domain skills relevant to this objective and record each used skill's exact `name` and resolved context. Run a full inventory of available skills only for cross-cutting or ambiguous scopes.
 4. Maintain an explicit register of decisions, assumptions, doubts, missing
    contracts, conflicting conventions, compatibility concerns, and
    external-state risks. Mark each item `resolved by evidence`, `resolved by
