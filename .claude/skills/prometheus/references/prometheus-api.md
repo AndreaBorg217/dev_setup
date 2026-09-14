@@ -18,8 +18,9 @@ All are read-only GETs. Query parameters should be URL-encoded — use `curl -G 
 
 ```bash
 curl -sS -G "$PROMETHEUS_URL/api/v1/query" \
-  --data-urlencode 'query=up' \
-  --max-time 15
+  --data-urlencode 'query=up{job="example-service"}' \
+  --max-time 15 \
+  | jq -r '.data.result[:20][] | [(.metric.instance // "unknown"), .value[1]] | @tsv'
 ```
 
 Response shape:
@@ -52,13 +53,14 @@ Don't guess a metric name — list what actually exists, then narrow with `grep`
 
 ```bash
 curl -sS "$PROMETHEUS_URL/api/v1/label/__name__/values" --max-time 15 \
-  | jq -r '.data[]' | grep -i <keyword>
+  | jq -r '[.data[] | select(test("<keyword>"; "i"))][:50][]'
 ```
 
 List values for a specific label (e.g. every `job` currently scraped):
 
 ```bash
-curl -sS "$PROMETHEUS_URL/api/v1/label/job/values" --max-time 15 | jq -r '.data[]'
+curl -sS "$PROMETHEUS_URL/api/v1/label/job/values" --max-time 15 \
+  | jq -r '.data[:50][]'
 ```
 
 ## PromQL basics
@@ -76,16 +78,42 @@ Counters (`_total` suffix) need `rate()` or `increase()` before they're meaningf
 
 ```bash
 # single scalar value out of an instant query
-curl -sS "$PROMETHEUS_URL/api/v1/query" --data-urlencode 'query=up' --max-time 15 \
+curl -sS "$PROMETHEUS_URL/api/v1/query" \
+  --data-urlencode 'query=up{job="example-service"}' --max-time 15 \
   | jq -r '.data.result[0].value[1]'
 
 # metric + value pairs out of a vector result
-curl -sS "$PROMETHEUS_URL/api/v1/query" --data-urlencode 'query=up' --max-time 15 \
-  | jq -r '.data.result[] | "\(.metric.job)=\(.value[1])"'
+curl -sS "$PROMETHEUS_URL/api/v1/query" \
+  --data-urlencode 'query=up{job="example-service"}' --max-time 15 \
+  | jq -r '.data.result[:20][] | "\(.metric.instance)=\(.value[1])"'
+
+# byte value converted to GiB without changing units by hand
+curl -sS "$PROMETHEUS_URL/api/v1/query" \
+  --data-urlencode 'query=process_resident_memory_bytes{job="example-service"}' \
+  --max-time 15 \
+  | jq -r '.data.result[:20][] | [(.metric.instance // "unknown"), ((.value[1] | tonumber) / 1073741824)] | @tsv'
 ```
 
 ## Timeouts and cardinality
 
 - Always set `--max-time` — an unbounded query against a wide range or high-cardinality label set can hang.
 - Prefer aggregating (`sum`, `avg`) server-side over pulling every raw series and aggregating client-side.
-- If `/api/v1/query` returns a very large `result` array, narrow with label matchers before widening the time range.
+- Project only needed labels and values with `jq`; never return complete metric
+  label maps to the model.
+- A display cap is a guard, not analysis. If results exceed it, narrow the label
+  selector or aggregate in PromQL before drawing a conclusion.
+
+## Grafana panel queries
+
+When the user references a specific dashboard panel, extract and run its actual
+query. A hand-written approximation can omit label filters, double-count
+container and pod-level series, or use a different aggregation.
+
+1. Extract the dashboard UID and panel ID from the URL. Fetch `GET
+   $GRAFANA_URL/api/dashboards/uid/<uid>`; add authentication only if required.
+2. Find the matching panel recursively in `dashboard.panels[]` and read its
+   `targets[].expr`.
+3. Substitute the current `var-*` URL parameter values for the dashboard
+   variables in the expression.
+4. Run that expression against `/api/v1/query`, then interpret its labels,
+   aggregation, and units exactly as configured.

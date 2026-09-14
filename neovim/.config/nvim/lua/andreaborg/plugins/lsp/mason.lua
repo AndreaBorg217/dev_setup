@@ -23,6 +23,7 @@ return {
 		mason_lspconfig.setup({
 			ensure_installed = {
 				"pyright",
+				"ruff",
 				"gopls",
 				"jdtls",
 				"lua_ls",
@@ -32,6 +33,7 @@ return {
 			},
 			automatic_enable = {
 				"pyright",
+				"ruff",
 				"gopls",
 				"jdtls",
 				"lua_ls",

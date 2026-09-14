@@ -7,5 +7,6 @@ return {
 	cmd = "Trouble",
 	keys = {
 		{ "<leader>xw", "<cmd>Trouble diagnostics open<CR>", desc = "Open trouble workspace diagnostics" },
+		{ "<leader>fd", "<cmd>Telescope diagnostics<CR>", desc = "Telescope diagnostics" },
 	},
 }

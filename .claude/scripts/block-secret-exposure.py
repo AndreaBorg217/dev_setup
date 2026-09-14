@@ -8,6 +8,7 @@ import re
 import shlex
 import sys
 from pathlib import Path
+from typing import Any
 
 
 SENSITIVE_FILE_GLOBS = [
@@ -79,7 +80,8 @@ SAFE_KUBECTL_PIPE_RE = re.compile(r"\|\s*kubectl\s+(apply|diff)\b[^|;&]*\s-f\s+-
 KUSTOMIZE_RE = re.compile(r"\b(kustomize\s+build|kubectl\s+kustomize|kubectl\s+apply\b[^|;&]*\s-k\b)")
 
 
-def main():
+def main() -> int:
+    """Route the hook input to the matching checker; deny when it returns a reason."""
     try:
         data = json.load(sys.stdin)
     except json.JSONDecodeError as error:
@@ -103,7 +105,8 @@ def main():
     return 0
 
 
-def check_bash(command, cwd):
+def check_bash(command: str, cwd: str) -> str:
+    """Deny Bash commands that would print secret values or decrypted material."""
     command = command.strip()
     if not command:
         return ""
@@ -160,14 +163,16 @@ def check_bash(command, cwd):
     return ""
 
 
-def check_read(raw_path, cwd):
+def check_read(raw_path: str, cwd: str) -> str:
+    """Deny Read tool access to sensitive files or SOPS-encrypted content."""
     path = resolve_path(raw_path, cwd)
     if path and (is_sensitive_path(path) or has_sops_marker(path)):
         return "Read tool access to '%s' is blocked. Use grep -c for a key name, stat, or wc -l instead." % display_path(path)
     return ""
 
 
-def check_grep(tool_input, cwd):
+def check_grep(tool_input: dict[str, Any], cwd: str) -> str:
+    """Deny Grep tool access to sensitive files or SOPS-encrypted content."""
     for raw_path in grep_candidate_paths(tool_input):
         path = resolve_path(raw_path, cwd)
         if path and (is_sensitive_path(path) or has_sops_marker(path)):
@@ -175,7 +180,8 @@ def check_grep(tool_input, cwd):
     return ""
 
 
-def command_substitutes_secret(command):
+def command_substitutes_secret(command: str) -> bool:
+    """Detect $() or backtick substitution wrapping a secret read or decrypt."""
     secret_words = r"(op|bw|bws|sops)"
     secret_actions = r"(read|decrypt|get|secret|-d|--decrypt)"
     if re.search(r"\$\([^)]*\b%s\b[^)]*\b%s\b[^)]*\)" % (secret_words, secret_actions), command, re.IGNORECASE):
@@ -185,11 +191,13 @@ def command_substitutes_secret(command):
     return False
 
 
-def prints_environment_or_secret(command):
+def prints_environment_or_secret(command: str) -> bool:
+    """Detect commands that would print an environment or file content."""
     return bool(re.search(r"\b(env|printenv|set|export|declare|echo|printf|cat|less|more|head|tail|tee|pbcopy)\b", command, re.IGNORECASE))
 
 
-def sops_exec_prints_secret(command):
+def sops_exec_prints_secret(command: str) -> bool:
+    """Check whether the sops exec-env/exec-file consumer prints secrets."""
     tokens = shell_tokens(command)
     for index, token in enumerate(tokens):
         if token in {"exec-env", "exec-file"}:
@@ -198,21 +206,25 @@ def sops_exec_prints_secret(command):
     return prints_environment_or_secret(command)
 
 
-def uses_sops_decrypt(command):
+def uses_sops_decrypt(command: str) -> bool:
+    """Detect a sops decrypt invocation in the command."""
     lower = command.lower()
     return bool(re.search(r"\bsops\b[^|;&]*(\s-d\b|\s--decrypt\b|\sdecrypt\b)", lower))
 
 
-def uses_sops_exec(command):
+def uses_sops_exec(command: str) -> bool:
+    """Detect a sops exec-env/exec-file invocation in the command."""
     lower = command.lower()
     return bool(re.search(r"\bsops\b[^|;&]*(\sexec-file\b|\sexec-env\b)", lower))
 
 
-def is_safe_kubectl_pipe(command):
+def is_safe_kubectl_pipe(command: str) -> bool:
+    """Check whether decrypted output pipes directly into kubectl apply/diff -f -."""
     return bool(SAFE_KUBECTL_PIPE_RE.search(command))
 
 
-def is_safe_sops_tempfile(command):
+def is_safe_sops_tempfile(command: str) -> bool:
+    """Check whether decrypted output goes to a mktemp file with a cleanup trap."""
     lower = command.lower()
     has_mktemp = "mktemp" in lower and "/tmp/sops" in lower
     has_trap = "trap" in lower and "rm -f" in lower and "exit int term" in lower
@@ -220,7 +232,8 @@ def is_safe_sops_tempfile(command):
     return has_mktemp and has_trap and redirects_to_tmpfile
 
 
-def kustomize_uses_ksops(command, cwd):
+def kustomize_uses_ksops(command: str, cwd: str) -> bool:
+    """Check whether a kustomize target references a ksops generator."""
     if "ksops" in command.lower():
         return True
 
@@ -249,7 +262,8 @@ def kustomize_uses_ksops(command, cwd):
     return False
 
 
-def kustomize_target(command):
+def kustomize_target(command: str) -> str:
+    """Extract the kustomize build/apply target from the first pipeline part."""
     tokens = shell_tokens(first_pipeline_part(command))
     if not tokens:
         return "."
@@ -269,7 +283,8 @@ def kustomize_target(command):
     return "."
 
 
-def first_non_option(tokens):
+def first_non_option(tokens: list[str]) -> str:
+    """Return the first positional argument, skipping flags and their values."""
     skip_next = False
     for token in tokens:
         if skip_next:
@@ -283,7 +298,8 @@ def first_non_option(tokens):
     return ""
 
 
-def bash_sensitive_read_path(command, cwd):
+def bash_sensitive_read_path(command: str, cwd: str) -> str:
+    """Find the first sensitive file read via a shell read command or redirect."""
     for segment in shell_command_segments(command):
         tokens = shell_tokens(segment)
         if not tokens:
@@ -307,7 +323,8 @@ def bash_sensitive_read_path(command, cwd):
     return ""
 
 
-def shell_command_segments(command):
+def shell_command_segments(command: str) -> list[str]:
+    """Split a shell command on pipes and sequencing operators, honouring quotes."""
     segments = []
     current = []
     quote = ""
@@ -361,20 +378,23 @@ def shell_command_segments(command):
     return segments
 
 
-def append_segment(segments, chars):
+def append_segment(segments: list[str], chars: list[str]) -> None:
+    """Append stripped segment text built from chars when non-empty."""
     segment = "".join(chars).strip()
     if segment:
         segments.append(segment)
 
 
-def strip_leading_assignments(tokens):
+def strip_leading_assignments(tokens: list[str]) -> list[str]:
+    """Drop leading VAR=value assignments to expose the real command."""
     tokens = list(tokens)
     while tokens and re.match(r"^[A-Za-z_][A-Za-z0-9_]*=", tokens[0]):
         tokens.pop(0)
     return tokens
 
 
-def sensitive_read_command_path(tool, tokens, cwd):
+def sensitive_read_command_path(tool: str, tokens: list[str], cwd: str) -> str:
+    """Return the first sensitive path read by a shell read command, if any."""
     if tool == "grep" and grep_is_count_only(tokens):
         return ""
 
@@ -386,7 +406,8 @@ def sensitive_read_command_path(tool, tokens, cwd):
     return ""
 
 
-def read_command_path_args(tool, tokens):
+def read_command_path_args(tool: str, tokens: list[str]) -> list[str]:
+    """Extract candidate file arguments for a shell read command."""
     args = tokens[1:]
     if tool == "grep":
         return grep_path_args(args)
@@ -397,7 +418,8 @@ def read_command_path_args(tool, tokens):
     return generic_path_args(args)
 
 
-def generic_path_args(args):
+def generic_path_args(args: list[str]) -> list[str]:
+    """Collect non-option arguments, honouring a `--` separator."""
     paths = []
 
     for index, arg in enumerate(args):
@@ -411,7 +433,8 @@ def generic_path_args(args):
     return paths
 
 
-def grep_path_args(args):
+def grep_path_args(args: list[str]) -> list[str]:
+    """Extract file arguments from grep args, skipping the search pattern."""
     paths = []
     pattern_seen = False
     skip_next = False
@@ -443,7 +466,8 @@ def grep_path_args(args):
     return paths
 
 
-def grep_is_count_only(tokens):
+def grep_is_count_only(tokens: list[str]) -> bool:
+    """Check whether a grep invocation only counts matches (-c/--count)."""
     for token in tokens[1:]:
         if token == "--":
             return False
@@ -456,7 +480,8 @@ def grep_is_count_only(tokens):
     return False
 
 
-def awk_path_args(args):
+def awk_path_args(args: list[str]) -> list[str]:
+    """Extract file arguments from awk args, skipping the program text."""
     paths = []
     program_seen = False
     skip_next = False
@@ -481,7 +506,8 @@ def awk_path_args(args):
     return paths
 
 
-def jq_path_args(args):
+def jq_path_args(args: list[str]) -> list[str]:
+    """Extract file arguments from jq args, skipping the filter text."""
     paths = []
     filter_seen = False
     skip_next = False
@@ -508,7 +534,8 @@ def jq_path_args(args):
     return paths
 
 
-def grep_candidate_paths(tool_input):
+def grep_candidate_paths(tool_input: dict[str, Any]) -> list[str]:
+    """Collect candidate paths from Grep tool path and glob inputs."""
     raw_path = tool_input.get("path", "")
     raw_glob = tool_input.get("glob", "")
 
@@ -525,18 +552,21 @@ def grep_candidate_paths(tool_input):
     return candidates
 
 
-def first_pipeline_part(command):
+def first_pipeline_part(command: str) -> str:
+    """Return the command text before the first pipe or sequencing operator."""
     return re.split(r"\||&&|\|\||;", command, 1)[0]
 
 
-def shell_tokens(command):
+def shell_tokens(command: str) -> list[str]:
+    """Split a command into shell tokens, falling back to whitespace split."""
     try:
         return shlex.split(command)
     except ValueError:
         return command.split()
 
 
-def resolve_path(raw_path, cwd):
+def resolve_path(raw_path: str, cwd: str) -> Path | None:
+    """Resolve a hook path argument against the session cwd; None when absent."""
     if not raw_path:
         return None
 
@@ -552,11 +582,13 @@ def resolve_path(raw_path, cwd):
     return path.resolve(strict=False)
 
 
-def is_sensitive_path(path):
+def is_sensitive_path(path: Path) -> bool:
+    """Check whether a path matches a sensitive glob without a NOT exception."""
     return matches_any(path, SENSITIVE_FILE_GLOBS) and not matches_any(path, NOT_GLOBS)
 
 
-def has_sops_marker(path):
+def has_sops_marker(path: Path) -> bool:
+    """Sniff a small readable file for SOPS encryption markers."""
     if not path or not path.exists() or not path.is_file():
         return False
 
@@ -571,7 +603,8 @@ def has_sops_marker(path):
     return any(marker in text for marker in SOPS_CONTENT_MARKERS)
 
 
-def matches_any(path, patterns):
+def matches_any(path: Path, patterns: list[str]) -> bool:
+    """Match a path against glob patterns, including `**/` and trailing `/**`."""
     path_text = str(path)
     path_name = path.name
 
@@ -597,7 +630,8 @@ def matches_any(path, patterns):
     return False
 
 
-def display_path(path):
+def display_path(path: Path) -> str:
+    """Render a path with $HOME shortened for deny messages."""
     home = Path.home()
     try:
         return "~/" + str(path.relative_to(home))
@@ -605,7 +639,8 @@ def display_path(path):
         return str(path)
 
 
-def deny(reason):
+def deny(reason: str) -> None:
+    """Emit the PreToolUse deny decision consumed by Claude Code."""
     print(json.dumps({
         "hookSpecificOutput": {
             "hookEventName": "PreToolUse",
