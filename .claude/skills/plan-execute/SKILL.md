@@ -65,7 +65,7 @@ do not continue, replace, or repair it in the parent.
 
 - Compare all changed paths, including materialization side effects, with
   `Writes`. Undeclared paths require plan amendment.
-- Require every declared skill in the worker receipt.
+- `Skills:` entries are planner suggestions, not requirements. A worker's non-use of a listed skill must not cause a `FAILED` status; record it under `Skills used:` in the Results as `None` or the subset actually used.
 - For `CI`, mark `DONE` when the artifact and handoff are ready and record the
   check as pending CI.
 - For `Local`, mark `DONE` only after the declared targeted check passes. Record

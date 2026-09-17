@@ -53,8 +53,10 @@ feature implementation or irrelevant tests into it.
 
 ## Design the task graph
 
-`plan-template.md` and `task-template.md` are the canonical schema. Have the
-`artifact-writer` read them; do not load them into Opus. Apply these invariants:
+`plan-template.md` and `task-template.md` are the canonical schema. Read both
+files now and follow them exactly when designing the task graph and writing the
+approval brief. Also pass both template paths to `artifact-writer` so it can
+encode the bundle faithfully. Apply these invariants:
 
 - Use stable task IDs and give each writable path exactly one owner. Each task
   leaves a coherent artifact and does not rely on a later repair.
