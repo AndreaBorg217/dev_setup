@@ -12,11 +12,16 @@ spec disambiguation; Opus owns an unambiguous task graph (every task has
 resolved skills, agent/model, writes, handoff, and verification — unresolved
 context blocks the bundle). Keep the user in control from prompt
 interpretation through final approval, own design judgement, use global
-routing for bounded evidence, and use `artifact-writer` only for deterministic
-encoding. Do not implement or repeat worker investigations.
+routing for bounded evidence, and leave all plan writing, materialization, and
+review to existing Haiku agents. Opus plans; it never writes or reviews the plan
+artifact. Do not implement or repeat worker investigations.
 
 Produce `plans/<slug>/PLAN.md` plus one `tasks/<full-id>.md` per task. A fresh
 Sonnet `plan-execute` session must be able to run it without this conversation.
+
+Before discovery or worker dispatch, read `plan-template.md` and
+`task-template.md` completely. They are the canonical schema for the task graph,
+approval brief, writer prompt, and review.
 
 ## Resolve the work
 
@@ -53,10 +58,9 @@ feature implementation or irrelevant tests into it.
 
 ## Design the task graph
 
-`plan-template.md` and `task-template.md` are the canonical schema. Read both
-files now and follow them exactly when designing the task graph and writing the
-approval brief. Also pass both template paths to `artifact-writer` so it can
-encode the bundle faithfully. Apply these invariants:
+Follow both templates exactly when designing the task graph and writing the
+approval brief. Pass both template paths to `artifact-writer` so it can encode
+the bundle faithfully. Apply these invariants:
 
 - Use stable task IDs and give each writable path exactly one owner. Each task
   leaves a coherent artifact and does not rely on a later repair.
@@ -105,27 +109,28 @@ do not write the bundle before it.
 
 ## Write and validate
 
-After approval, dispatch one `artifact-writer` with the approved brief, staging path,
-repository roots, evidence, skill context, and both template paths. It writes
-the complete staging bundle once without changing the design.
-
-Validate without loading the bundle into Opus:
+After approval, dispatch one Haiku `artifact-writer` with the approved brief,
+staging path, repository roots, evidence, skill context, both template paths,
+and the validation command below. It writes the complete staging bundle once
+without changing the design and runs the deterministic check:
 
 ```bash
 python3 "${CLAUDE_SKILL_DIR}/scripts/materialize_plan_bundle.py" \
   "<staging-file>" --repo-root "$root" --check
 ```
 
-Correct one local structural defect at most, then check once more. A semantic
-defect returns to user dialogue; do not add verifier or recovery agents.
+Then dispatch one read-only Haiku `explorer` to review the staging bundle against
+the approved brief, both templates, and the validator result. It returns only
+specific mismatches; it does not redesign or write. Send a structural mismatch
+back to `artifact-writer` once. A semantic mismatch returns to user dialogue.
+Do not load the bundle into Opus and do not create verifier or recovery agents.
 
 ## Approve and materialize
 
-In plan mode, copy the checked staging bundle unchanged to the harness plan
-file, validate that file, and call `ExitPlanMode`. Outside plan mode, the brief
-approval authorizes materializing the checked bundle.
-
-After approval, materialize the same staging file without regeneration:
+After review, dispatch the same Haiku `artifact-writer` to copy the checked
+staging bundle unchanged to the harness plan file in plan mode and validate it.
+Outside plan mode, the brief approval authorizes the writer to materialize the
+checked bundle. Materialize without regeneration:
 
 ```bash
 python3 "${CLAUDE_SKILL_DIR}/scripts/materialize_plan_bundle.py" \
@@ -135,3 +140,7 @@ python3 "${CLAUDE_SKILL_DIR}/scripts/materialize_plan_bundle.py" \
 Reply `Done` and stop before implementation. When amending, retain `DONE` only
 for tasks whose full contract is unchanged; reset changed and downstream tasks
 and remove obsolete task files.
+
+Before `ExitPlanMode`, report any unread template, missing Haiku writer/reviewer
+step, or validator failure and recommend correcting it. This is advisory: do not
+prevent the user from exiting plan mode.
