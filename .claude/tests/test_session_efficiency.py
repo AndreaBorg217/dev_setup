@@ -48,7 +48,13 @@ class TranscriptFixture:
         )
 
     def assistant(
-        self, request, model="claude-sonnet-5", skill=None, output_tokens=5, usage=None
+        self,
+        request,
+        model="claude-sonnet-5",
+        skill=None,
+        output_tokens=5,
+        usage=None,
+        timestamp=None,
     ):
         event = {
             "type": "assistant",
@@ -62,6 +68,8 @@ class TranscriptFixture:
         }
         if skill:
             event["attributionSkill"] = skill
+        if timestamp:
+            event["timestamp"] = timestamp
         self.events.append(event)
 
     def result(self, tool_id, content, file_meta=None, tool_result=None, is_error=False):
@@ -153,6 +161,8 @@ class SessionEfficiencyTests(unittest.TestCase):
                 "oversized_tool_payload",
                 "chatty_bash",
                 "oversized_underused_skill",
+                "missing_coding_skill",
+                "missing_git_skill",
             },
             categories,
         )
@@ -231,7 +241,7 @@ class SessionEfficiencyTests(unittest.TestCase):
                 f"request-{index}",
                 f"read-{index}",
                 "Read",
-                {"file_path": str(self.root / f"file-{index}.py"), "limit": 10},
+                {"file_path": str(self.root / f"file-{index}.py")},
                 model="claude-sonnet-5",
             )
             fixture.result(f"read-{index}", "small")
@@ -248,6 +258,36 @@ class SessionEfficiencyTests(unittest.TestCase):
             if item["category"] == "expensive_model_repo_search"
         )
         self.assertEqual(["claude-sonnet-5"], routing["evidence"]["models"])
+        self.assertEqual({"main": 2}, routing["evidence"]["trace_roles"])
+        self.assertEqual({"Read (broad)": 2}, routing["evidence"]["search_operations"])
+
+    def test_repository_search_reports_command_names_without_arguments(self):
+        fixture = TranscriptFixture(self.transcript, self.root)
+        fixture.tool(
+            "request",
+            "bash",
+            "Bash",
+            {"command": "rg private-pattern src && git status --short | head -5"},
+            model="claude-sonnet-5",
+        )
+        fixture.result("bash", "small")
+        fixture.write()
+
+        report = reviewer.analyze(
+            reviewer.parse_transcripts([self.transcript]),
+            reviewer.Thresholds(expensive_search_turns=1),
+        )
+        routing = next(
+            item
+            for item in report["warnings"]
+            if item["category"] == "expensive_model_repo_search"
+        )
+
+        self.assertEqual(
+            {"head": 1, "rg": 1},
+            routing["evidence"]["bash_search_commands"],
+        )
+        self.assertNotIn("private-pattern", json.dumps(routing))
 
     def test_resolved_model_overrides_incorrect_child_transcript_label(self):
         fixture = TranscriptFixture(self.transcript, self.root)
@@ -278,6 +318,14 @@ class SessionEfficiencyTests(unittest.TestCase):
             "agent_model_mismatch", {item["category"] for item in report["warnings"]}
         )
         self.assertEqual(1, report["summary"]["models"]["claude-sonnet-5"])
+        self.assertEqual(
+            {
+                "requested_models": {"sonnet": 1},
+                "resolved_models": {"claude-sonnet-5": 1},
+                "subagent_types": {"<unset>": 1},
+            },
+            report["summary"]["agent_dispatches"],
+        )
         serialized = json.dumps(report)
         self.assertNotIn("abc123", serialized)
         self.assertNotIn("DO_NOT_REPORT", serialized)
@@ -471,7 +519,7 @@ class SessionEfficiencyTests(unittest.TestCase):
         self.assertEqual(1, payload["summary"]["model_requests"])
         self.assertNotIn("private assistant content", output.getvalue())
 
-    def test_execution_churn_and_shunt_bypass_are_reported(self):
+    def test_continuations_and_agent_volume_are_neutral_without_duplication(self):
         fixture = TranscriptFixture(self.transcript, self.root)
         fixture.tool(
             "verify-agent",
@@ -523,12 +571,13 @@ class SessionEfficiencyTests(unittest.TestCase):
 
         self.assertTrue(
             {
-                "dedicated_verifier",
-                "subagent_continuation_churn",
                 "repeated_broad_verification",
                 "shunt_bypassed_after_denial",
             }.issubset(categories)
         )
+        self.assertNotIn("dedicated_verifier", categories)
+        self.assertNotIn("subagent_continuation_churn", categories)
+        self.assertNotIn("unbounded_subagent", categories)
         self.assertEqual(
             {"broad": 2, "targeted": 1},
             report["summary"]["verification_commands"],
@@ -555,6 +604,130 @@ class SessionEfficiencyTests(unittest.TestCase):
         )
 
         self.assertNotIn("maxTurns", warning["fix"])
+
+    def test_cross_trace_file_access_is_an_ownership_violation(self):
+        child_path = self.root / "agent-owner.jsonl"
+        source = self.root / "src" / "shared.py"
+        main = TranscriptFixture(self.transcript, self.root)
+        child = TranscriptFixture(child_path, self.root)
+        for fixture, prefix in ((main, "main"), (child, "child")):
+            fixture.tool(prefix, f"{prefix}-read", "Read", {"file_path": str(source)})
+            fixture.result(f"{prefix}-read", "bounded source")
+            fixture.write()
+
+        report = reviewer.analyze(
+            reviewer.parse_transcripts([self.transcript, child_path])
+        )
+        ownership = next(
+            item
+            for item in report["warnings"]
+            if item["category"] == "file_ownership_violation"
+        )
+
+        self.assertEqual(["src/shared.py"], ownership["evidence"]["files"])
+        self.assertEqual(2, ownership["evidence"]["traces"])
+
+    def test_long_subagent_is_not_labelled_waste_without_duplication(self):
+        child_path = self.root / "agent-long.jsonl"
+        main = TranscriptFixture(self.transcript, self.root)
+        main.assistant("main")
+        main.write()
+        child = TranscriptFixture(child_path, self.root)
+        for index in range(12):
+            child.assistant(f"child-{index}", model="claude-haiku-4-5")
+        child.write()
+
+        categories = {
+            item["category"]
+            for item in reviewer.analyze(
+                reviewer.parse_transcripts([self.transcript, child_path]),
+                reviewer.Thresholds(max_subagent_requests=2),
+            )["warnings"]
+        }
+
+        self.assertNotIn("unbounded_subagent", categories)
+
+    def test_skill_adherence_is_checked_per_trace(self):
+        airflow_source = self.root / "airflow" / "dags" / "job.py"
+        fixture = TranscriptFixture(self.transcript, self.root)
+        fixture.tool("read", "read-1", "Read", {"file_path": str(airflow_source)})
+        fixture.result("read-1", "source")
+        fixture.tool("git", "git-1", "Bash", {"command": "git status --short"})
+        fixture.result("git-1", "clean")
+        fixture.write()
+
+        categories = {
+            item["category"]
+            for item in reviewer.analyze(
+                reviewer.parse_transcripts([self.transcript])
+            )["warnings"]
+        }
+
+        self.assertTrue(
+            {
+                "missing_coding_skill",
+                "missing_airflow_skill",
+                "missing_git_skill",
+            }.issubset(categories)
+        )
+
+    def test_loaded_skills_satisfy_adherence_checks(self):
+        source = self.root / "airflow" / "dags" / "job.py"
+        fixture = TranscriptFixture(self.transcript, self.root)
+        for index, skill in enumerate(("coding", "airflow", "git")):
+            fixture.tool(f"skill-{index}", f"skill-tool-{index}", "Skill", {"skill": skill})
+            fixture.result(f"skill-tool-{index}", "loaded")
+        fixture.tool("read", "read-1", "Read", {"file_path": str(source)})
+        fixture.result("read-1", "source")
+        fixture.tool("git", "git-1", "Bash", {"command": "git status --short"})
+        fixture.result("git-1", "clean")
+        fixture.write()
+
+        categories = {
+            item["category"]
+            for item in reviewer.analyze(
+                reviewer.parse_transcripts([self.transcript])
+            )["warnings"]
+        }
+
+        self.assertFalse(
+            {
+                "missing_coding_skill",
+                "missing_airflow_skill",
+                "missing_git_skill",
+            }
+            & categories
+        )
+
+    def test_review_day_selects_local_date_and_aggregates_sessions(self):
+        transcript_root = self.root / "projects"
+        project = self.root / "repo"
+        project_dir = transcript_root / reviewer.project_key(project)
+        project_dir.mkdir(parents=True)
+        first = project_dir / "first.jsonl"
+        second = project_dir / "second.jsonl"
+        outside = project_dir / "outside.jsonl"
+        for path, timestamp in (
+            (first, "2026-09-17T08:00:00+02:00"),
+            (second, "2026-09-17T20:00:00+02:00"),
+            (outside, "2026-09-18T08:00:00+02:00"),
+        ):
+            fixture = TranscriptFixture(path, project)
+            fixture.assistant(path.stem, timestamp=timestamp)
+            fixture.write()
+
+        timezone = reviewer.ZoneInfo("Europe/Malta")
+        selected = reviewer.day_transcripts(
+            transcript_root,
+            reviewer.date(2026, 9, 17),
+            timezone,
+            [project],
+        )
+        report = reviewer.review_day(selected)
+
+        self.assertEqual([first, second], selected)
+        self.assertEqual(2, report["summary"]["sessions"])
+        self.assertEqual(2, report["summary"]["model_requests"])
 
 
 if __name__ == "__main__":

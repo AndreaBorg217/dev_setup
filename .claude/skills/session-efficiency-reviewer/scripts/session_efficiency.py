@@ -9,15 +9,30 @@ import json
 import math
 import re
 import sys
+from datetime import date, datetime
 from pathlib import Path
 from typing import Any, Iterable
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 
 DEFAULT_TRANSCRIPT_ROOT = Path.home() / ".claude" / "projects"
 DIRECT_READ_TOOLS = {"Read"}
-REPO_SEARCH_TOOLS = {"Glob", "Grep", "Read"}
+REPO_SEARCH_TOOLS = {"Glob", "Grep"}
 MUTATING_TOOLS = {"Edit", "MultiEdit", "NotebookEdit", "Write"}
+FILE_TOOLS = DIRECT_READ_TOOLS | MUTATING_TOOLS
+SOURCE_SUFFIXES = {
+    ".c", ".cc", ".cpp", ".cs", ".go", ".h", ".hpp", ".java", ".js",
+    ".jsx", ".kt", ".kts", ".php", ".py", ".rb", ".rs", ".scala",
+    ".sh", ".sql", ".swift", ".ts", ".tsx", ".zsh",
+}
+SOURCE_NAMES = {"dockerfile", "makefile", "rakefile"}
+GIT_COMMAND = re.compile(r"(?:^|[;&|]\s*)git\b", re.IGNORECASE)
 SEARCH_COMMAND = re.compile(
+    r"(?:^|[;&|]\s*)(?:fd|find|grep|head|ls|rg|sed|stat|tail|tree|wc)\b"
+    r"|(?:^|[;&|]\s*)git\s+(?:log|ls-files|show)\b",
+    re.IGNORECASE,
+)
+INSPECTION_COMMAND = re.compile(
     r"(?:^|[;&|]\s*)(?:fd|find|grep|head|ls|pwd|rg|sed|stat|tail|tree|wc)\b"
     r"|(?:^|[;&|]\s*)git\s+(?:diff|log|ls-files|rev-parse|show|status)\b",
     re.IGNORECASE,
@@ -234,6 +249,60 @@ def list_transcripts(
     return sorted(transcripts, key=lambda path: path.stat().st_mtime, reverse=True)[:limit]
 
 
+def transcript_dates(transcript: Path, timezone: ZoneInfo) -> set[date]:
+    """Return local dates present in timestamped transcript events."""
+    dates: set[date] = set()
+    try:
+        with transcript.open("r", encoding="utf-8", errors="replace") as handle:
+            for line in handle:
+                try:
+                    event = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+                raw = event.get("timestamp") if isinstance(event, dict) else None
+                if not isinstance(raw, str):
+                    continue
+                try:
+                    instant = datetime.fromisoformat(raw.replace("Z", "+00:00"))
+                except ValueError:
+                    continue
+                if instant.tzinfo is None:
+                    instant = instant.replace(tzinfo=timezone)
+                dates.add(instant.astimezone(timezone).date())
+    except OSError:
+        return set()
+    return dates
+
+
+def day_transcripts(
+    transcript_root: Path,
+    target_date: date,
+    timezone: ZoneInfo,
+    project_roots: Iterable[Path] = (),
+) -> list[Path]:
+    root = transcript_root.expanduser()
+    selected_roots = list(project_roots)
+    if selected_roots:
+        project_dirs = [root / project_key(project_root) for project_root in selected_roots]
+    else:
+        project_dirs = [path for path in root.iterdir() if path.is_dir()] if root.is_dir() else []
+    candidates = (
+        path
+        for project_dir in project_dirs
+        if project_dir.is_dir()
+        for path in project_dir.glob("*.jsonl")
+        if path.is_file()
+    )
+    return sorted(
+        (
+            path
+            for path in candidates
+            if has_model_activity(path) and target_date in transcript_dates(path, timezone)
+        ),
+        key=lambda path: (path.parent.name, path.name),
+    )
+
+
 def has_model_activity(transcript: Path) -> bool:
     """Ignore shell-only session fragments such as a transcript created by /clear."""
     try:
@@ -396,6 +465,7 @@ def parse_transcripts(paths: Iterable[Path]) -> dict[str, Any]:
                         tool_input = block.get("input")
                         call = {
                             "id": str(block.get("id") or f"{candidate['key']}:{len(calls)}"),
+                            "ordinal": len(calls),
                             "name": str(block.get("name") or "unknown"),
                             "input": tool_input if isinstance(tool_input, dict) else {},
                             "model": request["model"],
@@ -449,6 +519,39 @@ def search_bash(call: dict[str, Any]) -> bool:
     )
 
 
+def inspection_bash(call: dict[str, Any]) -> bool:
+    if call["name"] != "Bash":
+        return False
+    command = call["input"].get("command")
+    return (
+        isinstance(command, str)
+        and bool(INSPECTION_COMMAND.search(command))
+        and not bool(MUTATING_COMMAND.search(command))
+    )
+
+
+def search_bash_kinds(call: dict[str, Any]) -> list[str]:
+    """Return command names only, never arguments or shell content."""
+    if not search_bash(call):
+        return []
+    command = str(call["input"].get("command") or "")
+    kinds: list[str] = []
+    for segment in re.split(r"[;&|]+", command):
+        segment = segment.strip().lower()
+        match = re.match(
+            r"(?:fd|find|grep|head|ls|rg|sed|stat|tail|tree|wc)\b", segment
+        )
+        if match:
+            kinds.append(match.group(0))
+            continue
+        match = re.match(
+            r"git\s+(log|ls-files|show)\b", segment
+        )
+        if match:
+            kinds.append(f"git {match.group(1)}")
+    return kinds or ["other"]
+
+
 def repo_search_request(request: dict[str, Any]) -> bool:
     calls = request["calls"]
     if not calls:
@@ -457,7 +560,10 @@ def repo_search_request(request: dict[str, Any]) -> bool:
         return False
     if any(call["name"] == "Bash" and not search_bash(call) for call in calls):
         return False
-    return any(call["name"] in REPO_SEARCH_TOOLS or search_bash(call) for call in calls)
+    return any(
+        call["name"] in REPO_SEARCH_TOOLS or broad_read(call) or search_bash(call)
+        for call in calls
+    )
 
 
 def validation_command_kind(call: dict[str, Any]) -> str | None:
@@ -640,6 +746,32 @@ def repeated_read_calls(path_calls: list[dict[str, Any]]) -> list[dict[str, Any]
     return [successful[index] for index in sorted(involved)]
 
 
+def normalized_skill(value: Any) -> str | None:
+    if not isinstance(value, str) or not value.strip():
+        return None
+    return value.lower().split(":")[-1]
+
+
+def call_path(call: dict[str, Any]) -> Path | None:
+    for key in ("file_path", "notebook_path", "path"):
+        raw = call["input"].get(key)
+        if isinstance(raw, str) and raw.strip():
+            candidate = Path(raw).expanduser()
+            return candidate if candidate.is_absolute() else call["cwd"] / candidate
+    return None
+
+
+def source_path(path: Path | None) -> bool:
+    return bool(
+        path
+        and (path.suffix.lower() in SOURCE_SUFFIXES or path.name.lower() in SOURCE_NAMES)
+    )
+
+
+def airflow_path(path: Path | None) -> bool:
+    return bool(path and "airflow" in {part.lower() for part in path.parts})
+
+
 def analyze(
     parsed: dict[str, Any],
     thresholds: Thresholds | None = None,
@@ -704,6 +836,120 @@ def analyze(
             )
         )
 
+    owned_paths: dict[str, list[dict[str, Any]]] = collections.defaultdict(list)
+    for call in calls:
+        if call["name"] not in FILE_TOOLS or call.get("result_error"):
+            continue
+        if call["name"] == "Read" and call.get("result_bytes", 0) <= 0:
+            continue
+        path = call_path(call)
+        if path is not None:
+            owned_paths[safe_path(str(path), call["cwd"])].append(call)
+    ownership_conflicts = {
+        path: path_calls
+        for path, path_calls in owned_paths.items()
+        if len({call["trace"] for call in path_calls}) > 1
+    }
+    if ownership_conflicts:
+        duplicate_bytes = sum(
+            call.get("result_bytes", 0)
+            for path_calls in ownership_conflicts.values()
+            for call in path_calls
+        )
+        warnings.append(
+            warning(
+                "file_ownership_violation",
+                f"{len(ownership_conflicts)} file(s) were loaded or changed by multiple traces",
+                "Assign each file to one persistent worker, batch all questions for it, and route follow-ups to that owner without rereading it in the parent.",
+                files=sorted(ownership_conflicts)[:10],
+                traces=max(
+                    len({call["trace"] for call in path_calls})
+                    for path_calls in ownership_conflicts.values()
+                ),
+                estimated_context_tokens=estimated_tokens(duplicate_bytes, thresholds),
+            )
+        )
+
+    skill_ordinals: dict[int, dict[str, int]] = collections.defaultdict(dict)
+    attributed_skills: dict[int, set[str]] = collections.defaultdict(set)
+    for call in calls:
+        if call["name"] == "Skill":
+            skill = normalized_skill(call["input"].get("skill"))
+            if skill:
+                current = skill_ordinals[call["trace"]].get(skill, call["ordinal"])
+                skill_ordinals[call["trace"]][skill] = min(current, call["ordinal"])
+    for request in requests:
+        skill = normalized_skill(request.get("skill"))
+        if skill:
+            attributed_skills[request["trace"]].add(skill)
+
+    def skill_ready(trace: int, skill: str, call: dict[str, Any]) -> bool:
+        if skill in attributed_skills[trace]:
+            return True
+        loaded_at = skill_ordinals[trace].get(skill)
+        return loaded_at is not None and loaded_at < call["ordinal"]
+
+    source_calls: dict[int, list[dict[str, Any]]] = collections.defaultdict(list)
+    airflow_calls: dict[int, list[dict[str, Any]]] = collections.defaultdict(list)
+    git_calls: dict[int, list[dict[str, Any]]] = collections.defaultdict(list)
+    for call in calls:
+        path = call_path(call)
+        if call["name"] in FILE_TOOLS and source_path(path):
+            source_calls[call["trace"]].append(call)
+            if airflow_path(path):
+                airflow_calls[call["trace"]].append(call)
+        elif call["name"] == "LSP" or call["name"].startswith("mcp__codegraph__"):
+            source_calls[call["trace"]].append(call)
+        command = str(call["input"].get("command") or "")
+        if call["name"] == "Bash" and GIT_COMMAND.search(command):
+            git_calls[call["trace"]].append(call)
+
+    missing_coding = {
+        trace: [call for call in trace_calls if not skill_ready(trace, "coding", call)]
+        for trace, trace_calls in source_calls.items()
+        if any(not skill_ready(trace, "coding", call) for call in trace_calls)
+    }
+    if missing_coding:
+        warnings.append(
+            warning(
+                "missing_coding_skill",
+                f"{len(missing_coding)} trace(s) handled source files without loading the coding skill",
+                "Load coding before any source inspection or change; add domain skills only as supplements.",
+                traces=len(missing_coding),
+                calls=sum(len(items) for items in missing_coding.values()),
+            )
+        )
+    missing_airflow = {
+        trace: [call for call in trace_calls if not skill_ready(trace, "airflow", call)]
+        for trace, trace_calls in airflow_calls.items()
+        if any(not skill_ready(trace, "airflow", call) for call in trace_calls)
+    }
+    if missing_airflow:
+        warnings.append(
+            warning(
+                "missing_airflow_skill",
+                f"{len(missing_airflow)} trace(s) handled Airflow source without loading the supplemental Airflow skill",
+                "Load coding first and Airflow as the domain supplement for Airflow-specific behaviour.",
+                traces=len(missing_airflow),
+                calls=sum(len(items) for items in missing_airflow.values()),
+            )
+        )
+    missing_git = {
+        trace: [call for call in trace_calls if not skill_ready(trace, "git", call)]
+        for trace, trace_calls in git_calls.items()
+        if any(not skill_ready(trace, "git", call) for call in trace_calls)
+    }
+    if missing_git:
+        warnings.append(
+            warning(
+                "missing_git_skill",
+                f"{len(missing_git)} trace(s) ran Git commands without loading the Git skill",
+                "Load the Git skill before repository-state or branch operations.",
+                traces=len(missing_git),
+                calls=sum(len(items) for items in missing_git.values()),
+            )
+        )
+
     expensive = [
         request
         for request in requests
@@ -711,12 +957,28 @@ def analyze(
         and repo_search_request(request)
     ]
     if len(expensive) >= thresholds.expensive_search_turns:
+        trace_roles = collections.Counter(
+            "main" if request["trace"] == 0 else "subagent" for request in expensive
+        )
+        search_operations: collections.Counter[str] = collections.Counter()
+        bash_search_commands: collections.Counter[str] = collections.Counter()
+        for request in expensive:
+            for call in request["calls"]:
+                if call["name"] == "Read":
+                    read_kind = "broad" if broad_read(call) else "targeted"
+                    search_operations[f"Read ({read_kind})"] += 1
+                elif call["name"] in {"Glob", "Grep"} or search_bash(call):
+                    search_operations[call["name"]] += 1
+                    bash_search_commands.update(search_bash_kinds(call))
         warnings.append(
             warning(
                 "expensive_model_repo_search",
                 f"Sonnet/Opus spent {len(expensive)} request(s) on repository search",
                 "Use a bounded Haiku explorer for discovery; keep the stronger model for decomposition and evaluation.",
                 requests=len(expensive),
+                trace_roles=dict(sorted(trace_roles.items())),
+                search_operations=dict(sorted(search_operations.items())),
+                bash_search_commands=dict(sorted(bash_search_commands.items())),
                 models=sorted(
                     {effective_request_model(request, resolved_models) for request in expensive}
                 ),
@@ -727,33 +989,6 @@ def analyze(
     mismatch = agent_model_mismatch(parsed)
     if mismatch:
         warnings.append(mismatch)
-
-    verifier_calls = [
-        call
-        for call in calls
-        if call["name"] == "Agent"
-        and str(call["input"].get("subagent_type") or "").lower() == "verifier"
-    ]
-    if verifier_calls:
-        warnings.append(
-            warning(
-                "dedicated_verifier",
-                f"{len(verifier_calls)} dedicated verifier agent(s) duplicated task checking",
-                "Let CI own runtime verification, or let the implementation worker run one explicitly approved targeted Local check.",
-                calls=len(verifier_calls),
-            )
-        )
-
-    continuation_calls = [call for call in calls if call["name"] == "SendMessage"]
-    if len(continuation_calls) >= thresholds.continuation_calls:
-        warnings.append(
-            warning(
-                "subagent_continuation_churn",
-                f"Workers received {len(continuation_calls)} continuation message(s)",
-                "Dispatch one self-contained task without a turn cap; halt or issue a fresh narrower task when it cannot finish.",
-                calls=len(continuation_calls),
-            )
-        )
 
     validation_kinds = collections.Counter(
         kind for call in calls if (kind := validation_command_kind(call))
@@ -878,24 +1113,6 @@ def analyze(
                 reference=thresholds.max_main_requests,
             )
         )
-    long_subagents = [
-        count
-        for trace, count in requests_by_trace.items()
-        if trace != 0 and count > thresholds.max_subagent_requests
-    ]
-    if long_subagents:
-        warnings.append(
-            warning(
-                "unbounded_subagent",
-                f"{len(long_subagents)} subagent trace(s) exceeded {thresholds.max_subagent_requests} model requests",
-                "Narrow each dispatch and provide the required evidence up front; do not add turn caps or continuation messages.",
-                traces=len(long_subagents),
-                requests=sum(long_subagents),
-                max_requests=max(long_subagents),
-                reference=thresholds.max_subagent_requests,
-            )
-        )
-
     marker_counts = collections.Counter(
         call["result_marker"] for call in calls if call.get("result_marker")
     )
@@ -952,7 +1169,7 @@ def analyze(
     longest_bash_run: list[dict[str, Any]] = []
     current: list[dict[str, Any]] = []
     for call in calls:
-        if search_bash(call) and (not current or current[-1]["trace"] == call["trace"]):
+        if inspection_bash(call) and (not current or current[-1]["trace"] == call["trace"]):
             current.append(call)
             if len(current) > len(longest_bash_run):
                 longest_bash_run = list(current)
@@ -1005,23 +1222,40 @@ def analyze(
         effective_request_model(request, resolved_models) for request in requests
     )
     tools = collections.Counter(call["name"] for call in calls)
+    agent_calls = [call for call in calls if call["name"] == "Agent"]
+    agent_dispatches = {
+        "subagent_types": dict(sorted(collections.Counter(
+            str(call["input"].get("subagent_type") or "<unset>") for call in agent_calls
+        ).items())),
+        "requested_models": dict(sorted(collections.Counter(
+            str(call["input"].get("model") or "<unset>") for call in agent_calls
+        ).items())),
+        "resolved_models": dict(sorted(collections.Counter(
+            str(call.get("resolved_model") or "<unrecorded>") for call in agent_calls
+        ).items())),
+    }
     input_tokens = sum(request["input_tokens"] for request in requests)
     cache_read = sum(request["cache_read_input_tokens"] for request in requests)
     cache_creation = sum(request["cache_creation_input_tokens"] for request in requests)
+    output_tokens = sum(request["output_tokens"] for request in requests)
     return {
         "summary": {
             "traces": parsed["trace_count"],
             "parsed_lines": parsed["parsed_lines"],
             "invalid_lines": parsed["invalid_lines"],
             "model_requests": len(requests),
+            "main_model_requests": sum(request["trace"] == 0 for request in requests),
+            "subagent_model_requests": sum(request["trace"] != 0 for request in requests),
             "tool_calls": len(calls),
             "result_bytes": sum(call["result_bytes"] for call in calls),
             "input_tokens": input_tokens,
             "cache_read_input_tokens": cache_read,
             "cache_creation_input_tokens": cache_creation,
             "context_input_tokens": input_tokens + cache_read + cache_creation,
+            "output_tokens": output_tokens,
             "models": dict(sorted(models.items())),
             "tools": dict(sorted(tools.items())),
+            "agent_dispatches": agent_dispatches,
             "skills": dict(sorted(skill_calls.items())),
             "tool_errors": tool_errors,
             "verification_commands": {
@@ -1050,6 +1284,11 @@ def render_text(report: dict[str, Any]) -> str:
             f"context/input/cache tokens: {summary['input_tokens']:,} input; "
             f"{summary['cache_read_input_tokens']:,} cache-read; "
             f"{summary['cache_creation_input_tokens']:,} cache-create"
+        ),
+        (
+            f"requests: {summary['main_model_requests']} main; "
+            f"{summary['subagent_model_requests']} subagent; "
+            f"output tokens: {summary['output_tokens']:,}"
         ),
         "models: "
         + ", ".join(f"{name}={count}" for name, count in summary["models"].items()),
@@ -1097,13 +1336,113 @@ def render_text(report: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
-def add_review_arguments(parser: argparse.ArgumentParser) -> None:
-    parser.add_argument("transcript", nargs="?", type=Path)
-    parser.add_argument("--latest", action="store_true", help="review the latest main transcript")
-    parser.add_argument("--project-root", type=Path, default=Path.cwd())
-    parser.add_argument("--transcript-root", type=Path, default=DEFAULT_TRANSCRIPT_ROOT)
+def review_day(
+    transcripts: Iterable[Path],
+    thresholds: Thresholds | None = None,
+    skill_roots: Iterable[Path] = (),
+) -> dict[str, Any]:
+    """Review sessions independently, then aggregate only evidence-backed findings."""
+    thresholds = thresholds or Thresholds()
+    reports = []
+    for transcript in transcripts:
+        parsed = parse_transcripts(review_paths(transcript))
+        reports.append((transcript, analyze(parsed, thresholds, skill_roots)))
+
+    numeric_fields = (
+        "traces", "parsed_lines", "invalid_lines", "model_requests",
+        "main_model_requests", "subagent_model_requests", "tool_calls",
+        "result_bytes", "input_tokens", "cache_read_input_tokens",
+        "cache_creation_input_tokens", "context_input_tokens", "output_tokens",
+        "tool_errors",
+    )
+    summary = {field: 0 for field in numeric_fields}
+    models: collections.Counter[str] = collections.Counter()
+    tools: collections.Counter[str] = collections.Counter()
+    skills: collections.Counter[str] = collections.Counter()
+    warning_categories: collections.Counter[str] = collections.Counter()
+    sessions_by_warning: dict[str, set[str]] = collections.defaultdict(set)
+    verification = collections.Counter()
+    shunt = collections.Counter()
+    session_rows = []
+    for transcript, report in reports:
+        item = report["summary"]
+        for field in numeric_fields:
+            summary[field] += int(item.get(field) or 0)
+        models.update(item["models"])
+        tools.update(item["tools"])
+        skills.update(item["skills"])
+        verification.update(item["verification_commands"])
+        shunt.update(item["shunt"])
+        categories = collections.Counter(warning["category"] for warning in report["warnings"])
+        warning_categories.update(categories)
+        session_name = f"{transcript.parent.name}/{transcript.stem}"
+        for category in categories:
+            sessions_by_warning[category].add(session_name)
+        session_rows.append(
+            {
+                "session": session_name,
+                "model_requests": item["model_requests"],
+                "tool_calls": item["tool_calls"],
+                "context_input_tokens": item["context_input_tokens"],
+                "warning_categories": dict(sorted(categories.items())),
+            }
+        )
+    summary.update(
+        {
+            "sessions": len(reports),
+            "models": dict(sorted(models.items())),
+            "tools": dict(sorted(tools.items())),
+            "skills": dict(sorted(skills.items())),
+            "verification_commands": dict(sorted(verification.items())),
+            "shunt": dict(sorted(shunt.items())),
+        }
+    )
+    return {
+        "summary": summary,
+        "warning_categories": {
+            category: {
+                "warnings": count,
+                "sessions": len(sessions_by_warning[category]),
+            }
+            for category, count in sorted(warning_categories.items())
+        },
+        "sessions": session_rows,
+    }
+
+
+def render_day_text(report: dict[str, Any], target_date: date, timezone: str) -> str:
+    summary = report["summary"]
+    lines = [
+        f"Session efficiency review for {target_date.isoformat()} ({timezone})",
+        (
+            f"{summary['sessions']} session(s); {summary['model_requests']} model request(s); "
+            f"{summary['tool_calls']} tool call(s)"
+        ),
+        (
+            f"requests: {summary['main_model_requests']} main; "
+            f"{summary['subagent_model_requests']} subagent; "
+            f"output tokens: {summary['output_tokens']:,}"
+        ),
+        (
+            f"context/input/cache tokens: {summary['input_tokens']:,} input; "
+            f"{summary['cache_read_input_tokens']:,} cache-read; "
+            f"{summary['cache_creation_input_tokens']:,} cache-create"
+        ),
+    ]
+    if report["warning_categories"]:
+        lines.append("Evidence-backed findings:")
+        for category, counts in report["warning_categories"].items():
+            lines.append(
+                f"- {category}: {counts['warnings']} warning(s) across "
+                f"{counts['sessions']} session(s)"
+            )
+    else:
+        lines.append("No configured anti-pattern threshold was crossed.")
+    return "\n".join(lines)
+
+
+def add_threshold_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--skill-root", type=Path, action="append", default=[])
-    parser.add_argument("--main-only", action="store_true")
     parser.add_argument("--json", action="store_true", dest="as_json")
     parser.add_argument("--strict", action="store_true", help="exit 1 when warnings are found")
     parser.add_argument("--large-file-lines", type=int, default=400)
@@ -1116,6 +1455,30 @@ def add_review_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--chars-per-token", type=float, default=4.0)
     parser.add_argument("--high-context-tokens", type=int, default=300_000)
     parser.add_argument("--high-context-requests", type=int, default=3)
+
+
+def add_review_arguments(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("transcript", nargs="?", type=Path)
+    parser.add_argument("--latest", action="store_true", help="review the latest main transcript")
+    parser.add_argument("--project-root", type=Path, default=Path.cwd())
+    parser.add_argument("--transcript-root", type=Path, default=DEFAULT_TRANSCRIPT_ROOT)
+    parser.add_argument("--main-only", action="store_true")
+    add_threshold_arguments(parser)
+
+
+def thresholds_from_args(args: argparse.Namespace) -> Thresholds:
+    return Thresholds(
+        args.large_file_lines,
+        args.oversized_tool_bytes,
+        args.repeat_reads,
+        args.expensive_search_turns,
+        args.bash_calls,
+        args.large_skill_tokens,
+        args.skill_output_ratio,
+        args.chars_per_token,
+        args.high_context_tokens,
+        args.high_context_requests,
+    )
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -1135,6 +1498,12 @@ def main(argv: list[str] | None = None) -> int:
     listing.add_argument("--json", action="store_true", dest="as_json")
     review = commands.add_parser("review", help="lint a session transcript")
     add_review_arguments(review)
+    daily = commands.add_parser("review-day", help="aggregate all sessions on a local date")
+    daily.add_argument("--date", required=True, dest="target_date")
+    daily.add_argument("--timezone", default="Europe/Malta")
+    daily.add_argument("--project-root", type=Path, action="append", default=[])
+    daily.add_argument("--transcript-root", type=Path, default=DEFAULT_TRANSCRIPT_ROOT)
+    add_threshold_arguments(daily)
     args = parser.parse_args(argv)
 
     if args.command == "list":
@@ -1163,6 +1532,29 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"{int(stat.st_mtime)}\t{stat.st_size}\t{path}")
         return 0
 
+    if args.command == "review-day":
+        try:
+            target_date = date.fromisoformat(args.target_date)
+        except ValueError:
+            parser.error("--date must use YYYY-MM-DD")
+        try:
+            timezone = ZoneInfo(args.timezone)
+        except ZoneInfoNotFoundError:
+            parser.error(f"unknown timezone: {args.timezone}")
+        thresholds = thresholds_from_args(args)
+        if thresholds.chars_per_token <= 0:
+            parser.error("--chars-per-token must be greater than zero")
+        transcripts = day_transcripts(
+            args.transcript_root, target_date, timezone, args.project_root
+        )
+        report = review_day(transcripts, thresholds, args.skill_root)
+        print(
+            json.dumps(report, indent=2, sort_keys=True)
+            if args.as_json
+            else render_day_text(report, target_date, args.timezone)
+        )
+        return 1 if args.strict and report["warning_categories"] else 0
+
     if args.transcript and args.latest:
         parser.error("pass a transcript or --latest, not both")
     transcript = args.transcript
@@ -1173,18 +1565,7 @@ def main(argv: list[str] | None = None) -> int:
         transcript = latest[0]
     if not transcript.is_file():
         parser.error(f"transcript not found: {transcript}")
-    thresholds = Thresholds(
-        args.large_file_lines,
-        args.oversized_tool_bytes,
-        args.repeat_reads,
-        args.expensive_search_turns,
-        args.bash_calls,
-        args.large_skill_tokens,
-        args.skill_output_ratio,
-        args.chars_per_token,
-        args.high_context_tokens,
-        args.high_context_requests,
-    )
+    thresholds = thresholds_from_args(args)
     if thresholds.chars_per_token <= 0:
         parser.error("--chars-per-token must be greater than zero")
     parsed = parse_transcripts(review_paths(transcript, not args.main_only))
