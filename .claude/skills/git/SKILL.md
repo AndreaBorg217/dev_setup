@@ -17,7 +17,23 @@ Resolve the repository root, current branch, status, relevant diffs, remotes, up
 
 Preserve unrelated and pre-existing work. Do not overwrite, stage, restore, commit, or include it without explicit approval.
 
-When a user asks for work on a repository or to help debug a problem, do not work on the current branch if it is a feature branch. Also verify against HEAD master branch (latest remote state) or equivalent.
+Before planning, implementation, or investigation, establish the correct base.
+Do not use a feature branch for the task unless the user explicitly approves that
+branch. Resolve the repository's actual default, production, or deployed ref from
+evidence; never assume it is named `main` or `master`.
+
+For an investigation, use the verified ref that represents the state being
+investigated. If the user names `main`, `master`, a production branch, or another
+base, preserve dirty work as needed and switch to that verified ref; do not
+restore feature-branch changes onto the investigation baseline.
+
+For new work, ask whether to continue on the current feature branch or branch
+from a verified base unless the user already made that choice. An explicit request
+to create a branch from a named base authorizes the necessary local transition:
+inspect status, preserve dirty work with a scoped stash when needed, switch to and
+verify the base, create and check out the requested branch, then restore only the
+changes that belong on the new branch. Stop for unclear stash ownership, conflicts,
+an unknown branch name, or a base that is behind or diverged.
 
 ## Synchronize before change work
 
