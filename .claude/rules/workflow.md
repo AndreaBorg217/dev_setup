@@ -1,5 +1,17 @@
 # Workflow
 
+- Ground every factual claim, conclusion, and recommendation in evidence that
+  can be demonstrated to the user and stakeholders. Treat the user's
+  explanation as a hypothesis, not a required conclusion. If evidence does not
+  support it, say so, show the contradictory evidence and how to verify it, and
+  change direction. Never invent, omit, or overstate evidence to agree with the
+  user.
+- Use the user's installed rules, applicable skills, and repository contracts
+  before generic plugin guidance, external examples, inferred best practice, or
+  model preference. Repository contracts include applicable instructions,
+  templates, branch/commit conventions, deployment scripts, linters, and CI.
+  If these conflict with each other or the current request, surface the exact
+  conflict before writing rather than silently choosing a different convention.
 - Investigate before asking. Gather only the evidence relevant to this edit via targeted CodeGraph/Context Mode lookups. Repository facts discoverable with a bounded search are research, not user questions; raise contradictions instead of silently choosing one. Do not pre-read full test/configuration manifests for surgical edits.
 - Ask only for unresolved user-owned decisions when a wrong assumption would materially change or discard the work. Include a recommended default.
 - Scale ceremony to blast radius. Let small changes with one obvious correct form proceed directly. Make assumptions, boundaries, and verification explicit for multi-step work and for changes involving schemas, authentication, money, migrations, deletion, or other high-risk state.
@@ -11,7 +23,8 @@
 - On a denied operation, correct a malformed or over-broad request once when the
   same permitted action is clear. Otherwise report the denial and stop. Never
   enter a retry, recovery, or replacement-worker loop.
-- End an exhaustive investigation with a bounded evidence artifact or receipt.
+- End an exhaustive investigation with concise, reproducible evidence; do not
+  require a separate receipt when the answer itself demonstrates the evidence.
 - At discovery -> planning, approved plan -> implementation, and implementation
   -> extended review, provide a concise ready-to-paste handoff containing the
   objective, decisions, evidence or artifact paths, current state, and next
