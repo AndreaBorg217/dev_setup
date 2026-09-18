@@ -3,13 +3,19 @@
 Delegate automatically when the work fits; the user need not ask. The main
 thread is a thin orchestrator: fan out, then fan in receipts only.
 
+Before answering each user turn or loading new substantive context, decide
+whether the work belongs to an existing owner or can be delegated as a bounded
+task. Delegate first; do not load the same context in the main thread and only
+then send it to a worker. Keep coordination, synthesis, user dialogue, and
+judgement over returned evidence in the main thread.
+
 ## When to delegate
 
 - The work has an explicit objective, scope, and acceptance check.
 - Collection is noisy or menial and the main thread needs only derived facts,
   not raw output (review comments, logs, multi-file scans).
-- The work splits into independent units with disjoint writes (per repository,
-  per file set, per MR). Run those concurrently; serial execution that bloats
+- The work splits into independent units with disjoint file ownership (per
+  repository, file, or MR). Run those concurrently; serial execution that bloats
   main-thread context is a routing defect.
 - Keep dialogue, design judgement, and follow-up decisions in the main thread.
   Interpretation stays with the caller unless the caller supplied the grouping
@@ -38,18 +44,25 @@ thread is a thin orchestrator: fan out, then fan in receipts only.
 
 ## Bounds
 
-- Dispatch 1 worker per independent unit with disjoint writes and run those
-  units concurrently. Run dependent work serially; never let 2 agents edit the
-  same file.
-- Every agent is a leaf. Do not use nested, continuation, verifier, recovery, or
-  replacement agents. A blocked worker returns control to the user.
-- Give a read-only worker 1 question, named scope, a stop condition, and a
-  1,500-character receipt limit. Keep raw output in its context.
+- Assign each file to 1 owning worker for the duration of the investigation or
+  change. No other worker or the main thread rereads or edits that file. Route
+  later questions about it back to the same owner.
+- Batch every currently known question about a file into its owner's initial
+  prompt. Ten questions about one file go to one worker, not ten consecutive
+  workers. Continue the owner when new questions arise instead of spawning a
+  fresh worker with the same context.
+- Every agent is a leaf. Do not use nested, verifier, recovery, or blind
+  replacement agents. Reassign ownership only when the owner is unavailable or
+  demonstrably failed, and include its existing evidence in the handoff.
+- Give a read-only worker 1 owned file or independent evidence source, all
+  related questions, a stop condition, and a 1,500-character receipt limit.
+  Keep raw output in its context.
 - Make implementation prompts self-contained: objective, permitted writes,
   resolved decisions, constraints, acceptance criteria, applicable Skills and
   context, and at most 1 approved targeted check.
-- Batch related lookups. Do not repeat a worker's searches, redispatch the same
-  open question, or reread unchanged evidence.
+- Maintain the file-to-worker ownership map across follow-up turns. Batch
+  related lookups. Do not repeat an owner's searches, redispatch the same open
+  question, or reread unchanged evidence in the main thread.
 
 ## Tool and output discipline
 
