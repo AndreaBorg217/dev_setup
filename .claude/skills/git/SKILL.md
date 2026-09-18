@@ -17,6 +17,8 @@ Resolve the repository root, current branch, status, relevant diffs, remotes, up
 
 Preserve unrelated and pre-existing work. Do not overwrite, stage, restore, commit, or include it without explicit approval.
 
+When a user asks for work on a repository or to help debug a problem, do not work on the current branch if it is a feature branch. Also verify against HEAD master branch (latest remote state) or equivalent.
+
 ## Synchronize before change work
 
 Before source discovery or edits for a new change, inspect the worktree, branch,
