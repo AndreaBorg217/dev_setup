@@ -5,7 +5,8 @@ fi
 
 # Path to your Oh My Zsh installation.
 export ZSH="$HOME/.oh-my-zsh"
-export PATH="$HOME/.local/opt/neovim/current/bin:$PATH"
+export PATH="$HOME/.local/bin:$HOME/.local/opt/neovim/current/bin:$PATH"
+export DO_NOT_TRACK=1
 
 # Theme
 ZSH_THEME="powerlevel10k/powerlevel10k"
@@ -26,10 +27,10 @@ dev() {
     local session_name="${1:-${PWD:t}}"
 
     if ! tmux has-session -t "=$session_name" 2>/dev/null; then
-        tmux new-session -d -s "$session_name" -n editor nvim
-        tmux new-window -t "=$session_name" -n shell
-        tmux new-window -t "=$session_name" -n claude claude
-        tmux select-window -t "=$session_name:editor"
+        tmux new-session -d -s "$session_name" -n dev -c "$PWD" "zsh -c 'nvim; exec zsh'"
+        tmux split-window -h -t "=$session_name:dev" -c "$PWD" "zsh -c 'claude; exec zsh'"
+        tmux split-window -v -t "=$session_name:dev.1" -c "$PWD"
+        tmux select-pane -t "=$session_name:dev.0"
     fi
 
     if [[ -n "$TMUX" ]]; then
@@ -39,7 +40,9 @@ dev() {
     fi
 }
 
-alias end-session='tmux kill-session -t "=${PWD:t}"'
+function end_session {
+    tmux kill-session -t "=${1:-${PWD:t}}"
+}
 
 git() {
     # Intercept git push to protected branches
@@ -61,7 +64,7 @@ git() {
 alias python=python3
 alias pip=pip3
 
-# Create a new virtual environment 
+# Create a new virtual environment
 venvc() {
     python3 -m venv .venv
 }
@@ -140,6 +143,18 @@ docks() {
     docker stats
 }
 
+# Inspect image size
+imgsize() {
+    local image="$1"
+    echo "Total size for $image: $(docker images "$image" --format '{{.Size}}')"
+    docker history "$image" --no-trunc --format "table {{.Size}}\t{{.CreatedBy}}" > "${image//\//_}.txt"
+}
+
+# dockerignore effectiveness
+dockignore () {
+    docker build --no-cache --progress=plain -t test . 2>&1 | grep "transferring context"
+}
+
 # List all custom Docker networks and their subnets
 docknets() {
     OUTPUT_FILE="docker_networks.txt"
@@ -174,3 +189,26 @@ lsg () {
 gbc () {
     git branch "$@" && git checkout "$@"
 }
+
+# Clean unused Neovim plugins and LSPs (lua spec removed ≠ uninstalled)
+# - Lazy: `python = {}` in linter.lua stays installed until `Lazy clean`
+# - Mason: `ensure_installed` in mason.lua doesn't auto-uninstall old servers (e.g. removed pyright)
+function nvim_clean {
+    echo "→ Lazy: removing unused plugins (no longer in lua spec)..."
+    nvim --headless "+Lazy! clean" +qa 2>/dev/null
+    echo ""
+    echo "→ Mason: uninstalling packages not in mason.lua ensure_installed..."
+    # actual Mason package dir names (mason-lspconfig maps lua_ls->lua-language-server etc.)
+    local keep="pyright ruff gopls jdtls lua-language-server yaml-language-server dockerfile-language-server docker-compose-language-service gofumpt goimports golangci-lint gomodifytags impl yamllint yamlfmt hadolint cspell stylua prettier java-debug-adapter java-test palantir-java-format vscode-spring-boot-tools"
+    for pkg in $(ls -1 ~/.local/share/nvim/mason/packages 2>/dev/null); do
+        if ! echo "$keep" | tr ' ' '\n' | grep -qx "$pkg"; then
+            echo "  - MasonUninstall $pkg (not in ensure_installed)"
+            nvim --headless "+MasonUninstall $pkg" +qa 2>/dev/null
+        else
+            echo "  ✓ keep $pkg"
+        fi
+    done
+    echo ""
+    echo "  Verify with :Mason and :LspInfo"
+}
+alias clean_nvim=nvim_clean

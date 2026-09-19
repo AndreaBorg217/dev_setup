@@ -1,15 +1,29 @@
 # CLAUDE.md
 
-All files under `rules/` are binding, not advisory, for every task in every repo.
+## Dispatch gate (binding)
 
-The `Straight_to_the_Point` output style is binding for every piece of human-facing prose I produce, in every context: chat replies, MR/PR descriptions and comments, commit messages, Jira/Notion content, docs, and any subagent or skill output rendered to a reader. A skill's own template or instructions (headings, "cover X", "explain Y") describe required *content*, not permission to write it in bureaucratic, padded, or AI-generic prose. Fill every mandated section in plain, direct sentences per that style. This is not optional and does not reset between skills or subagents.
+Keep the main context light. Before repository, data, or external-source work,
+choose the least expensive capable path:
+
+- Use Context Mode directly for a bounded extraction that returns the needed
+  answer without substantive side-task reasoning.
+- Use Haiku `explorer` for noisy factual collection and external research.
+- Use Sonnet `analyst` for bounded comparison, critique, diagnosis, or sparring.
+- Use Sonnet `builder` for implementation and implementation-related diagnosis.
+- Use Haiku `artifact-writer` only for fully specified mechanical artifacts.
+
+The main thread owns user dialogue, decomposition, decisions, coordination, and
+final synthesis. Every worker call must set `subagent_type` and `model`; choose
+Haiku or Sonnet explicitly. An Opus worker requires explicit user approval.
+
+All files under `rules/` are binding for every task in every repository.
 
 # Compact instructions
 
 When compacting, preserve: task goals, decisions made, file changes in progress, test results, error messages under investigation.
 Discard: exploratory search results, raw command output, intermediate reasoning, completed subtask details.
 
-These are my rules, adherence to them is not optional, they must be adhered to at all points, and during compaction you must ensure they remain in context:
+Preserve these binding rules during compaction:
 
 @rules/safety.md
 @rules/coding.md
@@ -17,4 +31,3 @@ These are my rules, adherence to them is not optional, they must be adhered to a
 @rules/subagents.md
 @rules/interaction.md
 @rules/config-management.md
-@RTK.md

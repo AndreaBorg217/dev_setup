@@ -27,6 +27,13 @@ return {
 			"!**/coverage/**",
 			"!**/htmlcov/**",
 			"!**/.coverage",
+			"!**/.DS_Store",
+			"!**/*.o",
+			"!**/*.a",
+			"!**/*.out",
+			"!**/*.class",
+			"!**/vendor/**",
+			"!**/bin/**",
 		}
 
 		local function generated_path_arguments()
@@ -39,7 +46,7 @@ return {
 			return arguments
 		end
 
-		local find_files_command = { "rg", "--files", "--hidden", "--no-ignore" }
+		local find_files_command = { "rg", "--files", "--hidden" }
 		vim.list_extend(find_files_command, generated_path_arguments())
 
 		local trouble = require("trouble")
@@ -55,6 +62,30 @@ return {
 		telescope.setup({
 			defaults = {
 				path_display = { "smart" },
+				file_ignore_patterns = {
+					"%.git/",
+					"%.venv/",
+					"%.tox/",
+					"%.mypy_cache/",
+					"%.pytest_cache/",
+					"%.ruff_cache/",
+					"%.gradle/",
+					"__pycache__/",
+					"node_modules/",
+					"target/",
+					"build/",
+					"dist/",
+					"coverage/",
+					"htmlcov/",
+					"%.DS_Store",
+					"%.coverage",
+					"%.o",
+					"%.a",
+					"%.out",
+					"%.class",
+					"vendor/",
+					"bin/",
+				},
 				mappings = {
 					i = {
 						["<C-k>"] = actions.move_selection_previous, -- move to prev result
@@ -70,7 +101,7 @@ return {
 				},
 				live_grep = {
 					additional_args = function()
-						local arguments = { "--hidden", "--no-ignore" }
+						local arguments = { "--hidden" }
 						return vim.list_extend(arguments, generated_path_arguments())
 					end,
 				},

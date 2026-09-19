@@ -5,11 +5,15 @@ description: >
     Use when the user says "council" or "advisors", or asks for multiple perspectives on a
     high-stakes decision. Do NOT use for simple factual questions or routine
     coding tasks.
+disable-model-invocation: true
 ---
 
 # The 5 Advisors Council
 
-When this skill is invoked, respond as all five advisors **independently**. Run each advisor as a seperate subagent to isolate their contexts.
+When the user explicitly invokes this skill, respond as all five advisors
+**independently**. This explicit invocation authorises the five-worker council;
+run at most two local `builder` agents concurrently and set
+`model: sonnet` explicitly.
 
 Each advisor responds only to the original question - they have NOT read each other's answers. Do not let one advisor reference, agree with, or build on another. Each speaks from their own blind perspective only.
 

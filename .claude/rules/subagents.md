@@ -1,60 +1,81 @@
 # Subagents
 
-- All human-facing drafts and file edits must follow `Straight_to_the_Point`.
-- Cavecrew is internal-only and must not author human-facing prose, including docs, reviews, comments, commit text, or MR text.
-- Main agents must rewrite or reject Cavecrew receipts before exposing them to a reader.
+Delegate automatically when the work fits; the user need not ask. The main
+thread is a thin orchestrator: fan out, then fan in receipts only.
 
-- Use subagents for bounded delegated work, noisy commands, research, or context buffering. Keep the main conversation as the driver and orchestrator.
-- Pick a specific `subagent_type` instead of defaulting to `general-purpose`:
-  `Explore` or `caveman:cavecrew-investigator` for locating code,
-  `caveman:cavecrew-builder` for a bounded 1-2 file edit,
-  `caveman:cavecrew-reviewer` for diff/PR review, and `Plan` for design work.
-  Fall back to `general-purpose` only when none of those fit.
-- Batch related lookups into one dispatch instead of firing several tiny subagents.
-- If a dispatch would just repeat a question an earlier agent in this same
-  session already investigated, answer it from that agent's returned findings,
-  or re-dispatch with a narrower prompt referencing what's already known -
-  never re-ask the same open-ended question from scratch.
-- Set the Agent `model` parameter explicitly; `model` and `subagent_type` are separate. Route planning and production-incident orchestration to `opus`, implementation/review/ambiguous work to `sonnet`, and mechanical or verbose work to `haiku`.
-- Use the main thread for one small lookup or command whose output should stay
-  under roughly 1-2k tokens. Delegate noisy output, multiple files, web/log
-  research, dependency/test/build/check output, and parallelizable work.
-- Never call `WebSearch` or `WebFetch` from the main thread. Delegate web research, URLs, and documentation retrieval to a Haiku subagent and return only the requested sourced answer.
-- Prefer `caveman` agents (installed plugin) with compressed output when they
-  fit the task.
-- Ask subagents that run noisy commands or fetch docs to retain raw output in
-  their context and return only status, exact command/query, relevant snippets,
-  source links, and the recommended next action.
+Before answering each user turn or loading new substantive context, decide
+whether the work belongs to an existing owner or can be delegated as a bounded
+task. Delegate first; do not load the same context in the main thread and only
+then send it to a worker. Keep coordination, synthesis, user dialogue, and
+judgement over returned evidence in the main thread.
 
-## Leaf tier
+## When to delegate
 
-Subagents must not call `Agent`. This is enforced by `scripts/no-nested-agents.py` and the `general-purpose` agent override. If a subagent discovers that work needs splitting, it must finish what it reasonably can and return the proposed split to the main thread. The main thread owns fanout and uses the `Workflow` tool for larger pipelines.
+- The work has an explicit objective, scope, and acceptance check.
+- Collection is noisy or menial and the main thread needs only derived facts,
+  not raw output (review comments, logs, multi-file scans).
+- The work splits into independent units with disjoint file ownership (per
+  repository, file, or MR). Run those concurrently; serial execution that bloats
+  main-thread context is a routing defect.
+- Keep dialogue, final synthesis, and follow-up decisions in the main thread.
+  Delegate bounded substantive analysis when its evidence can stay with one
+  owner.
 
-## Parallelism judgement
+## Routing
 
-Classify before dispatching more than one subagent:
+- Prefer local custom agents over overlapping built-in or plugin agents.
+- Use Haiku `explorer` for factual collection: repository evidence, a specified
+  data query, or external sources. It never implements or makes substantive
+  comparisons or judgements.
+- Use Sonnet `analyst` for bounded read-only comparison, critique, diagnosis,
+  and sparring when the evidence needs interpretation. It never implements.
+- Use Haiku `artifact-writer` for fully specified renders and mechanical edits:
+  documentation from approved facts, static fixture data from an approved test
+  matrix, deterministic plan encoding, and low-risk mechanical config edits. It
+  runs only supplied commands and never takes source logic, test logic,
+  debugging, or unresolved content decisions.
+- Use Sonnet `builder` for source, test logic, configuration with semantic risk,
+  debugging, and implementation-related diagnosis. Choose per task; writing a
+  file alone does not require Sonnet.
+- Never use `WebSearch` or `WebFetch` in the main thread. Route external research
+  through `explorer`.
+- Skill discovery is manual and on demand — planner's one bounded inventory at plan time is the only exception. Do not run a catalogue before a task
+  or reject work because matching was not performed. Pass each applicable
+  skill's exact name and resolved context to the worker.
+- Workers invoke every skill named in their prompt, treat supplied skill context
+  as resolved, and stop if a named skill or required context is unavailable.
 
-- **Independent -> parallel.** Separate repos/projects, separate files with
-  no shared symbol, separate tenants/jurisdictions, read-only
-  investigations, same-tier environments. One message, multiple `Agent`
-  calls (e.g. `caveman:cavecrew-builder` for independent file edits, each
-  returning only the required diff result).
-- **Sequential -> serial.** B needs an artifact, decision, or exact diff
-  that only exists after A runs. Also: two agents that would edit the same
-  file - collapse into one agent instead.
-- **Probe-then-fanout -> one shared change, N consumers.** Never fan out to
-  all N in parallel off a shared-unit change. Order:
-  1. One subagent changes the shared unit (library, schema, API contract).
-  2. One subagent applies + verifies it against exactly ONE consumer and
-     returns the concrete adaptation - exact diff, commands, config keys,
-     version pins - not just pass/fail.
-  3. Orchestrator fans out the remaining N-1 consumers in parallel, pasting
-     the probe's adaptation verbatim into every dispatch prompt.
+## Bounds
 
-Decision test: uncertainty about the fix means the work is not parallel-safe yet. Parallelise only known-shape work; probe first to turn unknown shape into known shape.
+- Assign each file to 1 owning worker for the duration of the investigation or
+  change. No other worker or the main thread rereads or edits that file. Route
+  later questions about it back to the same owner.
+- Batch every currently known question about a file into its owner's initial
+  prompt. Ten questions about one file go to one worker, not ten consecutive
+  workers. Continue the owner when new questions arise instead of spawning a
+  fresh worker with the same context.
+- Every agent is a leaf. Do not use nested, verifier, recovery, or blind
+  replacement agents. Reassign ownership only when the owner is unavailable or
+  demonstrably failed, and include its existing evidence in the handoff.
+- Give a read-only worker 1 owned file or independent evidence source, all
+  related questions, a stop condition, and a 1,500-character receipt limit.
+  Keep raw output in its context.
+- Make implementation prompts self-contained: objective, permitted writes,
+  resolved decisions, constraints, acceptance criteria, applicable Skills and
+  context, and at most 1 approved targeted check.
+- Maintain the file-to-worker ownership map across follow-up turns. Batch
+  related lookups. Do not repeat an owner's searches, redispatch the same open
+  question, or reread unchanged evidence in the main thread.
 
-Anti-patterns: N agents independently rediscovering the same fix; fanning
-out before any consumer has been proven; parallel agents writing the same
-file; stg and prod in the same batch (always sequential).
+## Tool and output discipline
 
-Cost note: one probe is cheaper than N-1 failed fanouts plus retries.
+- Set `subagent_type` and `model` explicitly. Choose Haiku for bounded
+collection or deterministic rendering and Sonnet for semantic analysis,
+implementation, or diagnosis. Local custom agents must match their declared
+model. An Opus worker requires explicit user approval for that call.
+- Workers gather with `ctx_batch_execute`, follow up with one batched
+  `ctx_search`, and process with `ctx_execute`/`ctx_execute_file`
+  (`intent` filtered). Never return full files, logs, SQL, result
+  sets, or build output; keep raw output in the sandbox.
+- Code-oriented agents use CodeGraph first, then Context Mode, then LSP and the `coding` skill. The orchestrator owns all
+  human-facing prose, which follows `Straight_to_the_Point`.

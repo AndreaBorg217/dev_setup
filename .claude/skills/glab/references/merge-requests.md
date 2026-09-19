@@ -10,6 +10,19 @@ Before drafting:
 4. Identify deployment order, CI/CD jobs, environment progression, dependent or prerequisite MRs, runtime success signals, and rollback limitations.
 5. Check `.gitlab/merge_request_templates/` for a repository-required template.
 
+Use the validation budget once, at the final pre-MR state:
+
+- Reuse recorded targeted and full-suite results when runtime-relevant source
+  has not changed. Do not rerun them because README, comments, formatting-only
+  Python, or docstrings changed.
+- If a full suite is appropriate and has not run, request approval and run it
+  once immediately before final MR QA. Do not run it during each implementation
+  iteration.
+- If the plan assigns exhaustive verification to CI, do not run it locally;
+  state it as pending CI in `Testing`.
+- If runtime-relevant source changed after a full run, ask the user before one
+  exceptional rerun. Never spend that rerun automatically.
+
 Repository templates take precedence. Ensure they still address the five personal content areas, even if their headings differ. If no repository template applies, render [../assets/merge-request-template.md](../assets/merge-request-template.md) with all placeholders and instructional comments replaced.
 
 GitLab project templates are Markdown files under `.gitlab/merge_request_templates/` and must exist on the default branch to appear in GitLab. The installed CLI can select a local repository template with `glab mr create --template NAME`.

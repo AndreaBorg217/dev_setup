@@ -80,6 +80,24 @@ return {
 			require("lsp-file-operations").default_capabilities()
 		)
 
+		-- Suppress noisy STS MCP server info that causes "Press ENTER" on every spring file
+		do
+			local orig_show = vim.lsp.handlers["window/showMessage"]
+			vim.lsp.handlers["window/showMessage"] = function(err, result, ctx, config)
+				if result and result.message and result.message:match("MCP server") then
+					return
+				end
+				return orig_show(err, result, ctx, config)
+			end
+			local orig_log = vim.lsp.handlers["window/logMessage"]
+			vim.lsp.handlers["window/logMessage"] = function(err, result, ctx, config)
+				if result and result.message and result.message:match("MCP server") then
+					return
+				end
+				return orig_log(err, result, ctx, config)
+			end
+		end
+
 		vim.diagnostic.config({
 			virtual_text = true, -- Enable inline diagnostic messages
 			signs = {
@@ -90,9 +108,9 @@ return {
 					[vim.diagnostic.severity.INFO] = " ",
 				},
 			},
-			update_in_insert = false, -- Don't show diagnostics while in insert mode
+			update_in_insert = true, -- instant like VS Code (was false)
 			underline = true, -- Underline the problematic code
-			severity_sort = true, -- Sort by severity
+			severity_sort = true, -- Sort by severity (ERROR > WARN > INFO > HINT) for ALL diagnostics
 			float = {
 				border = "rounded",
 				source = "always", -- Show source in floating window
@@ -101,11 +119,37 @@ return {
 			},
 		})
 
+		-- Ensure qflist/loclist diagnostics are always severity-sorted (covers :copen, Trouble quickfix, etc.)
+		do
+			local orig_setqflist = vim.diagnostic.setqflist
+			vim.diagnostic.setqflist = function(opts)
+				opts = vim.tbl_extend("force", { severity_sort = true }, opts or {})
+				return orig_setqflist(opts)
+			end
+			local orig_setloclist = vim.diagnostic.setloclist
+			vim.diagnostic.setloclist = function(opts)
+				opts = vim.tbl_extend("force", { severity_sort = true }, opts or {})
+				return orig_setloclist(opts)
+			end
+		end
+
+		-- Make [d/]d and jumps respect severity (already sorted, but ensure)
+		vim.keymap.set("n", "]e", function()
+			vim.diagnostic.goto_next({ severity = vim.diagnostic.severity.ERROR })
+		end, { desc = "Next error" })
+		vim.keymap.set("n", "[e", function()
+			vim.diagnostic.goto_prev({ severity = vim.diagnostic.severity.ERROR })
+		end, { desc = "Prev error" })
+
 		vim.lsp.config("*", {
 			capabilities = capabilities,
+			flags = { debounce_text_changes = 50 }, -- instant like VS Code (default 150)
 		})
 
+		-- mimic vscode: ms-python.python + ms-python.vscode-pylance + charliermarsh.ruff
+		-- vscode settings.json: "python.analysis.typeCheckingMode":"standard", "[python]":{"editor.defaultFormatter":"charliermarsh.ruff","codeActionsOnSave":{"source.fixAll.ruff":"explicit","source.organizeImports.ruff":"explicit"}}
 		vim.lsp.config("pyright", require("andreaborg.plugins.lsp.servers.pyright"))
+		vim.lsp.config("ruff", require("andreaborg.plugins.lsp.servers.ruff"))
 		vim.lsp.config("gopls", require("andreaborg.plugins.lsp.servers.gopls"))
 		vim.lsp.config("jdtls", require("andreaborg.plugins.lsp.servers.jdtls"))
 		vim.lsp.config("yamlls", require("andreaborg.plugins.lsp.servers.yamlls"))
