@@ -37,7 +37,7 @@ Each call is independent. To ask a follow-up, ask again with the same `--paths` 
 ## When NOT to delegate (from upstream `What doesn't get delegated`)
 
 - Debugging (needs Opus reasoning)
-- Editing (needs exact content — use `Read` with `offset`/`limit`, which bypasses the hook)
+- Editing (needs exact content — use `Read` with `offset`/`limit`, which Shunt intentionally allows)
 - Small files ≤ `SHUNT_MIN_LINES` (default 350, override via `env.SHUNT_MIN_LINES` in `settings.json`)
 - Architectural decisions
 

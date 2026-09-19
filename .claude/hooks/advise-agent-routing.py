@@ -1,25 +1,21 @@
 #!/usr/bin/env python3
-"""Offer non-blocking guidance for efficient agent and discovery routing."""
+"""Enforce worker model routing without rewriting Agent or Task inputs."""
 
 from __future__ import annotations
 
 import json
 import re
 import sys
-from pathlib import Path
 from typing import Any
 
 
 LOCAL_AGENT_MODELS = {
     "artifact-writer": "haiku",
+    "analyst": "sonnet",
     "builder": "sonnet",
     "explorer": "haiku",
 }
-SEARCH_COMMAND = re.compile(
-    r"(?:^|[;&|]\s*)(?:fd|find|grep|head|ls|rg|sed|stat|tail|tree|wc)\b"
-    r"|(?:^|[;&|]\s*)git\s+(?:log|ls-files|show)\b",
-    re.IGNORECASE,
-)
+MODEL_TIER = re.compile(r"(?:^|[^a-z])(haiku|sonnet|opus)(?=$|[^a-z])")
 
 
 def load_input() -> dict[str, Any]:
@@ -32,59 +28,54 @@ def load_input() -> dict[str, Any]:
 
 def model_tier(value: Any) -> str:
     model = str(value or "").lower()
-    for tier in ("haiku", "sonnet", "opus"):
-        if tier in model:
-            return tier
+    tiers = set(MODEL_TIER.findall(model))
+    if len(tiers) == 1:
+        return tiers.pop()
     return ""
 
 
-def is_subagent(transcript_raw: Any) -> bool:
-    if not isinstance(transcript_raw, str):
-        return False
-    return "subagents" in Path(transcript_raw).parts
+def validation_result(tool_input: dict[str, Any]) -> tuple[str, str] | None:
+    agent_type = str(
+        tool_input.get("subagent_type") or tool_input.get("type") or ""
+    ).strip()
+    model_value = tool_input.get("model")
+    model_text = str(model_value or "").strip()
+    if not model_text:
+        return "deny", (
+            "AGENT_MODEL_POLICY: every worker must declare model=haiku or "
+            "model=sonnet. The main thread must choose the least expensive "
+            "capable model for this task before dispatching it."
+        )
 
+    requested_model = model_tier(model_text)
+    if not requested_model:
+        return "deny", (
+            f"AGENT_MODEL_POLICY: model={model_text!r} is not an allowed worker model. "
+            "Choose model=haiku or model=sonnet based on the task's complexity."
+        )
+    if requested_model == "opus":
+        return "ask", (
+            "AGENT_MODEL_POLICY: an Opus worker requires explicit user approval for "
+            "this call. Prefer Haiku or Sonnet unless the task's complexity justifies Opus."
+        )
 
-def agent_advisory(tool_input: dict[str, Any]) -> str:
-    agent_type = str(tool_input.get("subagent_type") or "")
-    requested_model = model_tier(tool_input.get("model"))
     expected_model = LOCAL_AGENT_MODELS.get(agent_type)
     if expected_model and requested_model != expected_model:
-        return (
-            f"ROUTING_ADVISORY: local agent {agent_type} is designed for model={expected_model}. "
-            "This is guidance only; continue with another model when the task warrants it."
+        return "deny", (
+            f"AGENT_MODEL_POLICY: local agent {agent_type} requires model={expected_model}; "
+            f"requested model={requested_model}. Use model={expected_model}."
         )
-    if not requested_model:
-        return (
-            "ROUTING_ADVISORY: no model was specified for this worker, so runtime defaults may "
-            "route it to Sonnet. Consider model=haiku for bounded read-only collection. "
-            "This is guidance only and does not restrict the chosen agent type."
-        )
-    return ""
+    return None
 
 
-def discovery_advisory(tool_name: str, tool_input: dict[str, Any]) -> str:
-    discovery = tool_name in {"Glob", "Grep"}
-    if tool_name == "Read":
-        discovery = not tool_input.get("offset") and not tool_input.get("limit")
-    if tool_name == "Bash":
-        command = str(tool_input.get("command") or "")
-        discovery = bool(SEARCH_COMMAND.search(command))
-    if not discovery:
-        return ""
-    return (
-        "ROUTING_ADVISORY: for bounded read-only repository discovery, consider delegating to "
-        "an explorer with model=haiku and returning only compact evidence. This is guidance only; "
-        "continue in the main thread when direct inspection is more appropriate."
-    )
-
-
-def emit_advisory(message: str) -> None:
+def emit_decision(decision: str, reason: str) -> None:
     print(
         json.dumps(
             {
                 "hookSpecificOutput": {
                     "hookEventName": "PreToolUse",
-                    "additionalContext": message,
+                    "permissionDecision": decision,
+                    "permissionDecisionReason": reason,
                 }
             }
         )
@@ -98,14 +89,12 @@ def main() -> int:
     if not isinstance(tool_input, dict):
         tool_input = {}
 
-    if tool_name in {"Agent", "Task"}:
-        message = agent_advisory(tool_input)
-    elif is_subagent(payload.get("transcript_path")):
-        message = ""
-    else:
-        message = discovery_advisory(tool_name, tool_input)
-    if message:
-        emit_advisory(message)
+    if tool_name not in {"Agent", "Task"}:
+        return 0
+
+    result = validation_result(tool_input)
+    if result:
+        emit_decision(*result)
     return 0
 
 

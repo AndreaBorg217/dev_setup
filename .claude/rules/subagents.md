@@ -17,23 +17,26 @@ judgement over returned evidence in the main thread.
 - The work splits into independent units with disjoint file ownership (per
   repository, file, or MR). Run those concurrently; serial execution that bloats
   main-thread context is a routing defect.
-- Keep dialogue, design judgement, and follow-up decisions in the main thread.
-  Interpretation stays with the caller unless the caller supplied the grouping
-  categories.
+- Keep dialogue, final synthesis, and follow-up decisions in the main thread.
+  Delegate bounded substantive analysis when its evidence can stay with one
+  owner.
 
 ## Routing
 
 - Prefer local custom agents over overlapping built-in or plugin agents.
-- Use Haiku `explorer` for all read-only collection: repository evidence, a
-  specified data query, or external sources. It never implements.
+- Use Haiku `explorer` for factual collection: repository evidence, a specified
+  data query, or external sources. It never implements or makes substantive
+  comparisons or judgements.
+- Use Sonnet `analyst` for bounded read-only comparison, critique, diagnosis,
+  and sparring when the evidence needs interpretation. It never implements.
 - Use Haiku `artifact-writer` for fully specified renders and mechanical edits:
   documentation from approved facts, static fixture data from an approved test
   matrix, deterministic plan encoding, and low-risk mechanical config edits. It
   runs only supplied commands and never takes source logic, test logic,
   debugging, or unresolved content decisions.
-- Use Sonnet `builder` for source, test logic, configuration with semantic
-  risk, debugging, and diagnosis. Choose per task; writing a file alone does
-  not require Sonnet.
+- Use Sonnet `builder` for source, test logic, configuration with semantic risk,
+  debugging, and implementation-related diagnosis. Choose per task; writing a
+  file alone does not require Sonnet.
 - Never use `WebSearch` or `WebFetch` in the main thread. Route external research
   through `explorer`.
 - Skill discovery is manual and on demand — planner's one bounded inventory at plan time is the only exception. Do not run a catalogue before a task
@@ -66,8 +69,10 @@ judgement over returned evidence in the main thread.
 
 ## Tool and output discipline
 
-- Set both `subagent_type` and `model` explicitly. Never dispatch Opus as a
-  worker.
+- Set `subagent_type` and `model` explicitly. Choose Haiku for bounded
+collection or deterministic rendering and Sonnet for semantic analysis,
+implementation, or diagnosis. Local custom agents must match their declared
+model. An Opus worker requires explicit user approval for that call.
 - Workers gather with `ctx_batch_execute`, follow up with one batched
   `ctx_search`, and process with `ctx_execute`/`ctx_execute_file`
   (`intent` filtered). Never return full files, logs, SQL, result
