@@ -1,6 +1,6 @@
 ---
 name: coding
-description: Mandatory for programming work in any language, including reading or changing source, debugging, code review, tests, builds, linting, type checking, and code-oriented LSP use. Do not use for documentation-only or configuration-only work with no program logic.
+description: Mandatory for programming work in any language, including reading or changing source, debugging, code review, tests, builds, linting, type checking, porting or refactoring code between frameworks or languages, and code-oriented LSP use. Do not use for documentation-only or configuration-only work with no program logic.
 ---
 
 # Coding
@@ -10,7 +10,7 @@ Load this skill before any code-facing tool. Keep it active for the task. Read
 
 ## Simplicity
 
-Implement the stated requirement as directly and simply as possible. Treat the task as the complete specification unless the repository provides concrete evidence otherwise.
+Code is not free. Every line is a liability and a potential failure point — conditionals especially, since each one is a branch that must be individually understood, tested, and kept correct. Implement the stated requirement as directly and simply as possible, for a human reviewer and debugger, not for an agent. Treat the task as the complete specification unless the repository provides concrete evidence otherwise.
 
 Before adding code, check in order:
 
@@ -20,33 +20,27 @@ Before adding code, check in order:
 4. Does an installed dependency solve it?
 5. Only then add something new.
 
-Additional logic requires evidence that you check up to 1-4 before you settled on 5, not imagination. Requirements, call sites, tests, established repository conventions, and observed runtime conditions are evidence. Hypothetical callers, misuse, edge cases, or future requirements are not.
+Additional logic requires evidence that you checked 1-4 before settling on 5, not imagination. Requirements, call sites, tests, this repository's established conventions, and observed runtime conditions are evidence. Hypothetical callers, misuse, edge cases, future requirements, and general framework or industry idiom you were trained on are not evidence — even when the destination framework's own documentation or tutorials treat them as standard — unless they are explicitly requested or already present in this repository.
 
 Unless explicitly required:
 
 - Do not add validation, guards, fallbacks, retries, compatibility code, configuration, extension points, wrappers, or generality.
-- Trust invariants guaranteed by construction. Do not guard against unreachable states.
+- Trust invariants guaranteed by construction — a schema field's declared nullability, a type signature, a database constraint, or validation already performed upstream all guarantee a property without needing to be re-checked. Do not guard against unreachable states.
 - Do not create an abstraction for a single concrete implementation without my approval.
 
-If two implementations satisfy the requirement, prefer the one with fewer concepts, branches, files, and lines. Deleting unnecessary code is preferred.
+If two implementations satisfy the requirement, prefer the one with fewer concepts, branches, files, and lines — do not express in 1000 lines what can be expressed in 10. Deleting unnecessary code is preferred.
 
 Even if a bug is identified, do not first assume the code is missing logic and add more code to cater for a particular case. Identify if the bug is in the existing logic and favour amending the existing logic instead of adding more logic to cover bugs.
 
-## Locality & Abstraction
-
-Prefer code that can be understood and debugged at the call site. Five obvious lines inline are usually better than a five-line helper used once.
-
-Extract a helper only when logic is genuinely reused, its name materially improves understanding, or leaving it inline makes the containing function difficult to follow.
-
-Do not introduce interfaces, factories, strategies, adapters, base classes, configuration objects, or similar abstractions for theoretical reuse. "Clean code", separation of concerns, testability, and possible future requirements are not sufficient reasons.
-
-A small amount of obvious duplication is preferable to abstraction that increases cognitive load. The cleanest code is the easiest to debug not the one that looks the most engineered.
-
-Examples:
+Do not add handling for established invariants to protect against things that cannot materialise in practice, like:
 
 - Code running `SELECT` queries does not need protection against `DELETE`.
 - A collection known to be non-empty does not need an empty guard.
-- An established invariant does not need repeated validation.
+- An established invariant does not need repeated validation — a schema field declared non-nullable, a type marked non-optional, or a database `NOT NULL` constraint does not need an `if x is not None` check before use.
+
+## Style
+
+Once logic is justified under Simplicity, express it plainly:
 
 - Use descriptive names and avoid unclear abbreviations. Avoid `item` when a parameter is a `table_name` or `agg` when an aggregate is `minTimestamp`.
 - Prefer explicit intermediate variables when they aid debugging.
@@ -58,9 +52,28 @@ Examples:
 - Group and space the lines. Put related lines together. Order them the way they run. Add blank lines between steps. Keep one idea per line. When a function has 3+ distinct checks, use brief `//` section headers to mark them and split compound conditions into explicit intermediates so each block reads at a glance.
 - Simplicity means low cognitive load, not minimum character count.
 - Create constants only when the name adds domain meaning or a value must stay synchronized across multiple places.
+
+## Reference Style
+
+If the user supplies their own code, a skeleton of how they think the code should look, or existing code that the task asks you to port, translate, or migrate, treat it as the style and behavior contract for the task, ahead of general language or framework idiom.
+
+- Preserve behavior line-for-line unless the task explicitly asks for a change.
+- Add only what the destination mechanically requires to run: a task decorator, an entry point, a changed function signature, a required dependency declaration.
+- Do not add retries, callbacks, alerting, structured logging, config, validation, or defensive error handling that was not in the source — even when it is standard in the destination's own documentation or examples — unless the source already had it or the task explicitly requests it.
+- If a destination constraint forces a genuine behavior change (for example, a size limit on data passed between steps), name the constraint and make the minimal accommodation for it. Do not use it as license to add unrelated hardening.
+
+## Comments
+
 - Add comments only for stable, non-obvious reasoning: why a decision exists, why an obvious alternative failed, or context another developer could not infer from the code.
 - Do not comment on control flow, values, types, or behavior already expressed by the code; those comments drift.
 - Update or remove comments and docstrings in the same change when their behavior, assumptions, or constraints change.
+
+## Locality & Abstraction
+
+- Prefer code that can be understood and debugged at the call site. Five obvious lines inline are usually better than a five-line helper used once.
+- Extract a helper only when logic is genuinely reused, its name materially improves understanding, or leaving it inline makes the containing function difficult to follow.
+- Do not introduce interfaces, factories, strategies, adapters, base classes, configuration objects, or similar abstractions for theoretical reuse. "Clean code", separation of concerns, testability, and possible future requirements are not sufficient reasons.
+- A small amount of obvious duplication is preferable to abstraction that increases cognitive load. The cleanest code is the easiest to debug not the one that looks the most engineered.
 
 ## Exceptions
 
@@ -74,7 +87,7 @@ Use normal conditionals for expected control flow. Idiomatic EAFP is fine when i
 
 Do not create or modify tests unless explicitly requested or approved.
 
-Each test must validate one observable behavior with a plausible failure path, derive expectations from the specification rather than the implementation, and protect against a realistic regression.
+Each test must validate one observable behavior with a plausible failure path, derive expectations from the specification rather than the implementation, and protect against a realistic regression. In this way, a condition in the code is either a case that can materialise in reality and should be protected by tests, or otherwise it cannot materialise in reality and hence it should be removed and not covered by a test to add coverage.
 
 Use Arrange-Act-Assert. Do not test impossible behavior, language/framework behavior, trivial getters/setters, constants, or wiring merely for coverage.
 
@@ -135,6 +148,12 @@ When a language server is available for the language being edited, use it for ty
 
 If no linter exists, say so and suggest an appropriate one.
 
-Before finishing, remove any new helper, branch, guard, abstraction, parameter,
-exception handler, fallback, comment, or dependency unsupported by a requirement
-or repository evidence.
+## Final Audit
+
+Before presenting the diff, reread it once as a reviewer rather than its author.
+
+- Every helper, branch, guard, abstraction, parameter, exception handler, retry, callback, default value, log statement, comment, and dependency must trace to a requirement, a call site, a test, this repository's convention, or an observed failure — not to what the destination framework typically looks like.
+- If the task was a port or translation, confirm nothing was added beyond what the destination mechanically requires.
+- If the user supplied their own code as an example, confirm the result matches its style rather than general idiom.
+
+Remove anything that fails this check.
