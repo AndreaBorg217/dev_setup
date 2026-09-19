@@ -10,7 +10,8 @@ input=$(cat)
 command=$(echo "$input" | jq -r '.tool_input.command // empty')
 [ -z "$command" ] && exit 0
 
-# Skip piped commands (cat file | grep) — those are targeted reads
+# Skip piped commands (cat file | grep) — those are targeted reads.
+# This is intentional Shunt behavior; Context Mode handles broad multi-step extraction.
 echo "$command" | grep -qE '\|' && exit 0
 
 # Skip redirections (cat file > out) — not a read-into-context operation
@@ -34,7 +35,11 @@ fi
 
 lines=$(wc -l < "$file_path" 2>/dev/null | tr -d ' ' || echo "0")
 if [ "$lines" -gt "$MIN_LINES" ]; then
-  echo "{\"decision\": \"block\", \"reason\": \"File is ${lines} lines (threshold: ${MIN_LINES}). Use the /shunt-bulk-reader skill or Haiku subagent instead of cat/head/tail. Piped commands (cat file | grep) pass through as targeted reads.\"}"
+  # Local compatibility change: current Claude Code PreToolUse hooks require
+  # hookSpecificOutput.permissionDecision. Spotify's legacy decision:block is ignored.
+  # Keep the upstream command matching above unchanged; only translate its block response.
+  reason="File is ${lines} lines (threshold: ${MIN_LINES}). Use the /shunt-bulk-reader skill or Haiku subagent instead of cat/head/tail. Piped commands (cat file | grep) pass through as targeted reads."
+  jq -n --arg reason "$reason" '{hookSpecificOutput: {hookEventName: "PreToolUse", permissionDecision: "deny", permissionDecisionReason: $reason}}'
 else
   exit 0
 fi

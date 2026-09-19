@@ -26,6 +26,18 @@ SOURCE_SUFFIXES = {
     ".sh", ".sql", ".swift", ".ts", ".tsx", ".zsh",
 }
 SOURCE_NAMES = {"dockerfile", "makefile", "rakefile"}
+READ_ONLY_MCP_ACTIONS = (
+    "batch_execute",
+    "execute",
+    "execute_file",
+    "fetch",
+    "fetch_and_index",
+    "get",
+    "list",
+    "query",
+    "run_query",
+    "search",
+)
 GIT_COMMAND = re.compile(r"(?:^|[;&|]\s*)git\b", re.IGNORECASE)
 SEARCH_COMMAND = re.compile(
     r"(?:^|[;&|]\s*)(?:fd|find|grep|head|ls|rg|sed|stat|tail|tree|wc)\b"
@@ -68,6 +80,7 @@ class Thresholds:
         large_shunt_result_bytes: int = 6_000,
         continuation_calls: int = 2,
         tool_errors: int = 10,
+        missed_delegation_calls: int = 8,
     ) -> None:
         self.large_file_lines = large_file_lines
         self.oversized_tool_bytes = oversized_tool_bytes
@@ -89,6 +102,7 @@ class Thresholds:
         self.large_shunt_result_bytes = large_shunt_result_bytes
         self.continuation_calls = continuation_calls
         self.tool_errors = tool_errors
+        self.missed_delegation_calls = missed_delegation_calls
 
 
 def byte_size(value: Any) -> int:
@@ -566,6 +580,33 @@ def repo_search_request(request: dict[str, Any]) -> bool:
     )
 
 
+def collection_family(call: dict[str, Any]) -> str | None:
+    """Classify likely read-only collection without retaining inputs or results."""
+    name = call["name"]
+    if name in REPO_SEARCH_TOOLS or broad_read(call) or inspection_bash(call):
+        return "repository"
+    if name == "ToolSearch":
+        return "tool discovery"
+    if name in {"WebFetch", "WebSearch"}:
+        return "external sources"
+    if name.startswith("mcp__codegraph__"):
+        return "repository"
+    if not name.startswith("mcp__"):
+        return None
+    action = name.rsplit("__", 1)[-1].lower()
+    if action.startswith("ctx_"):
+        action = action.removeprefix("ctx_")
+    if action.startswith(READ_ONLY_MCP_ACTIONS):
+        return "data or external sources"
+    return None
+
+
+def is_context_mode_collection(call: dict[str, Any]) -> bool:
+    """Return whether a collection result stayed in the Context Mode sandbox."""
+    name = call["name"].lower()
+    return "context-mode" in name and name.rsplit("__", 1)[-1].startswith("ctx_")
+
+
 def validation_command_kind(call: dict[str, Any]) -> str | None:
     """Classify common local build/test commands without retaining command text."""
     if call["name"] != "Bash" or search_bash(call):
@@ -950,6 +991,32 @@ def analyze(
             )
         )
 
+    agent_calls = [call for call in calls if call["name"] == "Agent"]
+    main_collection = [
+        call
+        for call in calls
+        if (
+            call["trace"] == 0
+            and collection_family(call) is not None
+            and not is_context_mode_collection(call)
+        )
+    ]
+    if not agent_calls and len(main_collection) >= thresholds.missed_delegation_calls:
+        families = collections.Counter(
+            collection_family(call) for call in main_collection
+        )
+        warnings.append(
+            warning(
+                "missed_delegation",
+                f"Main trace performed {len(main_collection)} direct collection call(s) without an Agent dispatch",
+                "Use Context Mode for compact main-thread extraction, or delegate bounded read-only collection before loading its output into the main trace.",
+                calls=len(main_collection),
+                main_requests=sum(request["trace"] == 0 for request in requests),
+                tool_families=dict(sorted(families.items())),
+                heuristic=True,
+            )
+        )
+
     expensive = [
         request
         for request in requests
@@ -1222,7 +1289,6 @@ def analyze(
         effective_request_model(request, resolved_models) for request in requests
     )
     tools = collections.Counter(call["name"] for call in calls)
-    agent_calls = [call for call in calls if call["name"] == "Agent"]
     agent_dispatches = {
         "subagent_types": dict(sorted(collections.Counter(
             str(call["input"].get("subagent_type") or "<unset>") for call in agent_calls
@@ -1311,6 +1377,7 @@ def render_text(report: dict[str, Any]) -> str:
             "estimated_avoidable_tokens",
             "estimated_context_tokens",
             "requests",
+            "main_requests",
             "calls",
             "traces",
             "max_requests",
@@ -1327,6 +1394,8 @@ def render_text(report: dict[str, Any]) -> str:
                 lines.append(f"   {label}: {value:,}" if isinstance(value, int) else f"   {label}: {value}")
         if "files" in evidence:
             lines.append(f"   files: {', '.join(evidence['files'])}")
+        if "tool_families" in evidence:
+            lines.append(f"   tool families: {evidence['tool_families']}")
         for key in ("requested_tiers", "resolved_runtime_tiers", "association"):
             if key in evidence:
                 lines.append(f"   {key.replace('_', ' ')}: {evidence[key]}")
@@ -1455,6 +1524,7 @@ def add_threshold_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--chars-per-token", type=float, default=4.0)
     parser.add_argument("--high-context-tokens", type=int, default=300_000)
     parser.add_argument("--high-context-requests", type=int, default=3)
+    parser.add_argument("--missed-delegation-calls", type=int, default=8)
 
 
 def add_review_arguments(parser: argparse.ArgumentParser) -> None:
@@ -1468,16 +1538,17 @@ def add_review_arguments(parser: argparse.ArgumentParser) -> None:
 
 def thresholds_from_args(args: argparse.Namespace) -> Thresholds:
     return Thresholds(
-        args.large_file_lines,
-        args.oversized_tool_bytes,
-        args.repeat_reads,
-        args.expensive_search_turns,
-        args.bash_calls,
-        args.large_skill_tokens,
-        args.skill_output_ratio,
-        args.chars_per_token,
-        args.high_context_tokens,
-        args.high_context_requests,
+        large_file_lines=args.large_file_lines,
+        oversized_tool_bytes=args.oversized_tool_bytes,
+        repeat_reads=args.repeat_reads,
+        expensive_search_turns=args.expensive_search_turns,
+        bash_calls=args.bash_calls,
+        large_skill_tokens=args.large_skill_tokens,
+        skill_output_ratio=args.skill_output_ratio,
+        chars_per_token=args.chars_per_token,
+        high_context_tokens=args.high_context_tokens,
+        high_context_requests=args.high_context_requests,
+        missed_delegation_calls=args.missed_delegation_calls,
     )
 
 

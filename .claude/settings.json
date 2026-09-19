@@ -98,11 +98,24 @@
   "hooks": {
     "PreToolUse": [
       {
+        "matcher": "ExitPlanMode",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ~/.claude/hooks/plan-exit-advisory.py"
+          }
+        ]
+      },
+      {
         "matcher": "Task|Agent",
         "hooks": [
           {
             "type": "command",
             "command": "bash ~/.claude/hooks/block-fork"
+          },
+          {
+            "type": "command",
+            "command": "python3 ~/.claude/hooks/advise-agent-routing.py"
           }
         ]
       },
@@ -130,6 +143,16 @@
           {
             "type": "command",
             "command": "bash ~/.claude/hooks/check-bash-read"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ~/.claude/hooks/warn-feature-branch-baseline.py"
           }
         ]
       }

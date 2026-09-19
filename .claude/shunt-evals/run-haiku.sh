@@ -18,7 +18,8 @@ setup_fixtures() {
   for ((i=0;i<count;i++)); do
     local fixture; fixture=$(jq -r ".evals[$i].fixture" "$evals_file"); [ "$fixture" = "null" ] && continue
     local lines; lines=$(jq -r ".evals[$i].fixture.lines" "$evals_file")
-    local input_path; input_path=$(jq -r ".evals[$i].input.tool_input.file_path // empty" "$evals_file")
+    local input_path
+    input_path=$(jq -r ".evals[$i].input.tool_input.file_path // empty" "$evals_file")
     if [ -z "$input_path" ]; then input_path=$(jq -r ".evals[$i].input.tool_input.command // empty" "$evals_file" | sed -E 's/^(cat|head|tail|less|more) +(-[^ ]+ +)*//' | sed 's/ .*//' | tr -d '"'"'")
     fi
     input_path=$(echo "$input_path" | sed "s|{{FIXTURES}}|$FIXTURES|")
@@ -32,7 +33,9 @@ run_eval() {
     local env_cmd=""; while IFS='=' read -r key val; do env_cmd="$env_cmd $key=$val"; done < <(echo "$env_json" | jq -r 'to_entries[] | "\(.key)=\(.value)"')
     result=$(echo "$input" | env $env_cmd bash "$hook" 2>/dev/null)
   else result=$(echo "$input" | bash "$hook" 2>/dev/null); fi
-  actual=$(echo "$result" | jq -r '.decision')
+  if [ -z "$result" ]; then actual="allow"; else actual=$(printf '%s' "$result" | jq -r '.hookSpecificOutput.permissionDecision // .decision // "allow"' 2>/dev/null || printf 'allow'); fi
+  # Local compatibility normalization: Spotify's "block" is Claude Code's "deny".
+  [ "$actual" = "deny" ] && actual="block"
   if [ "$actual" = "$expected" ]; then printf "  \033[32mPASS\033[0m  %-30s %s\n" "$name" "$reason"; PASSED=$((PASSED+1)); else printf "  \033[31mFAIL\033[0m  %-30s expected=%s got=%s\n" "$name" "$expected" "$actual"; FAILED=$((FAILED+1)); fi
 }
 run_suite() {

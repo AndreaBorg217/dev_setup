@@ -647,6 +647,81 @@ class SessionEfficiencyTests(unittest.TestCase):
 
         self.assertNotIn("unbounded_subagent", categories)
 
+    def test_sustained_main_collection_without_agent_is_missed_delegation(self):
+        fixture = TranscriptFixture(self.transcript, self.root)
+        for index in range(8):
+            fixture.tool(
+                f"query-{index}",
+                f"query-tool-{index}",
+                "mcp__warehouse__run_query",
+                {"query": "private"},
+            )
+            fixture.result(f"query-tool-{index}", "bounded result")
+        fixture.write()
+
+        report = reviewer.analyze(reviewer.parse_transcripts([self.transcript]))
+        missed = next(
+            item
+            for item in report["warnings"]
+            if item["category"] == "missed_delegation"
+        )
+
+        self.assertEqual(8, missed["evidence"]["calls"])
+        self.assertEqual(
+            {"data or external sources": 8},
+            missed["evidence"]["tool_families"],
+        )
+        self.assertNotIn("private", json.dumps(missed))
+
+    def test_agent_dispatch_makes_main_collection_neutral(self):
+        fixture = TranscriptFixture(self.transcript, self.root)
+        fixture.tool(
+            "agent",
+            "agent-tool",
+            "Agent",
+            {"subagent_type": "explorer", "model": "haiku", "prompt": "private"},
+        )
+        fixture.result("agent-tool", "bounded result")
+        for index in range(8):
+            fixture.tool(
+                f"query-{index}",
+                f"query-tool-{index}",
+                "mcp__warehouse__run_query",
+                {"query": "private"},
+            )
+            fixture.result(f"query-tool-{index}", "bounded result")
+        fixture.write()
+
+        categories = {
+            item["category"]
+            for item in reviewer.analyze(
+                reviewer.parse_transcripts([self.transcript])
+            )["warnings"]
+        }
+
+        self.assertNotIn("missed_delegation", categories)
+
+    def test_context_mode_collection_in_main_trace_is_not_missed_delegation(self):
+        fixture = TranscriptFixture(self.transcript, self.root)
+        for index in range(8):
+            fixture.tool(
+                f"context-{index}",
+                f"context-tool-{index}",
+                "mcp__plugin_context-mode_context-mode__ctx_execute",
+                {"language": "shell", "code": "private"},
+            )
+            fixture.result(f"context-tool-{index}", "bounded result")
+        fixture.write()
+
+        categories = {
+            item["category"]
+            for item in reviewer.analyze(
+                reviewer.parse_transcripts([self.transcript])
+            )["warnings"]
+        }
+
+        self.assertNotIn("missed_delegation", categories)
+
     def test_skill_adherence_is_checked_per_trace(self):
         airflow_source = self.root / "airflow" / "dags" / "job.py"
         fixture = TranscriptFixture(self.transcript, self.root)

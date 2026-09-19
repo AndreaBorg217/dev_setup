@@ -41,7 +41,6 @@ setup_fixtures() {
 
   local count
   count=$(jq '.evals | length' "$evals_file")
-
   for ((i = 0; i < count; i++)); do
     local fixture
     fixture=$(jq -r ".evals[$i].fixture" "$evals_file")
@@ -81,7 +80,15 @@ run_eval() {
   else
     result=$(echo "$input" | bash "$hook" 2>/dev/null)
   fi
-  actual=$(echo "$result" | jq -r '.decision')
+  if [ -z "$result" ]; then
+    actual="allow"
+  else
+    actual=$(printf '%s' "$result" | jq -r '.hookSpecificOutput.permissionDecision // .decision // "allow"' 2>/dev/null || printf 'allow')
+    [ -z "$actual" ] || [ "$actual" = "null" ] && actual="allow"
+  fi
+  # Local compatibility normalization: Spotify labels a rejected hook "block";
+  # current Claude Code calls the equivalent decision "deny".
+  [ "$actual" = "deny" ] && actual="block"
 
   if [ "$actual" = "$expected" ]; then
     printf "  \033[32mPASS\033[0m  %-30s %s\n" "$name" "$reason"

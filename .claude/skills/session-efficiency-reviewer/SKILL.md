@@ -57,6 +57,10 @@ general-purpose model. Use `--main-only` when subagent traces must be excluded.
 - Treat high subagent volume and continuations to an existing owner as neutral.
   Report subagent waste only when the transcript demonstrates duplicated file
   access, repeated context, incorrect routing, or another measured defect.
+- Report sustained direct read-only collection in the main trace with no Agent
+  dispatch as missed delegation. Treat Context Mode sandbox calls as successful
+  compact extraction, not missed delegation. Tool-name classification remains a
+  heuristic; do not infer intent or claim every individual call required a worker.
 - A file has one persistent owner for a task. A parent or second worker reading
   or changing the same file is an ownership violation; later questions should
   return to the existing owner and be batched there.
