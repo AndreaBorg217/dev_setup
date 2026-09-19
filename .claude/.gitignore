@@ -16,6 +16,7 @@
 !commands/**
 !hooks/
 !hooks/**
+hooks/context-mode-cache-heal.mjs
 hooks/__pycache__/
 hooks/**/*.py[cod]
 !output-styles/
