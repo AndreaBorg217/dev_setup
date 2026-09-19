@@ -243,7 +243,7 @@ not claim durable recovery until the Git desired state is reconciled.
 ## Approved live-resource patch
 
 `patch-resource` is an out-of-band live mutation. It can create GitOps drift and
-may be reverted by automated reconciliation. There is no dry-run flag, so show
+may be reverted by automated reconciliation; disable auto-sync before proceeding with a patch. There is no dry-run flag, so show
 the complete patch and exact target before requesting approval.
 
 For an explicitly approved merge patch:
