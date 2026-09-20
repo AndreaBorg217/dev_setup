@@ -24,14 +24,29 @@ source $ZSH/oh-my-zsh.sh
 # ============================================================================
 
 dev() {
+    local attach=0
+    if [[ "$1" == "-a" || "$1" == "--attach" ]]; then
+        attach=1
+        shift
+    fi
     local session_name="${1:-${PWD:t}}"
 
-    if ! tmux has-session -t "=$session_name" 2>/dev/null; then
-        tmux new-session -d -s "$session_name" -n dev -c "$PWD" "zsh -c 'nvim; exec zsh'"
-        tmux split-window -h -t "=$session_name:dev" -c "$PWD" "zsh -c 'claude; exec zsh'"
-        tmux split-window -v -t "=$session_name:dev.1" -c "$PWD"
-        tmux select-pane -t "=$session_name:dev.0"
+    if tmux has-session -t "=$session_name" 2>/dev/null; then
+        if (( attach )); then
+            if [[ -n "$TMUX" ]]; then
+                tmux switch-client -t "=$session_name"
+            else
+                tmux attach-session -t "=$session_name"
+            fi
+            return
+        fi
+        tmux kill-session -t "=$session_name"
     fi
+
+    tmux new-session -d -s "$session_name" -n dev -c "$PWD" "zsh -c 'nvim; exec zsh'"
+    tmux split-window -h -t "=$session_name:dev" -c "$PWD" "zsh -c 'claude; exec zsh'"
+    tmux split-window -v -t "=$session_name:dev.1" -c "$PWD"
+    tmux select-pane -t "=$session_name:dev.0"
 
     if [[ -n "$TMUX" ]]; then
         tmux switch-client -t "=$session_name"
