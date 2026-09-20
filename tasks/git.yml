@@ -19,7 +19,17 @@
     name:
       - git-delta
       - lazygit
-    state: present
+    state: latest
+  tags:
+    - "git"
+- name: Locate git-delta themes
+  ansible.builtin.command:
+    argv:
+      - brew
+      - --prefix
+      - git-delta
+  register: git_delta_prefix
+  changed_when: false
   tags:
     - "git"
 - name: Configure global Git defaults
@@ -28,43 +38,66 @@
     scope: global
     value: "{{ item.value }}"
   loop:
+    - name: core.editor
+      value: nvim
     - name: core.pager
       value: delta
     - name: interactive.diffFilter
       value: delta --color-only
+    - name: include.path
+      value: "{{ git_delta_prefix.stdout }}/share/git-delta/themes.gitconfig"
     - name: delta.features
-      value: tokyonight
-    - name: delta.tokyonight.dark
+      value: arctic-fox
+    - name: delta.navigate
       value: "true"
-    - name: delta.tokyonight.minus-style
-      value: "syntax #3b2a3c"
-    - name: delta.tokyonight.minus-emph-style
-      value: "syntax #f7768e bold ul"
-    - name: delta.tokyonight.plus-style
-      value: "syntax #243b36"
-    - name: delta.tokyonight.plus-emph-style
-      value: "syntax #9ece6a bold ul"
-    - name: delta.tokyonight.zero-style
-      value: "syntax #565f89"
-    - name: delta.tokyonight.file-style
-      value: "bold #7aa2f7"
-    - name: delta.tokyonight.hunk-header-style
-      value: file line-number syntax
-    - name: delta.tokyonight.line-numbers
-      value: "true"
-    - name: delta.tokyonight.line-numbers-minus-style
-      value: "#f7768e"
-    - name: delta.tokyonight.line-numbers-plus-style
-      value: "#9ece6a"
-    - name: delta.tokyonight.line-numbers-zero-style
-      value: "#565f89"
     - name: diff.algorithm
       value: histogram
+    - name: init.defaultBranch
+      value: main
     - name: pull.rebase
+      value: "true"
+    - name: push.autoSetupRemote
+      value: "true"
+    - name: branch.sort
+      value: -committerdate
+    - name: checkout.defaultRemote
+      value: origin
+    - name: fetch.prune
       value: "true"
     - name: rerere.enabled
       value: "true"
     - name: rerere.autoupdate
       value: "true"
+  tags:
+    - "git"
+- name: Locate Lazygit configuration directory
+  ansible.builtin.command:
+    argv:
+      - lazygit
+      - --print-config-dir
+  register: lazygit_config_directory
+  changed_when: false
+  tags:
+    - "git"
+- name: Create Lazygit configuration directory
+  ansible.builtin.file:
+    path: "{{ lazygit_config_directory.stdout }}"
+    state: directory
+    mode: "0755"
+  tags:
+    - "git"
+- name: Configure Lazygit delta renderer
+  ansible.builtin.copy:
+    content: |
+      git:
+        diffRenderers:
+          - type: stdinFilter
+            name: delta
+            colorArg: always
+            command: delta --paging=never --features=arctic-fox
+          - type: rawGit
+            name: raw
+    dest: "{{ lazygit_config_directory.stdout }}/config.yml"
+    mode: "0644"
   tags:
     - "git"
