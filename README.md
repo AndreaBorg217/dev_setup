@@ -313,4 +313,23 @@ Go to [https://claude.ai/code/routines](https://claude.ai/code/routines) and cre
 
 - [Go DAP](https://www.youtube.com/watch?v=i04sSQjd-qo)
 
+[Asfar Ali](https://www.tiktok.com/@s4.codes)
+
+[Sam Natale](https://www.youtube.com/@sam_natale)
+
+- [Git config](https://www.youtube.com/watch?v=KY4RDCpPHI0)
+
+[Ron Minsky](https://www.youtube.com/@antithesis-hq)
+
+- [Reliable software in the age of agents](https://youtu.be/rUYP4C29yCw?si=IvFrZKQVBHBkFHo)
+
+[Mario Zechner](https://www.youtube.com/@wordmandotdev)
+
+- [Code Isn't Free](https://youtu.be/GhjU-KvXtT0?si=HcqFrz6qb8DhHxWc)
+- [Building pi in a World of Slop](https://youtu.be/RjfbvDXpFls?si=UkZmm1oTJE5kJEru)
+
+[Eric Zakariasson](https://github.com/cursor/plugins/tree/main/cursor-team-kit)
+
+- [Cursor Team Kit](https://github.com/cursor/plugins/tree/main/cursor-team-kit)
+
 Terminal font created by [romaktv](https://github.com/romkatv/powerlevel10k-media/blob/master/MesloLGS%20NF%20Regular.ttf)
