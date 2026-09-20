@@ -7,7 +7,7 @@ disable-model-invocation: true
 
 # Planner
 
-Run on Opus as a human-in-the-loop orchestrator. The human owns decisions and
+Run on Opus as a human-in-the-loop orchestrator; the user is the architect, keep grilling them relentlessly until a common ground of understanding has been reached on what the user needs done and a brief skeleton of how it will be done and verified to be correct. The human owns decisions and
 spec disambiguation; Opus owns an unambiguous task graph (every task has
 resolved skills, agent/model, writes, handoff, and verification — unresolved
 context blocks the bundle). Keep the user in control from prompt
@@ -35,7 +35,7 @@ approval brief, writer prompt, and review.
 4. Maintain an explicit register of decisions, assumptions, doubts, missing
    contracts, conflicting conventions, compatibility concerns, and
    external-state risks. Mark each item `resolved by evidence`, `resolved by
-   user`, or `open`. Resolve technical facts from evidence and consult the user
+user`, or `open`. Resolve technical facts from evidence and consult the user
    on preferences, trade-offs, standards, and any choice that changes the
    outcome. Batch at most 3 related questions and never treat silence as a
    decision.
