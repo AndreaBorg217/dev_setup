@@ -27,6 +27,7 @@ Unless explicitly required:
 - Do not add validation, guards, fallbacks, retries, compatibility code, configuration, extension points, wrappers, or generality.
 - Trust invariants guaranteed by construction — a schema field's declared nullability, a type signature, a database constraint, or validation already performed upstream all guarantee a property without needing to be re-checked. Do not guard against unreachable states.
 - Do not create an abstraction for a single concrete implementation without my approval.
+- When working on a function, if it would take 2+ fields that come from the same object and are used as a cohesive unit (not merely co-located), take the object itself as the parameter instead of destructuring it at the call site.
 
 If two implementations satisfy the requirement, prefer the one with fewer concepts, branches, files, and lines — do not express in 1000 lines what can be expressed in 10. Deleting unnecessary code is preferred.
 
@@ -44,6 +45,7 @@ Once logic is justified under Simplicity, express it plainly:
 
 - Use descriptive names and avoid unclear abbreviations. Avoid `item` when a parameter is a `table_name` or `agg` when an aggregate is `minTimestamp`.
 - Prefer explicit intermediate variables when they aid debugging.
+- Even for languages that don't require explicit types like Python, also reach for type hints or the linguistic equivalent; lean into types as an initial check for correctness.
 - Prefer simple loops over `map`, `reduce`, dense comprehensions, or method chains when easier to follow.
 - Avoid clever reflection, dynamic dispatch, or language-specific tricks unless they materially simplify the code.
 - Prefer linear conditionals and early returns over nesting.
