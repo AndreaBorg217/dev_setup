@@ -30,16 +30,32 @@ if echo "$command" | grep -qE '^(cat|head|tail|less|more) '; then
   done
 fi
 
-[ -z "$file_path" ] && exit 0
-[ ! -f "$file_path" ] && exit 0
-
-lines=$(wc -l < "$file_path" 2>/dev/null | tr -d ' ' || echo "0")
-if [ "$lines" -gt "$MIN_LINES" ]; then
-  # Local compatibility change: current Claude Code PreToolUse hooks require
-  # hookSpecificOutput.permissionDecision. Spotify's legacy decision:block is ignored.
-  # Keep the upstream command matching above unchanged; only translate its block response.
-  reason="File is ${lines} lines (threshold: ${MIN_LINES}). Use the /shunt-bulk-reader skill or Haiku subagent instead of cat/head/tail. Piped commands (cat file | grep) pass through as targeted reads."
-  jq -n --arg reason "$reason" '{hookSpecificOutput: {hookEventName: "PreToolUse", permissionDecision: "deny", permissionDecisionReason: $reason}}'
-else
-  exit 0
+if [ -n "$file_path" ] && [ -f "$file_path" ]; then
+  lines=$(wc -l < "$file_path" 2>/dev/null | tr -d ' ' || echo "0")
+  if [ "$lines" -gt "$MIN_LINES" ]; then
+    # Local compatibility change: current Claude Code PreToolUse hooks require
+    # hookSpecificOutput.permissionDecision. Spotify's legacy decision:block is ignored.
+    # Keep the upstream command matching above unchanged; only translate its block response.
+    reason="File is ${lines} lines (threshold: ${MIN_LINES}). Use the /shunt-bulk-reader skill or Haiku subagent instead of cat/head/tail. Piped commands (cat file | grep) pass through as targeted reads."
+    jq -n --arg reason "$reason" '{hookSpecificOutput: {hookEventName: "PreToolUse", permissionDecision: "deny", permissionDecisionReason: $reason}}'
+    exit 0
+  fi
 fi
+
+# Unscoped grep -r / find / rg: these are the raw repository-search invocations
+# the session-efficiency analyzer flags as expensive_model_repo_search
+# (SEARCH_COMMAND matches bare grep/find/rg regardless of scope) and, when they
+# return the whole repo, as aggregate/oversized tool output. A result-limiting
+# flag (-m/--max-count/-l for grep, -maxdepth for find) means the command is
+# already targeted, same as the pipe/redirect exemption above.
+if echo "$command" | grep -qE '(^|[;&|]\s*)(grep\s+(-[A-Za-z]*r[A-Za-z]*\s+|--recursive\s+)|find\s|rg\s)'; then
+  scoped=0
+  echo "$command" | grep -qE '(^|\s)-[A-Za-z]*m[0-9]*[A-Za-z]*|(^|\s)-[A-Za-z]*l[A-Za-z]*(\s|$)|--max-count(=|\s)|-maxdepth\s' && scoped=1
+  if [ "$scoped" -eq 0 ]; then
+    reason="Unscoped repository search (grep -r/find/rg without a result-limiting flag). Use the /shunt-bulk-reader skill or a Haiku explorer subagent for repo-wide search, or add -m/--max-count/-l (grep) or -maxdepth (find) to scope it."
+    jq -n --arg reason "$reason" '{hookSpecificOutput: {hookEventName: "PreToolUse", permissionDecision: "deny", permissionDecisionReason: $reason}}'
+    exit 0
+  fi
+fi
+
+exit 0

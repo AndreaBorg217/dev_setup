@@ -1,7 +1,7 @@
 ---
 name: session-efficiency-reviewer
 description: Audits Claude Code JSONL sessions for evidence-backed context waste, file-ownership duplication, skill adherence, and model routing. Use for session-cost or agent-efficiency reviews, not code-correctness reviews.
-disable-model-invocation: true
+when_to_use: "session_efficiency.py, JSONL transcript, context waste, file-ownership duplication, skill adherence, model routing, review --latest, review-day, list --mentions-path, mine-preferences, correction marker, preference marker, confidence tier, proposed_artifact, resolvedModel, subagent trace, repeated reads, broad build/test commands, token estimate, Shunt receipt, --main-only, --json, --project-root, --transcript-root"
 ---
 
 # Session efficiency reviewer
@@ -46,6 +46,43 @@ Repeat `--project-root` to restrict the report to selected repositories:
 python3 "${CLAUDE_SKILL_DIR}/scripts/session_efficiency.py" review-day \
   --date 2026-09-17 --timezone Europe/Malta
 ```
+
+Mine the last N days (default 7) of your own main-session transcripts for
+user-authored correction and preference markers — explicit corrections
+("no, not that", "don't do X", "stop doing X", "that's not what I asked"),
+explicit preferences ("I prefer X", "always do X", "never do X"), and the
+same marker repeated across sessions. Only fixed marker categories, a single
+redacted subject word, counts, a confidence tier, and a proposed artifact
+type are emitted — never quoted or reconstructable turn text:
+
+```bash
+python3 "${CLAUDE_SKILL_DIR}/scripts/session_efficiency.py" mine-preferences \
+  --project-root "$PWD" --days 7
+```
+
+Add `--json` for machine-readable output, or `--transcript-root` to point at
+a non-default transcript directory. Each finding reports
+`category:subtype (subject)`, `occurrences`, `sessions`, a `confidence` tier,
+and one `proposed_artifact`:
+
+- `confidence`: `strong` (an explicit workflow-changing correction, or the
+  same marker repeated across sessions), `medium` (the same tool/model/
+  validation-related preference repeated across sessions), `weak` (a single
+  ambiguous instance with no repetition), `contradicted` (conflicting
+  `always`/`never`/`i_prefer` evidence for the same subject).
+- `proposed_artifact`: `skill` (a recurring multi-step preference), `rule`
+  (a broad standing correction or `always`/`never` statement), `hook` (a
+  mechanically-enforceable, repeatedly-violated constraint on a named
+  tool/model/validation step — a candidate for a new blocking/advisory
+  PreToolUse hook, following this repo's `advise-agent-routing.py`,
+  `require-coding-skill.py`, and `require-git-skill.py` precedent),
+  `workflow doc` (situational context worth recording but not a standing
+  rule), or `none` (contradicted or weak evidence — do not force an
+  artifact).
+
+This mode remains user-invocation-only, per `disable-model-invocation` above;
+present findings and let the user decide whether to draft the proposed
+artifact.
 
 The script uses Python's standard library and reads the transcript only inside
 the process. Do not pre-process a transcript with `cat`, `jq`, `Read`, or a

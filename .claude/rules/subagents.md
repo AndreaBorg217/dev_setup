@@ -37,6 +37,8 @@ judgement over returned evidence in the main thread.
 - Use Sonnet `builder` for source, test logic, configuration with semantic risk,
   debugging, and implementation-related diagnosis. Choose per task; writing a
   file alone does not require Sonnet.
+- Use Sonnet `reviewer` for thermo-nuclear-strength read-only code review of a
+  diff, file, symbol, or branch. It never implements or delegates.
 - Never use `WebSearch` or `WebFetch` in the main thread. Route external research
   through `explorer`.
 - Skill discovery is manual and on demand — planner's one bounded inventory at plan time is the only exception. Do not run a catalogue before a task

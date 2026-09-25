@@ -19,5 +19,9 @@ diagnostics. Run verification inside `ctx_execute` with an `intent` filter.
 Do not delegate edits, interpretation, or the task itself.
 If it needs a wider split, return the proposed split to the orchestrator.
 
+Before returning, run the task's approved targeted spec test(s) and report the
+exact command and result. Read each file once per task and reuse that content;
+do not re-read it.
+
 Return only status, commands or queries run, relevant evidence, changed paths,
 and the next action.

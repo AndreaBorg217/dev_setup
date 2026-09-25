@@ -1,6 +1,7 @@
 ---
 name: glab
 description: Manages GitLab via glab - MRs, issues, pipelines and API calls. Use when working with GitLab MRs, pipelines or discussions.
+when_to_use: "glab, glab mr, glab ci, GitLab API, REST, GraphQL, MR IID, source branch, target branch, pipeline, discussion, comment, reply, resolve discussion, reopen discussion, merge request description, MR template, merge, close MR, CI mutation, authenticated account, host, project"
 ---
 
 # GitLab with glab

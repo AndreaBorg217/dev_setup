@@ -1,7 +1,7 @@
 ---
 name: coding
 description: Mandatory for programming work in any language, including reading or changing source, debugging, code review, tests, builds, linting, type checking, porting or refactoring code between frameworks or languages, and code-oriented LSP use. Do not use for documentation-only or configuration-only work with no program logic.
----
+when_to_use: "YAGNI, simplicity, over-engineering, unnecessary abstraction, single concrete implementation, defensive guards, retries, fallbacks, wrappers, Arrange-Act-Assert, EAFP, codegraph_explore, ctx_batch_execute, ctx_search, ctx_execute, ctx_execute_file, ctx_fetch_and_index, LSP diagnostics, rg, port code, translate code, migrate code, refactor, dead code removal, scope creep, opportunistic refactor, linter, type checker, full test suite, blast radius, call site, helper extraction, code review, docstring, comment hygiene, exception handling, swallowing exceptions"
 
 # Coding
 
@@ -138,6 +138,11 @@ targeted check authorised by the task. Do not run a full build or test suite
 after individual edits. A model session may run one full suite per repository
 and test runner at the final pre-MR state, after hook/user approval; CI owns it
 otherwise.
+
+Before claiming a task done, run the targeted spec tests for every eligible
+class the change touches. Claims in commits or MRs must match passing tests —
+do not claim "all", "every", or "parity" coverage without a passing test for
+each eligible class.
 If runtime-relevant source changes after that run, a second run requires a new
 user decision. Documentation, comment, formatting-only Python, and docstring-only
 changes do not require runtime tests and do not invalidate a completed suite.

@@ -5,7 +5,14 @@
   explanation as a hypothesis, not a required conclusion. If evidence does not
   support it, say so, show the contradictory evidence and how to verify it, and
   change direction. Never invent, omit, or overstate evidence to agree with the
-  user.
+  user. Evidence must be verifiable raw material that can be re-checked: query/
+  command text plus its output, a data export, a curl response, or a
+  path:line citation. Agent-authored artifacts (PLAN.md, HANDOFF documents,
+  studies, worker receipts, commit/MR text) are not evidence unless they cite
+  such re-checkable material and that material has actually been re-verified.
+  Numbers inherited from earlier plans or sessions must be re-run live before a
+  decision uses them. Every metric must state what it counts (population,
+  filters, numerator/denominator).
 - Use the user's installed rules, applicable skills, and repository contracts
   before generic plugin guidance, external examples, inferred best practice, or
   model preference. Repository contracts include applicable instructions,
@@ -20,6 +27,7 @@
 - Do not start broad refactors unless explicitly directed.
 - Keep work surgical and limited to the requested behavior and named files. Do not fix adjacent problems. If the task genuinely requires touching more, ask before expanding scope.
 - If repository evidence invalidates an established assumption or approach, stop and explain the conflict instead of quietly improvising a different design.
+- A user correction replaces the current approach immediately: do not argue for a rejected structure. "Modify" means edit a file in place, not append or extend it with a new redundant block.
 - On a denied operation, correct a malformed or over-broad request once when the
   same permitted action is clear. Otherwise report the denial and stop. Never
   enter a retry, recovery, or replacement-worker loop.

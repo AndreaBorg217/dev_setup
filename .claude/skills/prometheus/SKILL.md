@@ -1,7 +1,7 @@
 ---
 name: prometheus
 description: Use when querying Prometheus for metrics — instant/range queries, PromQL, or discovering metric/label names.
----
+when_to_use: "Prometheus, PromQL, instant query, range query, /api/v1/query, /api/v1/query_range, /api/v1/label/__name__/values, /api/v1/label/<name>/values, metric discovery, label name, PROMETHEUS_URL, curl, jq, request timeout, high cardinality, fleet-wide metric, aggregate, Grafana panel, panel expression, byte metrics, GiB, GB, JVM memory, RSS, heap, committed heap, non-heap, buffer pools, container working set, RocksDB, Alertmanager, snapshot, delete series, config reload"
 
 # Prometheus
 
