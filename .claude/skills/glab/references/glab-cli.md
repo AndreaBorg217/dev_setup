@@ -40,7 +40,8 @@ GLAB_SOURCE_BRANCH="feature-branch"
 glab mr list \
   -R "$GLAB_PROJECT" \
   --source-branch "$GLAB_SOURCE_BRANCH" \
-  --output json
+  --output json \
+  | jq -c '.[] | {iid, title, source_branch}' | head -n 30
 ```
 
 Find MRs by author or search text:
@@ -48,23 +49,25 @@ Find MRs by author or search text:
 ```bash
 GLAB_PROJECT="group/project"
 GLAB_AUTHOR="username"
-glab mr list -R "$GLAB_PROJECT" --author "$GLAB_AUTHOR" --all
+glab mr list -R "$GLAB_PROJECT" --author "$GLAB_AUTHOR" --all | head -n 30
 ```
 
 ```bash
 GLAB_PROJECT="group/project"
 GLAB_SEARCH="search text"
-glab mr list -R "$GLAB_PROJECT" --search "$GLAB_SEARCH"
+glab mr list -R "$GLAB_PROJECT" --search "$GLAB_SEARCH" | head -n 30
 ```
 
-Inspect metadata, comments, structured fields, and the diff:
+Inspect metadata, comments, structured fields, and the diff. Keep every read
+capped (the hook denies raw `mr view --comments`, `mr diff`, and `api` output):
 
 ```bash
 GLAB_PROJECT="group/project"
 GLAB_MR_IID="123"
-glab mr view "$GLAB_MR_IID" -R "$GLAB_PROJECT" --comments
-glab mr view "$GLAB_MR_IID" -R "$GLAB_PROJECT" --output json
-glab mr diff "$GLAB_MR_IID" -R "$GLAB_PROJECT"
+glab mr view "$GLAB_MR_IID" -R "$GLAB_PROJECT" --comments | head -n 100
+glab mr view "$GLAB_MR_IID" -R "$GLAB_PROJECT" --output json \
+  | jq '{title, state, source_branch, target_branch, web_url}'
+glab mr diff "$GLAB_MR_IID" -R "$GLAB_PROJECT" | head -n 100
 ```
 
 ## Comments and discussions
@@ -128,9 +131,11 @@ List discussions or all notes:
 GLAB_PROJECT_ID="12345"
 GLAB_MR_IID="123"
 glab api --paginate \
-  "projects/$GLAB_PROJECT_ID/merge_requests/$GLAB_MR_IID/discussions"
+  "projects/$GLAB_PROJECT_ID/merge_requests/$GLAB_MR_IID/discussions" \
+  | jq -c . | head -n 50
 glab api --paginate \
-  "projects/$GLAB_PROJECT_ID/merge_requests/$GLAB_MR_IID/notes?per_page=100"
+  "projects/$GLAB_PROJECT_ID/merge_requests/$GLAB_MR_IID/notes?per_page=100" \
+  | jq -c . | head -n 50
 ```
 
 Reply to an existing discussion:
@@ -186,7 +191,7 @@ glab api graphql -f query='
 query {
   project(fullPath: "group/project") {
     mergeRequest(iid: "123") {
-      notes(first: 100) {
+      notes(first: 20) {
         pageInfo {
           hasNextPage
           endCursor
@@ -202,7 +207,7 @@ query {
 }'
 ```
 
-If `hasNextPage` is true, rerun the query with `notes(first: 100, after: "END_CURSOR")`, replacing `END_CURSOR` with the returned cursor. Continue until `hasNextPage` is false.
+If `hasNextPage` is true, rerun the query with `notes(first: 20, after: "END_CURSOR")`, replacing `END_CURSOR` with the returned cursor. Stop after 3 pages and report; continue only with explicit approval.
 
 ## Create or update an MR
 
@@ -281,7 +286,7 @@ glab ci get -R "$GLAB_PROJECT" --pipeline-id "$GLAB_PIPELINE_ID"
 ```bash
 GLAB_PROJECT="group/project"
 GLAB_JOB_ID="12345"
-glab ci trace "$GLAB_JOB_ID" -R "$GLAB_PROJECT"
+glab ci trace "$GLAB_JOB_ID" -R "$GLAB_PROJECT" | tail -n 100
 ```
 
 Use REST when exact pipeline, job, commit-status, or MR-commit JSON is needed:
@@ -289,21 +294,25 @@ Use REST when exact pipeline, job, commit-status, or MR-commit JSON is needed:
 ```bash
 GLAB_PROJECT_ID="12345"
 GLAB_MR_IID="123"
-glab api "projects/$GLAB_PROJECT_ID/merge_requests/$GLAB_MR_IID/pipelines"
-glab api "projects/$GLAB_PROJECT_ID/merge_requests/$GLAB_MR_IID/commits?per_page=100"
+glab api "projects/$GLAB_PROJECT_ID/merge_requests/$GLAB_MR_IID/pipelines" \
+  | jq -c . | head -n 50
+glab api "projects/$GLAB_PROJECT_ID/merge_requests/$GLAB_MR_IID/commits?per_page=100" \
+  | jq -c . | head -n 50
 ```
 
 ```bash
 GLAB_PROJECT_ID="12345"
 GLAB_PIPELINE_ID="12345"
-glab api --paginate "projects/$GLAB_PROJECT_ID/pipelines/$GLAB_PIPELINE_ID/jobs"
+glab api --paginate "projects/$GLAB_PROJECT_ID/pipelines/$GLAB_PIPELINE_ID/jobs" \
+  | jq -c . | head -n 50
 ```
 
 ```bash
 GLAB_PROJECT_ID="12345"
 GLAB_COMMIT_SHA="commit-sha"
 glab api --paginate \
-  "projects/$GLAB_PROJECT_ID/repository/commits/$GLAB_COMMIT_SHA/statuses?per_page=100"
+  "projects/$GLAB_PROJECT_ID/repository/commits/$GLAB_COMMIT_SHA/statuses?per_page=100" \
+  | jq -c . | head -n 50
 ```
 
 Triggering, retrying, cancelling, or deleting CI state requires explicit approval.

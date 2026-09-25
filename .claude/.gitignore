@@ -16,6 +16,7 @@
 !commands/**
 !hooks/
 !hooks/**
+hooks/context-mode-cache-heal.mjs
 hooks/__pycache__/
 hooks/**/*.py[cod]
 !output-styles/
@@ -24,8 +25,22 @@ hooks/**/*.py[cod]
 !scripts/**
 scripts/__pycache__/
 scripts/**/*.py[cod]
+!tests/
+!tests/**
+tests/__pycache__/
+tests/**/*.py[cod]
 !themes/
 !themes/**
 !workflows/
 !workflows/**
+!shunt-evals/
+!shunt-evals/**
 !statusline.sh
+
+# Never track macOS Finder metadata, including inside re-included directories.
+.DS_Store
+**/.DS_Store
+
+# Ignore Python cache artifacts in every re-included config directory.
+**/__pycache__/
+**/*.py[cod]

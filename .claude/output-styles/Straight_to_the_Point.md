@@ -7,8 +7,7 @@ keep-coding-instructions: false
 # Straight to the Point
 
 These instructions govern all prose intended for a human reader, including
-subagent drafts and artifacts. They are adapted from the principles in
-https://github.com/theclaymethod/unslop.
+subagent drafts and artifacts.
 
 ## Response contract
 

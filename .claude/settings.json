@@ -1,205 +1,253 @@
 {
-  "$schema": "https://json.schemastore.org/claude-code-settings.json",
-  "env": {
-    "CLAUDE_CODE_SUBAGENT_MODEL": "inherit",
-    "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "50",
-    "CLAUDE_CODE_DISABLE_TERMINAL_TITLE": "1",
-    "CLAUDE_CODE_EFFORT_LEVEL": "medium",
-    "MAX_MCP_OUTPUT_TOKENS": "10000",
-    "ANTHROPIC_DEFAULT_OPUS_MODEL": "claude-opus-5",
-    "ANTHROPIC_DEFAULT_SONNET_MODEL": "claude-sonnet-5",
-    "ANTHROPIC_DEFAULT_HAIKU_MODEL": "claude-haiku-4-5",
-    "CAVEMAN_DEFAULT_MODE": "off"
-  },
-  "permissions": {
-    "allow": [
-      "Bash(ls *)",
-      "Bash(find *)",
-      "Bash(wc *)",
-      "Bash(grep -c *)",
-      "Bash(git log *)",
-      "Bash(git diff *)",
-      "Bash(git status)",
-      "Bash(git show *)",
-      "Bash(git branch *)",
-      "Bash(git remote *)",
-      "Bash(pwd)",
-      "Bash(which *)",
-      "Bash(brew list *)",
-      "Bash(brew info *)",
-      "Bash(docker logs *)",
-      "Bash(docker stats *)",
-      "Bash(docker ps *)",
-      "Bash(docker images *)",
-      "Bash(docker inspect *)",
-      "Bash(docker network ls)",
-      "Bash(docker volume ls)",
-      "Bash(docker compose ps *)",
-      "Bash(op --account * item get *)",
-      "Bash(op --account * item list *)",
-      "Bash(op --account * run *)",
-      "Bash(curl * airflow.prod.rootz.com*)",
-      "Bash(curl * airflow.stg.rootz.com*)",
-      "Bash(chmod +x /tmp/*.sh)",
-      "Bash(/tmp/*.sh)",
-      "Read(~/Documents/GitHub/**)",
-      "Edit(~/Documents/GitHub/dev_setup/.claude/**)"
-    ],
-    "deny": [
-      "Read(**/node_modules/**)",
-      "Read(**/.git/objects/**)",
-      "Read(**/dist/**)",
-      "Read(**/build/**)",
-      "Read(**/*.lock)",
-      "Read(**/*.log)",
-      "Read(**/.env)",
-      "Read(**/*.env)",
-      "Read(~/.aws/**)",
-      "Read(~/.azure/**)",
-      "Read(~/.ssh/**)",
-      "Read(~/.kube/**)",
-      "Read(~/.config/gcloud/**)",
-      "Read(~/.config/gh/hosts.yml)",
-      "Read(~/.docker/config.json)",
-      "Read(~/.git-credentials)",
-      "Read(~/.pgpass)",
-      "Read(~/.terraform.d/credentials.tfrc.json)",
-      "Read(**/.netrc)",
-      "Read(**/.npmrc)",
-      "Read(**/application_default_credentials.json)",
-      "Read(**/*.pem)",
-      "Read(**/*.key)",
-      "Read(**/*.pfx)",
-      "Read(**/*.p12)",
-      "Read(**/terraform.tfstate*)",
-      "Read(**/*.enc.yaml)",
-      "Read(**/*.enc.yml)",
-      "Read(**/*.enc.json)",
-      "Read(/tmp/sops*)",
-      "Read(/tmp/op*)",
-      "Read(/tmp/bw*)",
-      "Read(/tmp/bws*)",
-      "Read(/tmp/secret*)",
-      "Read(/private/tmp/sops*)",
-      "Read(/private/tmp/op*)",
-      "Read(/private/tmp/bw*)",
-      "Read(/private/tmp/bws*)",
-      "Read(/private/tmp/secret*)",
-      "Bash(env)",
-      "Bash(env *)",
-      "Bash(printenv)",
-      "Bash(printenv *)",
-      "Bash(set)",
-      "Bash(export)",
-      "Bash(export *)",
-      "Bash(declare)",
-      "Bash(declare *)",
-      "Bash(op read *)",
-      "Bash(bw get *)",
-      "Bash(bws secret get *)",
-      "Bash(bws secret list *)",
-      "Bash(op run --no-masking *)",
-      "Bash(echo $*)",
-      "Bash(printf *$*)"
-    ]
-  },
-  "model": "opusplan",
-  "availableModels": [
-    "sonnet",
-    "haiku",
-    "opus"
-  ],
-  "hooks": {
-    "SubagentStart": [
-      {
-        "matcher": ".*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python3 ~/Documents/GitHub/dev_setup/.claude/scripts/inject-output-style.py"
-          }
-        ]
-      }
-    ],
-    "PreToolUse": [
-      {
-        "matcher": "Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "rtk hook claude"
-          },
-          {
-            "type": "command",
-            "command": "python3 ~/Documents/GitHub/dev_setup/.claude/scripts/block-secret-exposure.py"
-          }
-        ]
-      },
-      {
-        "matcher": "Read",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python3 ~/Documents/GitHub/dev_setup/.claude/scripts/block-secret-exposure.py"
-          }
-        ]
-      },
-      {
-        "matcher": "Grep",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python3 ~/Documents/GitHub/dev_setup/.claude/scripts/block-secret-exposure.py"
-          }
-        ]
-      },
-      {
-        "matcher": "Agent",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python3 ~/.claude/scripts/no-nested-agents.py"
-          }
-        ]
-      }
-    ]
-  },
-  "statusLine": {
-    "type": "command",
-    "command": "bash ~/.claude/statusline.sh"
-  },
-  "enabledPlugins": {
-    "caveman@caveman": true,
-    "jdtls-lsp@claude-plugins-official": true,
-    "wildz-data@wildz-data": true,
-    "pyright-lsp@claude-plugins-official": true,
-    "wildz-core@wildz-data": true
-  },
-  "extraKnownMarketplaces": {
-    "caveman": {
-      "source": {
-        "source": "github",
-        "repo": "JuliusBrussee/caveman"
-      }
+    "$schema": "https://json.schemastore.org/claude-code-settings.json",
+    "env": {
+        "DO_NOT_TRACK": "1",
+        "ENABLE_TOOL_SEARCH": "true",
+        "CODEGRAPH_NO_PROMPT_HOOK": "1",
+        "CLAUDE_CODE_DISABLE_TERMINAL_TITLE": "1",
+        "CLAUDE_CODE_EFFORT_LEVEL": "medium"
     },
-    "wildz-data": {
-      "source": {
-        "source": "git",
-        "url": "git@gitlab.com:granturo/rootz/bi/data-skills.git"
-      }
-    }
-  },
-  "outputStyle": "Straight_to_the_Point",
-  "effortLevel": "medium",
-  "awaySummaryEnabled": false,
-  "editorMode": "normal",
-  "skipAutoPermissionPrompt": false,
-  "fallbackModel": [
-    "sonnet",
-    "haiku"
-  ],
-  "enableArtifact": false,
-  "enableWorkflows": false,
-  "feedbackDrafts": "quiet",
-  "askUserQuestionTimeout": "never"
+    "permissions": {
+        "allow": [
+            "Read(~/.claude/projects/**)",
+            "Read(~/Documents/GitHub/**)",
+            "Edit(~/Documents/GitHub/dev_setup/.claude/**)",
+            "Write(~/Documents/GitHub/dev_setup/.claude/hooks/**)",
+            "Bash(codegraph status *)",
+            "Bash(codegraph query *)",
+            "Bash(codegraph explore *)",
+            "Bash(codegraph context *)",
+            "Bash(codegraph node *)",
+            "Bash(codegraph files *)",
+            "Bash(codegraph callers *)",
+            "Bash(codegraph callees *)",
+            "Bash(codegraph impact *)",
+            "Bash(codegraph affected *)",
+            "mcp__plugin_context-mode_context-mode__*",
+            "mcp__codegraph__*",
+            "WebSearch",
+            "WebFetch"
+        ],
+        "deny": [
+            "Read(**/.env)",
+            "Read(**/*.env)",
+            "Read(~/.aws/**)",
+            "Read(~/.azure/**)",
+            "Read(~/.ssh/**)",
+            "Read(~/.kube/**)",
+            "Read(~/.config/gcloud/**)",
+            "Read(~/.config/gh/hosts.yml)",
+            "Read(~/.docker/config.json)",
+            "Read(~/.git-credentials)",
+            "Read(~/.pgpass)",
+            "Read(~/.terraform.d/credentials.tfrc.json)",
+            "Read(**/.netrc)",
+            "Read(**/.npmrc)",
+            "Read(**/application_default_credentials.json)",
+            "Read(**/*.pem)",
+            "Read(**/*.key)",
+            "Read(**/*.pfx)",
+            "Read(**/*.p12)",
+            "Read(**/terraform.tfstate*)",
+            "Read(**/*.enc.yaml)",
+            "Read(**/*.enc.yml)",
+            "Read(**/*.enc.json)",
+            "Read(/tmp/sops*)",
+            "Read(/tmp/op*)",
+            "Read(/tmp/bw*)",
+            "Read(/tmp/bws*)",
+            "Read(/tmp/secret*)",
+            "Read(/private/tmp/sops*)",
+            "Read(/private/tmp/op*)",
+            "Read(/private/tmp/bw*)",
+            "Read(/private/tmp/bws*)",
+            "Read(/private/tmp/secret*)",
+            "Bash(env)",
+            "Bash(env *)",
+            "Bash(printenv)",
+            "Bash(printenv *)",
+            "Bash(set)",
+            "Bash(export)",
+            "Bash(export *)",
+            "Bash(declare)",
+            "Bash(declare *)",
+            "Bash(op read *)",
+            "Bash(bw get *)",
+            "Bash(bws secret get *)",
+            "Bash(bws secret list *)",
+            "Bash(op run --no-masking *)",
+            "Bash(echo $*)",
+            "Bash(printf *$*)",
+            "mcp__plugin_context-mode_context-mode__ctx_upgrade",
+            "mcp__plugin_context-mode_context-mode__ctx_purge"
+        ],
+        "ask": []
+    },
+    "model": "opusplan",
+    "fallbackModel": ["sonnet"],
+    "availableModels": ["sonnet", "haiku", "opus"],
+    "hooks": {
+        "PreToolUse": [
+            {
+                "matcher": "ExitPlanMode",
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "python3 ~/.claude/hooks/plan-exit-advisory.py"
+                    }
+                ]
+            },
+            {
+                "matcher": "Task|Agent",
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "bash ~/.claude/hooks/block-fork"
+                    },
+                    {
+                        "type": "command",
+                        "command": "python3 ~/.claude/hooks/advise-agent-routing.py"
+                    }
+                ]
+            },
+            {
+                "matcher": "Bash|Read|Grep",
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "python3 ~/.claude/scripts/block-secret-exposure.py"
+                    }
+                ]
+            },
+            {
+                "matcher": "Read",
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "bash ~/.claude/hooks/check-file-size"
+                    }
+                ]
+            },
+            {
+                "matcher": "Bash",
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "bash ~/.claude/hooks/check-bash-read"
+                    }
+                ]
+            },
+            {
+                "matcher": "Edit|Write|MultiEdit",
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "python3 ~/.claude/hooks/require-coding-skill.py"
+                    }
+                ]
+            },
+            {
+                "matcher": "Bash|Edit|Write|MultiEdit",
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "python3 ~/.claude/hooks/require-git-skill.py"
+                    }
+                ]
+            },
+            {
+                "matcher": "Edit|Write|MultiEdit",
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "python3 ~/.claude/hooks/advise-file-ownership-continuity.py"
+                    }
+                ]
+            },
+            {
+                "matcher": "Bash|Read|Edit|Write|Grep|Glob",
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "python3 ~/.claude/hooks/advise-excessive-main-requests.py"
+                    }
+                ]
+            }
+        ],
+        "PostToolUse": [
+            {
+                "matcher": "Skill",
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "python3 ~/.claude/hooks/record-skill-invocation.py"
+                    }
+                ]
+            }
+        ],
+        "UserPromptExpansion": [
+            {
+                "matcher": "coding|git",
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "python3 ~/.claude/hooks/record-skill-invocation.py"
+                    }
+                ]
+            }
+        ],
+        "UserPromptSubmit": [
+            {
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "python3 ~/.claude/hooks/warn-feature-branch-baseline.py"
+                    }
+                ]
+            }
+        ],
+        "SessionStart": [
+            {
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "\"/Users/andrea.borg/.claude/hooks/context-mode-cache-heal.mjs\""
+                    }
+                ]
+            }
+        ]
+    },
+    "statusLine": {
+        "type": "command",
+        "command": "bash ~/.claude/statusline.sh"
+    },
+    "enabledPlugins": {
+        "jdtls-lsp@claude-plugins-official": true,
+        "pyright-lsp@claude-plugins-official": true,
+        "gopls-lsp@claude-plugins-official": true,
+        "skill-creator@claude-plugins-official": true,
+        "context-mode@context-mode": true,
+    },
+    "extraKnownMarketplaces": {
+        "claude-plugins-official": {
+            "source": {
+                "source": "github",
+                "repo": "anthropics/claude-plugins-official"
+            }
+        },
+        "context-mode": {
+            "source": {
+                "source": "github",
+                "repo": "mksglu/context-mode"
+            }
+        },
+    "outputStyle": "Straight_to_the_Point",
+    "feedbackDrafts": "quiet",
+    "effortLevel": "medium",
+    "awaySummaryEnabled": false,
+    "askUserQuestionTimeout": "never",
+    "theme": "dark",
+    "editorMode": "normal",
+    "skipAutoPermissionPrompt": false,
+    "tui": "fullscreen"
 }

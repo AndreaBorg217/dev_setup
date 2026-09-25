@@ -1,6 +1,7 @@
 ---
 name: docker
 description: Used when generating Dockerfiles, docker-compose configurations, or troubleshooting containerized environments.
+when_to_use: "Dockerfile, docker-compose.yml, multi-stage build, layer caching, alpine, distroless, slim base image, USER non-root, docker run, healthcheck, depends_on, service_healthy, .env file, named networks, named volumes, docker exec, docker stats, docker compose logs, docker inspect, environment variables, docknets, docker network inspect"
 ---
 
 ## Boundaries

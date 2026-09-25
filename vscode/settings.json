@@ -82,6 +82,12 @@
     ],
     "java.sources.organizeImports.starThreshold": 999,
     "java.sources.organizeImports.staticStarThreshold": 999,
+    "[markdown]": {
+        "editor.wordWrap": "on"
+    },
+    "[plaintext]": {
+        "editor.wordWrap": "on"
+    },
     // JAVASCRIPT/TYPESCRIPT/REACT Configuration
     "[javascript]": {
         "editor.defaultFormatter": "esbenp.prettier-vscode",
