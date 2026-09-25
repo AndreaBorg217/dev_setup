@@ -9,7 +9,7 @@ import json
 import math
 import re
 import sys
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Any, Iterable
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
@@ -55,6 +55,24 @@ MUTATING_COMMAND = re.compile(
     r"|(?:^|[^<])(?:>>?|\btee\b)",
     re.IGNORECASE,
 )
+CORRECTION_MARKERS: dict[str, re.Pattern[str]] = {
+    "no_not_that": re.compile(r"\bno,?\s+not that\b", re.IGNORECASE),
+    "dont_do": re.compile(r"\bdon'?t do\b", re.IGNORECASE),
+    "stop_doing": re.compile(r"\bstop doing\b", re.IGNORECASE),
+    "not_what_asked": re.compile(r"that'?s not what i asked", re.IGNORECASE),
+}
+PREFERENCE_MARKERS: dict[str, re.Pattern[str]] = {
+    "i_prefer": re.compile(r"\bi prefer\b", re.IGNORECASE),
+    "always": re.compile(r"\balways\b", re.IGNORECASE),
+    "never": re.compile(r"\bnever\b", re.IGNORECASE),
+}
+PREFERENCE_VOCAB = {
+    "haiku", "sonnet", "opus", "model", "subagent", "agent", "hook", "skill",
+    "test", "tests", "pytest", "lint", "linter", "build", "ci", "git",
+    "commit", "review", "codegraph", "context-mode", "ctx_execute", "rg",
+    "grep", "read", "bash", "tool", "validation",
+}
+PREFERENCE_STOPWORDS = {"do", "to", "it", "that", "this", "the", "a", "an", "not", "you", "please"}
 
 
 class Thresholds:
@@ -1510,6 +1528,150 @@ def render_day_text(report: dict[str, Any], target_date: date, timezone: str) ->
     return "\n".join(lines)
 
 
+def _prompt_text(content: Any) -> str | None:
+    """Return human-authored turn text, or None for tool results/empty turns."""
+    if isinstance(content, str):
+        return content if content.strip() else None
+    if not isinstance(content, list):
+        return None
+    has_result = any(isinstance(block, dict) and block.get("type") == "tool_result" for block in content)
+    if has_result:
+        return None
+    texts = [
+        str(block.get("text") or "")
+        for block in content
+        if isinstance(block, dict) and block.get("type") == "text"
+    ]
+    joined = " ".join(text for text in texts if text.strip())
+    return joined if joined.strip() else None
+
+
+def _subject_key(lowered_text: str, marker_end: int) -> str:
+    """Reduce the words following a marker to one redacted label used only for grouping."""
+    tail = lowered_text[marker_end : marker_end + 60]
+    for word in re.findall(r"[a-z][a-z0-9_.-]*", tail):
+        if word not in PREFERENCE_STOPWORDS and len(word) > 1:
+            return word[:24]
+    return "unspecified"
+
+
+def mine_transcript_signals(transcript: Path) -> list[dict[str, str]]:
+    """Scan one main-session transcript for user-authored correction/preference markers.
+
+    Never returns quoted or reconstructable turn text; only a fixed marker
+    subtype plus a single redacted subject word used for cross-session grouping.
+    """
+    signals: list[dict[str, str]] = []
+    with transcript.open("r", encoding="utf-8", errors="replace") as handle:
+        for line in handle:
+            try:
+                event = json.loads(line)
+            except (json.JSONDecodeError, RecursionError):
+                continue
+            if not isinstance(event, dict) or event.get("type") != "user" or event.get("isMeta"):
+                continue
+            message = event.get("message")
+            if not isinstance(message, dict):
+                continue
+            text = _prompt_text(message.get("content"))
+            if not text:
+                continue
+            lowered = text.lower()
+            for subtype, pattern in CORRECTION_MARKERS.items():
+                match = pattern.search(lowered)
+                if match:
+                    signals.append(
+                        {"category": "correction", "subtype": subtype, "subject": _subject_key(lowered, match.end())}
+                    )
+            for subtype, pattern in PREFERENCE_MARKERS.items():
+                match = pattern.search(lowered)
+                if match:
+                    signals.append(
+                        {"category": "preference", "subtype": subtype, "subject": _subject_key(lowered, match.end())}
+                    )
+    return signals
+
+
+def propose_artifact(tier: str, category: str, subtype: str, subject_in_vocab: bool) -> str:
+    """Map one finding to exactly one artifact type, per the workflow-from-chat scheme."""
+    if tier in ("weak", "contradicted"):
+        return "none"
+    if subject_in_vocab:
+        return "hook"
+    if category == "correction":
+        return "rule" if subtype in ("no_not_that", "not_what_asked") else "workflow doc"
+    if subtype == "i_prefer":
+        return "skill"
+    return "rule"
+
+
+def mine_preferences(transcripts: Iterable[Path]) -> dict[str, Any]:
+    """Aggregate correction/preference signals across sessions into tiered findings."""
+    transcripts = list(transcripts)
+
+    sessions_by_signal: dict[tuple[str, str, str], set[str]] = collections.defaultdict(set)
+    occurrences: collections.Counter[tuple[str, str, str]] = collections.Counter()
+    for transcript in transcripts:
+        session = transcript.stem
+        seen_in_session: set[tuple[str, str, str]] = set()
+        for signal in mine_transcript_signals(transcript):
+            key = (signal["category"], signal["subtype"], signal["subject"])
+            occurrences[key] += 1
+            if key not in seen_in_session:
+                sessions_by_signal[key].add(session)
+                seen_in_session.add(key)
+
+    opposite_subtype = {"always": "never", "never": "always"}
+    findings = []
+    for (category, subtype, subject), sessions in sorted(sessions_by_signal.items()):
+        session_count = len(sessions)
+        repeated = session_count > 1
+        contradicted = (
+            subtype in opposite_subtype and (category, opposite_subtype[subtype], subject) in sessions_by_signal
+        ) or (subtype == "i_prefer" and ("preference", "never", subject) in sessions_by_signal)
+
+        if contradicted:
+            tier = "contradicted"
+        elif category == "correction":
+            tier = "strong"
+        elif repeated:
+            tier = "medium" if subject in PREFERENCE_VOCAB else "strong"
+        else:
+            tier = "weak"
+
+        findings.append(
+            {
+                "category": category,
+                "subtype": subtype,
+                "subject": subject,
+                "sessions": session_count,
+                "occurrences": occurrences[(category, subtype, subject)],
+                "confidence": tier,
+                "proposed_artifact": propose_artifact(tier, category, subtype, subject in PREFERENCE_VOCAB),
+            }
+        )
+
+    tier_rank = {"contradicted": 0, "strong": 1, "medium": 2, "weak": 3}
+    findings.sort(key=lambda item: (tier_rank[item["confidence"]], -item["sessions"], item["category"], item["subject"]))
+    return {"sessions_scanned": len(transcripts), "findings": findings}
+
+
+def render_mining_text(report: dict[str, Any]) -> str:
+    lines = [
+        "Preference mining report",
+        f"{report['sessions_scanned']} session(s) scanned; {len(report['findings'])} finding(s)",
+    ]
+    for item in report["findings"]:
+        lines.append(
+            f"- [{item['confidence']}] {item['category']}:{item['subtype']} ({item['subject']}) "
+            f"— {item['occurrences']} occurrence(s) across {item['sessions']} session(s) "
+            f"-> proposed artifact: {item['proposed_artifact']}"
+        )
+    if not report["findings"]:
+        lines.append("No correction or preference markers found in the scanned sessions.")
+    return "\n".join(lines)
+
+
 def add_threshold_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--skill-root", type=Path, action="append", default=[])
     parser.add_argument("--json", action="store_true", dest="as_json")
@@ -1575,6 +1737,13 @@ def main(argv: list[str] | None = None) -> int:
     daily.add_argument("--project-root", type=Path, action="append", default=[])
     daily.add_argument("--transcript-root", type=Path, default=DEFAULT_TRANSCRIPT_ROOT)
     add_threshold_arguments(daily)
+    mining = commands.add_parser(
+        "mine-preferences", help="mine user-authored correction/preference signals across recent sessions"
+    )
+    mining.add_argument("--project-root", type=Path, default=Path.cwd())
+    mining.add_argument("--transcript-root", type=Path, default=DEFAULT_TRANSCRIPT_ROOT)
+    mining.add_argument("--days", type=int, default=7)
+    mining.add_argument("--json", action="store_true", dest="as_json")
     args = parser.parse_args(argv)
 
     if args.command == "list":
@@ -1625,6 +1794,20 @@ def main(argv: list[str] | None = None) -> int:
             else render_day_text(report, target_date, args.timezone)
         )
         return 1 if args.strict and report["warning_categories"] else 0
+
+    if args.command == "mine-preferences":
+        if args.days <= 0:
+            parser.error("--days must be greater than zero")
+        project_dir = args.transcript_root.expanduser() / project_key(args.project_root)
+        cutoff = (datetime.now() - timedelta(days=args.days)).timestamp()
+        transcripts = sorted(
+            path
+            for path in (project_dir.glob("*.jsonl") if project_dir.is_dir() else [])
+            if path.is_file() and path.stat().st_mtime >= cutoff and has_model_activity(path)
+        )
+        report = mine_preferences(transcripts)
+        print(json.dumps(report, indent=2, sort_keys=True) if args.as_json else render_mining_text(report))
+        return 0
 
     if args.transcript and args.latest:
         parser.error("pass a transcript or --latest, not both")

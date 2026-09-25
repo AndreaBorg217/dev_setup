@@ -1,6 +1,7 @@
 ---
 name: shunt-bulk-reader
 description: "Delegate bulk file reading to Haiku. Use when you need to read files >350 lines, answer questions across 3+ files, or summarize large diffs. Replaces Spotify shunt's AiKA bulk-reader with local Haiku."
+when_to_use: "bulk-read, Haiku subagent, shunt, bulk-read script, SHUNT_MIN_LINES, SHUNT_TIMEOUT_SECONDS, SHUNT_MAX_PAYLOAD_BYTES, check-file-size hook, check-bash-read hook, large diff summary, read files over 350 lines, questions across multiple files, ctx_batch_execute, ctx_search, intent filter, Not logged in fallback, grep outline fallback, Task subagent_type general model haiku, follow-up bulk-read, Read offset limit verify"
 ---
 
 # Shunt Bulk Reader (Haiku)

@@ -1,7 +1,7 @@
 ---
 name: debugger
 description: Diagnoses failures from logs, traces, and metrics — OOMs, crash loops, exceptions, or degraded behaviour. Use when a stack trace, error log, or incident report is provided, or when explicitly asked to find and fix a system or code anomaly.
----
+when_to_use: "stack trace, error log, incident report, OOM, crash loop, exception, degraded behaviour, root cause, kubectl logs, kubectl describe pod, kubectl get events, docker logs, journalctl, restart counts, exit codes, resource requests, resource limits, node conditions, PromQL, range query, memory leak, latency spike, error rate, reproduction, repro, codegraph_explore, call chain, blast radius, silent failure, missing telemetry, false positive, false negative, correlation vs causation, regression guard, symptom fix vs root cause fix"
 
 # Debugger
 

@@ -27,3 +27,9 @@ full files, or noisy search output. Return the exact query or command,
 requested facts with file and line locations or source and window, and any
 blocker. Grouping into a brief triage is allowed only when the caller supplies
 the categories; interpretation and follow-up decisions belong to the caller.
+
+Tag each returned fact as either `live: <exact query/command>` or
+`doc: <path:line>`. When asked to run a query or command, actually run it;
+never answer instead from a document. If the query or command cannot be run,
+return `Blocked: <reason>` rather than substituting a document-derived answer.
+Read each file once per task and reuse that content; do not re-read it.

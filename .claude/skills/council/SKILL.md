@@ -5,6 +5,7 @@ description: >
     Use when the user says "council" or "advisors", or asks for multiple perspectives on a
     high-stakes decision. Do NOT use for simple factual questions or routine
     coding tasks.
+when_to_use: "council, advisors, 5 Advisors, summon the council, stress-test a decision, multiple perspectives, high-stakes decision, blind perspective, Chairman's verdict, The Contrarian, The First Principles Thinker, The Expansionist, The Outsider, The Executor, what breaks this, actual problem is, hidden upside, from the outside this looks like, Monday morning action, first thing you do"
 disable-model-invocation: true
 ---
 

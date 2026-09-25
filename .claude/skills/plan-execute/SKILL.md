@@ -1,6 +1,7 @@
 ---
 name: plan-execute
 description: Use when the user asks to execute, run, resume, or continue a plan bundle produced by planner. Dispatches approved tasks and checkpoints resumable state without implementing in the parent.
+when_to_use: "execute plan, resume plan, continue plan, plan bundle, PLAN.md, tasks/<id>.md, schema 4, orchestrator, dispatch workers, checkpoint, resumable state, baseline, git skill, block, bracketed block, task template, DONE, IN_PROGRESS, FAILED, CI, Local, Manual, materialization, handoff, builder, explorer, artifact-writer, plan amendment, Skills used, worker dispatch"
 model: sonnet
 disable-model-invocation: true
 ---
@@ -61,15 +62,29 @@ restate them in every prompt.
 An incomplete worker is a failed dispatch. Checkpoint its evidence and stop;
 do not continue, replace, or repair it in the parent.
 
+A follow-up edit to a file already owned by a worker is routed to that same
+worker via `SendMessage`, not a fresh worker.
+
+## Verify and repair
+
+Run each task's `Verification` against the produced artifact before recording
+any outcome; never accept a worker's assertion of success as proof. For `CI`,
+this means confirming the artifact and handoff are actually ready to submit,
+not that the worker claimed they are. For `Local`, this means the orchestrator
+itself runs the task's spec tests for every eligible class the task's
+test-matrix rows cover, not that the worker reported them passing; the task is
+marked `DONE` only once those spec tests pass.
+
 ## Record outcomes
 
 - Compare all changed paths, including materialization side effects, with
   `Writes`. Undeclared paths require plan amendment.
 - `Skills:` entries are planner suggestions, not requirements. A worker's non-use of a listed skill must not cause a `FAILED` status; record it under `Skills used:` in the Results as `None` or the subset actually used.
-- For `CI`, mark `DONE` when the artifact and handoff are ready and record the
-  check as pending CI.
-- For `Local`, mark `DONE` only after the declared targeted check passes. Record
-  `FAILED` and stop on failure.
+- For `CI`, mark `DONE` only once the artifact and handoff are confirmed ready
+  per Verify and repair, and record the check as pending CI.
+- For `Local`, mark `DONE` only after the orchestrator has confirmed the
+  declared targeted check passes per Verify and repair. Record `FAILED` and
+  stop on failure.
 - For `Manual`, retain `IN_PROGRESS`, record the ready state and exact user
   action, then stop. Apply the user's reported outcome on the next invocation.
 - Record worker errors as `FAILED`. Preserve successful siblings in a parallel
@@ -78,6 +93,9 @@ do not continue, replace, or repair it in the parent.
 Write only the result fields defined in the task template; never include raw
 logs. Any new decision, dependency, credential need, expanded write scope, or
 uncertain external state requires plan amendment.
+
+A commit or MR claim of "all", "every", or "parity" requires a passing
+test-matrix row for each eligible class it claims to cover.
 
 ## Finish
 

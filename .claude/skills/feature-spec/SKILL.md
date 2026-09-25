@@ -1,6 +1,7 @@
 ---
 name: feature-spec
 description: Use only when the user explicitly invokes feature-spec or directly asks for a strict written feature specification and review. Collects a structured specification, rejects material gaps, and saves the accepted spec without invoking planner or implementation.
+when_to_use: "feature-spec, feature specification, intake template, Feature, Inputs, Output, Edge Cases, Invariants, Performance Budget, Failure Modes, spec review, completeness check, testability, realism, robustness, latency limits, push back on spec, refine sections, accepted specification, save spec as markdown"
 disable-model-invocation: true
 ---
 

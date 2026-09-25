@@ -1,6 +1,7 @@
 ---
 name: argocd
 description: Use when accessing Argo CD through the argocd CLI — finding the server, using SSO, inspecting deployed applications/resources/manifests/logs/history, diffing, syncing, rolling back, or patching live resources.
+when_to_use: "argocd CLI, argocd context, argocd login, --sso, --grpc-web, account get-user-info, app list, app get, --refresh, --hard-refresh, --show-operation, app history, app resources, --output tree=detailed, app manifests, --source git, --source live, app logs, --filter, app diff, patch-resource, --prune, rollback, sync, GROUP:KIND:NAME, --force, --replace, --assumeYes, ARGOCD_SERVER, GitOps reconciliation"
 ---
 
 # Argo CD CLI

@@ -1,6 +1,7 @@
 ---
 name: git
 description: Manages Git operations - status, diff, commits, branches and history rewrites. Use when inspecting or mutating Git state.
+when_to_use: "git status, git diff, git commit, git branch, history rewrite, repository root, current branch, remotes, upstream, stashes, worktrees, feature branch, default branch, production branch, deployed ref, verified base, fetch, pull, rebase, force-with-lease, unguarded force update, commit convention, amend, squash, merge, conflict resolution, credential-bearing remote URL, AskUserQuestion"
 ---
 
 # Git

@@ -1,6 +1,7 @@
 ---
 name: airflow
 description: Manages Apache Airflow DAGs, tasks, operators, sensors and XComs. Use when reading, changing or operating Airflow workflows; not for generic Python orchestration.
+when_to_use: "DAG, task, operator, sensor, XCom, retry behaviour, task mapping, branching, setup/teardown, params, docstrings, REST API, task state, logs, dry-run, clear task instances, retry task instances, delete runs, pause a DAG"
 ---
 
 # Airflow

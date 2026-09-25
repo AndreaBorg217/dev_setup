@@ -42,7 +42,7 @@ Plan schema: 4
 ## Boundaries and decisions
 
 - Excluded unless explicitly included below: git operations, deployment, test-file changes, and documentation changes.
-- Decision: Verification ownership is <CI, Manual, or explicitly approved targeted Local>; exhaustive build/test suites run only in CI.
+- Decision: Verification ownership is <Local running only this task's spec test classes for behaviour-changing code, CI, or Manual>; exhaustive build/test suites run only in CI.
 - Decision: <Explicit user choice and its scope>; rejected <principal alternative> because <one-clause reason>.
 
 ## Risks and resolutions
@@ -51,13 +51,13 @@ Plan schema: 4
 
 ## Grounded facts
 
-- <Technical fact required by the plan>. Evidence: <exact path:line, command/result, configuration, test, or authoritative source>.
+- <Technical fact required by the plan>. Evidence: <re-checkable raw material per `rules/workflow.md` — exact path:line, command/result, configuration, test, data export, curl response, or authoritative source>.
 
 ## Test matrix
 
-| Scenario | Input/precondition | Expected result | Test/fixture location | Owning task |
-| --- | --- | --- | --- | --- |
-| <Case approved by the user> | <Exact setup> | <Observable result> | <Path> | <full-id> |
+| Spec requirement | Eligible class | Input/precondition | Expected result | Test/fixture location | Owning task |
+| --- | --- | --- | --- | --- | --- |
+| <Requirement approved by the user> | <One row per enumerated input class, source, or producer> | <Exact setup> | <Observable result> | <Path> | <full-id> |
 
 ## Execution order
 

@@ -1,6 +1,7 @@
 ---
 name: explain
 description: Use only when the user explicitly invokes explain via /explain. Generic explainer for understanding code or software concepts - how code works, codebase patterns, framework features, or system concepts.
+when_to_use: "/explain, explain how this works, explain this code, walk me through, ASCII diagram, Animated HTML, with vs. without comparison, give me an example, why is X approach not good, what's wrong with Y, deepening questions, common gotcha, framework feature, Spring annotations, React hooks, software concept explanation, how ClickHouse stores data, LSM trees, external system context, message queue, downstream service, export to markdown, real identifiers vs generic names, step-through animation, timeline slider, play pause replay, self-contained HTML visualization, dark aesthetic diagram, legend, edge routing, domain token animation"
 disable-model-invocation: true
 ---
 

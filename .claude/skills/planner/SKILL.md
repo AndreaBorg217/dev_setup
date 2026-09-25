@@ -1,6 +1,7 @@
 ---
 name: planner
 description: Use when the user asks to plan or scope multi-step work before implementation. Resolves decisions through user answers or technical evidence, then produces a split plan bundle for plan-execute.
+when_to_use: "plan multi-step work, scope before implementation, PLAN.md, task graph, plan-execute, plan-template.md, task-template.md, approval brief, decision register, resolved by evidence, resolved by user, AskUserQuestion, design probe, artifact-writer, explorer worker, reviewer agent, Blocks:, Skills:, Skill context:, Materialization, Handoff:, Verification: CI, Verification: Manual, Verification: Local, test matrix, materialize_plan_bundle.py, staging bundle, ExitPlanMode, investigation plan, worktree baseline"
 model: opus
 disable-model-invocation: true
 ---
@@ -30,7 +31,13 @@ approval brief, writer prompt, and review.
 2. Restate the objective, intended outcome, and boundaries. Ask the user to
    correct any material ambiguity before relying on an interpretation. Maintain
    one current objective: a user correction replaces conflicting older scope,
-   evidence, and candidate tasks; discovery never expands scope.
+   evidence, and candidate tasks; discovery never expands scope. Do not fill a
+   gap in the spec with what you judge best — surface the gap with enough
+   context for the user to decide, and record their answer in the register.
+   If the user asks for something to be explained as part of the feature (a
+   test plan, a review, a walkthrough of the approach), treat that explanation
+   as its own task with its own owner and handoff, not as a side effect of an
+   implementation task.
 3. Resolve repository facts and data queries with bounded workers. Route all evidence gathering — repository reads, MCP queries, external sources — through `explorer` workers. Never run MCP queries or data lookups in the main thread between subagent batches; batch unresolved questions and re-delegate them together. Consult only the domain skills relevant to this objective and record each used skill's exact `name` and resolved context. Run a full inventory of available skills only for cross-cutting or ambiguous scopes.
 4. Maintain an explicit register of decisions, assumptions, doubts, missing
    contracts, conflicting conventions, compatibility concerns, and
@@ -38,11 +45,21 @@ approval brief, writer prompt, and review.
 user`, or `open`. Resolve technical facts from evidence and consult the user
    on preferences, trade-offs, standards, and any choice that changes the
    outcome. Batch at most 3 related questions and never treat silence as a
-   decision.
+   decision. A `resolved by evidence` item requires verifiable evidence per
+   `rules/workflow.md` — re-checkable raw material such as query/command text
+   plus its output, a data export, a curl response, or a path:line citation.
+   Numbers inherited from prior plans, HANDOFFs, or studies must be re-run
+   live via `explorer` before a decision uses them. Each metric must state
+   what it counts (population, filters, numerator/denominator).
 5. Use one Sonnet design probe only when architecture, stateful processing,
    generated contracts, migrations, or cross-repository sequencing needs
    semantic resolution. It must return a concrete API or artifact handoff, not
-   another open investigation.
+   another open investigation. Halt if a required probe remains inconclusive
+   or unavailable; do not proceed to drafting on an unresolved probe.
+6. Ask the user via `AskUserQuestion` whether review is in scope for this plan.
+   Recommend a default: `yes` for multi-file, risky, or schema/auth/migration-
+   touching plans; `no` for small single-file mechanical work. Record the
+   answer as a `resolved by user` item in the register.
 
 Before drafting, audit scope, contracts, configuration precedence,
 compatibility, rollout, rollback, tests, repository state, dependencies, and
@@ -81,12 +98,27 @@ the bundle faithfully. Apply these invariants:
 - Declare `Materialization` and `Handoff` when a later task needs locally built,
   installed, generated, published, or migrated state. Consumers run in a later
   block.
-- Use `CI` verification by default for code, `Manual` for investigation or
-  documentation, and `Local` only for one targeted check explicitly approved
-  during planning. Full suites belong to CI.
+- Behaviour-changing code tasks default to `Local` verification running only
+  that task's spec test classes; use `Manual` for investigation or
+  documentation. Full suites belong to CI.
+- When review is in scope (step 6 above resolved `yes`), add one task owned by
+  the read-only Sonnet `reviewer` agent, with a stable ID like any other task.
+  Place its `Blocks:` after the implementation task(s) it reviews. Set
+  `Skills: None` (the `reviewer` agent is self-contained) and
+  `Verification: Manual` — a human reads the reviewer's findings; it is not an
+  automated pass/fail gate. Set `Handoff:` to instruct `plan-execute` to
+  surface the reviewer's returned findings to the user before considering the
+  overall plan complete.
 
-For behaviour changes, add a test matrix naming each scenario, precondition,
-expected result, test location, and owning task.
+For behaviour changes, decompose each spec requirement over its full eligible
+domain — every input class, source, and producer enumerated from code
+evidence, such as listing every mapper or handler the requirement applies to.
+An unenumerated domain is an open register item, not an assumed pass. Add a
+test matrix with one row per eligible class naming the spec requirement, the
+class, precondition, expected result, test location, and owning task. The
+most important question for any task is how its logic will be verified as
+correct: every task needs a concrete verification path, not just a completion
+criterion.
 
 ## Approve the brief
 
@@ -141,6 +173,7 @@ Reply `Done` and stop before implementation. When amending, retain `DONE` only
 for tasks whose full contract is unchanged; reset changed and downstream tasks
 and remove obsolete task files.
 
-Before `ExitPlanMode`, report any unread template, missing Haiku writer/reviewer
-step, or validator failure and recommend correcting it. This is advisory: do not
-prevent the user from exiting plan mode.
+Before `ExitPlanMode`, confirm every template was read, the Haiku writer and
+reviewer steps ran, and the validator passed. Halt and do not exit plan mode on
+an unread template, a skipped writer/reviewer step, a validator failure, or any
+open register item. Never present a partial plan as execution-ready.
