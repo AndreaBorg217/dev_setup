@@ -1,10 +1,3 @@
-- name: Install GitHub Desktop
-  community.general.homebrew_cask:
-    name: github
-    state: present
-  tags:
-    - "git"
-
 - name: Set git user name
   community.general.git_config:
     name: user.name
@@ -13,7 +6,6 @@
   when: lookup('env', 'GIT_USER_NAME') | length > 0
   tags:
     - "git"
-
 - name: Set git user email
   community.general.git_config:
     name: user.email
@@ -22,10 +14,90 @@
   when: lookup('env', 'GIT_USER_EMAIL') | length > 0
   tags:
     - "git"
-
-- name: Install lazygit
+- name: Install Git command-line tools
   community.general.homebrew:
-    name: lazygit
-    state: present
+    name:
+      - git-delta
+      - lazygit
+    state: latest
+  tags:
+    - "git"
+- name: Locate git-delta themes
+  ansible.builtin.command:
+    argv:
+      - brew
+      - --prefix
+      - git-delta
+  register: git_delta_prefix
+  changed_when: false
+  tags:
+    - "git"
+- name: Configure global Git defaults
+  community.general.git_config:
+    name: "{{ item.name }}"
+    scope: global
+    value: "{{ item.value }}"
+  loop:
+    - name: core.editor
+      value: nvim
+    - name: core.pager
+      value: delta
+    - name: interactive.diffFilter
+      value: delta --color-only
+    - name: include.path
+      value: "{{ git_delta_prefix.stdout }}/share/git-delta/themes.gitconfig"
+    - name: delta.features
+      value: arctic-fox
+    - name: delta.navigate
+      value: "true"
+    - name: diff.algorithm
+      value: histogram
+    - name: init.defaultBranch
+      value: main
+    - name: pull.rebase
+      value: "true"
+    - name: push.autoSetupRemote
+      value: "true"
+    - name: branch.sort
+      value: -committerdate
+    - name: checkout.defaultRemote
+      value: origin
+    - name: fetch.prune
+      value: "true"
+    - name: rerere.enabled
+      value: "true"
+    - name: rerere.autoupdate
+      value: "true"
+  tags:
+    - "git"
+- name: Locate Lazygit configuration directory
+  ansible.builtin.command:
+    argv:
+      - lazygit
+      - --print-config-dir
+  register: lazygit_config_directory
+  changed_when: false
+  tags:
+    - "git"
+- name: Create Lazygit configuration directory
+  ansible.builtin.file:
+    path: "{{ lazygit_config_directory.stdout }}"
+    state: directory
+    mode: "0755"
+  tags:
+    - "git"
+- name: Configure Lazygit delta renderer
+  ansible.builtin.copy:
+    content: |
+      git:
+        diffRenderers:
+          - type: stdinFilter
+            name: delta
+            colorArg: always
+            command: delta --paging=never --features=arctic-fox
+          - type: rawGit
+            name: raw
+    dest: "{{ lazygit_config_directory.stdout }}/config.yml"
+    mode: "0644"
   tags:
     - "git"

@@ -62,13 +62,21 @@ local function delete_unmodified_buffers()
 	vim.notify(string.format("Preserved %d modified buffer(s)", preserved_count))
 end
 
-keymap.set("n", "<Esc>", "<cmd>nohlsearch<CR>", { desc = "Clear search highlights" })
-vim.keymap.set("i", "<S-Tab>", "<C-d>", { noremap = true, silent = true })
-vim.keymap.set("n", "-", "$", { noremap = true, silent = true })
-vim.keymap.set("n", "`", "^", { noremap = true, silent = true })
-vim.keymap.set("n", "R", "<C-r>", { noremap = true, silent = true })
-vim.keymap.set("v", "<Tab>", ">gv", { noremap = true, silent = true })
-vim.keymap.set("v", "<S-Tab>", "<gv", { noremap = true, silent = true })
+keymap.set("n", "<Esc>", function()
+	-- VS Code: Esc closes sidebar/file explorer when visible, else clears highlights
+	local ok, api = pcall(require, "nvim-tree.api")
+	if ok and api.tree.is_visible() then
+		api.tree.close()
+		return
+	end
+	vim.cmd("nohlsearch")
+end, { desc = "Close file explorer if open, else clear search highlights" })
+vim.keymap.set("i", "<S-Tab>", "<C-d>", { desc = "Outdent line", noremap = true, silent = true })
+vim.keymap.set("n", "-", "$", { desc = "Go to end of line", noremap = true, silent = true })
+vim.keymap.set("n", "`", "^", { desc = "Go to first non-blank", noremap = true, silent = true })
+vim.keymap.set("n", "R", "<C-r>", { desc = "Redo", noremap = true, silent = true })
+vim.keymap.set("v", "<Tab>", ">gv", { desc = "Indent selection", noremap = true, silent = true })
+vim.keymap.set("v", "<S-Tab>", "<gv", { desc = "Outdent selection", noremap = true, silent = true })
 
 keymap.set("n", "<leader>w", "<cmd>w<CR>", { desc = "Save file" })
 keymap.set("n", "<leader>q", "<cmd>q<CR>", { desc = "Quit" })
@@ -80,8 +88,8 @@ keymap.set("n", "<leader>sx", "<cmd>close<CR>", { desc = "Close current split" }
 keymap.set("n", "<leader>to", "<cmd>tabnew<CR>", { desc = "Open new tab" })
 keymap.set("n", "<Tab>", "<cmd>tabn<CR>", { desc = "Go to next tab" })
 keymap.set("n", "<S-Tab>", "<cmd>tabp<CR>", { desc = "Go to previous tab" })
-keymap.set("v", "J", ":m '>+1<CR>gv=gv")
-keymap.set("v", "K", ":m '<-2<CR>gv=gv")
+keymap.set("v", "J", ":m '>+1<CR>gv=gv", { desc = "Move selection down" })
+keymap.set("v", "K", ":m '<-2<CR>gv=gv", { desc = "Move selection up" })
 keymap.set("n", "<leader>os", reveal_in_finder, { desc = "Reveal current file in Finder" })
 keymap.set("n", "<leader>cn", copy_path_with_line, { desc = "Copy relative path and line" })
 keymap.set("v", "<leader>cn", copy_path_with_visual_lines, { desc = "Copy relative path and lines" })
@@ -92,15 +100,28 @@ keymap.set({ "n", "v" }, "<leader>cp", function()
 	copy_to_clipboard(current_file_path())
 end, { desc = "Copy absolute path" })
 
-keymap.set("n", "<C-/>", function()
+local function toggle_comment_normal()
 	require("lazy").load({ plugins = { "Comment.nvim" } })
 	require("Comment.api").toggle.linewise.current()
-end, { desc = "Toggle comment" })
-keymap.set("v", "<C-/>", function()
+end
+local function toggle_comment_visual()
 	local escape = vim.api.nvim_replace_termcodes("<Esc>", true, false, true)
 	vim.api.nvim_feedkeys(escape, "nx", false)
 	require("lazy").load({ plugins = { "Comment.nvim" } })
 	require("Comment.api").toggle.linewise(vim.fn.visualmode())
-end, { desc = "Toggle comment" })
+end
+-- VS Code: Cmd+/ (macOS editor.action.commentLine) -> map all variants that terminals actually send
+-- <C-/> (intended), <C-_> (terminal Ctrl+/ -> 0x1F), <D-/> (Cmd+/ in GUI/kitty/wezterm/iTerm2 with Cmd passthrough)
+for _, lhs in ipairs({ "<C-/>", "<C-_>", "<D-/>" }) do
+	keymap.set("n", lhs, toggle_comment_normal, { desc = "Toggle comment" })
+	keymap.set("v", lhs, toggle_comment_visual, { desc = "Toggle comment" })
+	keymap.set("i", lhs, function()
+		toggle_comment_normal()
+		-- stay in insert after toggle like VS Code
+		vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Esc>", true, false, true), "n", false)
+		vim.cmd("startinsert")
+	end, { desc = "Toggle comment" })
+end
+-- VS Code also shows `gcc`/`gc` fallback - Comment.nvim already provides gcc/gbc/gc via its setup
 
-keymap.set("n", "<leader>x", delete_unmodified_buffers, { desc = "Delete unmodified buffers" })
+keymap.set("n", "<leader>X", delete_unmodified_buffers, { desc = "Delete unmodified buffers" })

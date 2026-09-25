@@ -21,6 +21,10 @@ return {
 					buffer = buffer,
 					desc = "Toggle folder",
 				})
+				-- VS Code: Esc closes file explorer when focused
+				vim.keymap.set("n", "<Esc>", function()
+					api.tree.close()
+				end, { buffer = buffer, desc = "Close file explorer" })
 			end,
 			view = {
 				width = 40,
@@ -81,6 +85,7 @@ return {
 			"<cmd>NvimTreeFindFileToggle<CR>",
 			{ desc = "Toggle file explorer on current file" }
 		) -- toggle file explorer on current file
+		keymap.set("n", "<leader>eo", "<cmd>NvimTreeFindFile<CR>", { desc = "Open current file in explorer" })
 		keymap.set("n", "<leader>ec", "<cmd>NvimTreeCollapse<CR>", { desc = "Collapse file explorer" }) -- collapse file explorer
 		keymap.set("n", "<leader>er", "<cmd>NvimTreeRefresh<CR>", { desc = "Refresh file explorer" }) -- refresh file explorer
 	end,

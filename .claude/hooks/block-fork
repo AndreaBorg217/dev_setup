@@ -1,0 +1,14 @@
+#!/bin/bash
+# Block fork-type subagent spawns.
+# Fork copies the full parent conversation history into a subagent context window —
+# burning tokens with no benefit. Pass targeted context in the prompt instead.
+
+input=$(cat)
+subagent_type=$(echo "$input" | jq -r '.tool_input.subagent_type // empty')
+
+if [ "$subagent_type" = "fork" ]; then
+  echo '{"decision": "block", "reason": "Fork subagents are banned: they copy the entire parent conversation history into the subagent context window, wasting tokens. Pass only the specific context needed in the worker prompt instead."}' >&2
+  exit 2
+fi
+
+exit 0

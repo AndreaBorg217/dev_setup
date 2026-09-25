@@ -1,93 +1,179 @@
 ---
 name: planner
-description: Use when the user asks to plan, scope, or break down multi-step work before implementation, or says "plan this" / "write a plan" - resolves technical blockers during planning and produces self-contained PLAN.md consumed by plan-execute.
+description: Use when the user asks to plan or scope multi-step work before implementation. Resolves decisions through user answers or technical evidence, then produces a split plan bundle for plan-execute.
+when_to_use: "plan multi-step work, scope before implementation, PLAN.md, task graph, plan-execute, plan-template.md, task-template.md, approval brief, decision register, resolved by evidence, resolved by user, AskUserQuestion, design probe, artifact-writer, explorer worker, reviewer agent, Blocks:, Skills:, Skill context:, Materialization, Handoff:, Verification: CI, Verification: Manual, Verification: Local, test matrix, materialize_plan_bundle.py, staging bundle, ExitPlanMode, investigation plan, worktree baseline"
+model: opus
+disable-model-invocation: true
 ---
 
 # Planner
 
-Run on Opus. Produce one `plans/<kebab-name>/PLAN.md` that a fresh Sonnet `plan-execute` session can execute without this conversation. Follow `rules/subagents.md` for any delegated investigation.
+Run on Opus as a human-in-the-loop orchestrator; the user is the architect, keep grilling them relentlessly until a common ground of understanding has been reached on what the user needs done and a brief skeleton of how it will be done and verified to be correct. The human owns decisions and
+spec disambiguation; Opus owns an unambiguous task graph (every task has
+resolved skills, agent/model, writes, handoff, and verification — unresolved
+context blocks the bundle). Keep the user in control from prompt
+interpretation through final approval, own design judgement, use global
+routing for bounded evidence, and leave all plan writing, materialization, and
+review to existing Haiku agents. Opus plans; it never writes or reviews the plan
+artifact. Do not implement or repeat worker investigations.
 
-## 1. Mode and intent
+Produce `plans/<slug>/PLAN.md` plus one `tasks/<full-id>.md` per task. A fresh
+Sonnet `plan-execute` session must be able to run it without this conversation.
 
-Detect plan mode from the harness-assigned plan-file path in the system prompt.
+Before discovery or worker dispatch, read `plan-template.md` and
+`task-template.md` completely. They are the canonical schema for the task graph,
+approval brief, writer prompt, and review.
 
-- **Plan mode:** use the harness file as the staging copy. Keep planning until it is complete and call `ExitPlanMode`; do not ask for a separate signoff first. After approval, materialize that exact approved content at the repository plan path, reply `Done`, and stop before implementation.
-- **Other modes:** perform the same investigation and validation, present the completed plan once for explicit approval, then materialize it, reply `Done`, and stop. Warn once that the session may not be Opus.
-- Never dispatch Opus from this skill. Route Haiku/Sonnet work under `rules/subagents.md` and pass the model explicitly.
+## Resolve the work
 
-Treat user intent and technical facts differently:
+1. Invoke the `git` skill before repository discovery. Record each repository's
+   fetched ref, commit, branch, and approved worktree state as its baseline.
+2. Restate the objective, intended outcome, and boundaries. Ask the user to
+   correct any material ambiguity before relying on an interpretation. Maintain
+   one current objective: a user correction replaces conflicting older scope,
+   evidence, and candidate tasks; discovery never expands scope. Do not fill a
+   gap in the spec with what you judge best — surface the gap with enough
+   context for the user to decide, and record their answer in the register.
+   If the user asks for something to be explained as part of the feature (a
+   test plan, a review, a walkthrough of the approach), treat that explanation
+   as its own task with its own owner and handoff, not as a side effect of an
+   implementation task.
+3. Resolve repository facts and data queries with bounded workers. Route all evidence gathering — repository reads, MCP queries, external sources — through `explorer` workers. Never run MCP queries or data lookups in the main thread between subagent batches; batch unresolved questions and re-delegate them together. Consult only the domain skills relevant to this objective and record each used skill's exact `name` and resolved context. Run a full inventory of available skills only for cross-cutting or ambiguous scopes.
+4. Maintain an explicit register of decisions, assumptions, doubts, missing
+   contracts, conflicting conventions, compatibility concerns, and
+   external-state risks. Mark each item `resolved by evidence`, `resolved by
+user`, or `open`. Resolve technical facts from evidence and consult the user
+   on preferences, trade-offs, standards, and any choice that changes the
+   outcome. Batch at most 3 related questions and never treat silence as a
+   decision. A `resolved by evidence` item requires verifiable evidence per
+   `rules/workflow.md` — re-checkable raw material such as query/command text
+   plus its output, a data export, a curl response, or a path:line citation.
+   Numbers inherited from prior plans, HANDOFFs, or studies must be re-run
+   live via `explorer` before a decision uses them. Each metric must state
+   what it counts (population, filters, numerator/denominator).
+5. Use one Sonnet design probe only when architecture, stateful processing,
+   generated contracts, migrations, or cross-repository sequencing needs
+   semantic resolution. It must return a concrete API or artifact handoff, not
+   another open investigation. Halt if a required probe remains inconclusive
+   or unavailable; do not proceed to drafting on an unresolved probe.
+6. Ask the user via `AskUserQuestion` whether review is in scope for this plan.
+   Recommend a default: `yes` for multi-file, risky, or schema/auth/migration-
+   touching plans; `no` for small single-file mechanical work. Record the
+   answer as a `resolved by user` item in the register.
 
-- Obtain behavior, scope, tradeoffs, and acceptance criteria from explicit user statements or approval.
-- Establish technical facts from inspected code, configuration, commands, tests, or authoritative documentation.
-- If evidence conflicts with stated intent or exposes multiple behavior choices, present it and ask the user. Never silently choose.
+Before drafting, audit scope, contracts, configuration precedence,
+compatibility, rollout, rollback, tests, repository state, dependencies, and
+handoffs. Continue the evidence-and-user-dialogue loop until the register has no
+open item and the plan has no known gap. Do not claim certainty about unknowable
+future events; instead make every material uncertainty an explicit resolved
+decision, mitigation, validation step, or blocker. A plan cannot contain an
+unresolved assumption, doubt, question, placeholder, or deferred design choice.
 
-Unless explicitly requested, exclude git operations, deployment, test-file changes, and documentation changes. Relevant existing tests, lint, builds, and artifact checks may be run for verification.
+An investigation plan is valid. Define its questions, evidence sources, stop
+conditions, output artifact or handoff, and validation criteria; do not force
+feature implementation or irrelevant tests into it.
 
-Scale depth to blast radius. A small change with one obvious implementation still gets a complete plan when this skill was explicitly invoked, but it needs only the evidence and tasks required to make that plan executable. Apply fuller scrutiny to new modules, schemas, authentication, money, migrations, deletion, external state, and other high-risk work.
+## Design the task graph
 
-## 2. Select the plan
+Follow both templates exactly when designing the task graph and writing the
+approval brief. Pass both template paths to `artifact-writer` so it can encode
+the bundle faithfully. Apply these invariants:
 
-1. Resolve the repository root with `git rev-parse --show-toplevel`; halt outside a git repository.
-2. Use a user-supplied plan name or mechanically slug an unambiguous objective as kebab-case.
-3. Target `$root/plans/<slug>/PLAN.md` without creating it yet.
-4. Treat an existing plan as an amendment only when the request identifies it or the user confirms the match. Amend it in place; never fork, version, or create a backup copy.
+- Use stable task IDs and give each writable path exactly one owner. Each task
+  leaves a coherent artifact and does not rely on a later repair.
+- Choose the least expensive capable model per task and record a concrete
+  `Model reason` — this implies the worker (`Haiku`→`explorer`/`artifact-writer`, `Sonnet`→`builder` per `rules/subagents.md`). Use Haiku for bounded deterministic work with complete inputs,
+  including read-only collection, approved documentation rendering, and static
+  fixture data from an approved test matrix. Use Sonnet for semantic judgement,
+  source or test logic, runtime configuration, debugging, ambiguity, and
+  elevated-risk work. A write alone does not determine the model.
+- Verify referenced existing paths and symbols. Trace generated or shared
+  contracts through production, materialization, and their first consumer; do
+  not plan reflection, adapters, or fallbacks around missing contracts.
+- Encode dependencies once in `Blocks:`. Bracket at most 2 independent tasks
+  with disjoint writes and no sibling-produced input.
+- Keep shared evidence and decisions in `PLAN.md`; keep only execution-critical
+  details in each task. Do not copy source, logs, or discovery narrative.
+- Recommend exact applicable skills (`name` from `SKILL.md:2`) and resolved `Skill context:` per `task-template.md:14-15` — unresolved context blocks the bundle. Include git, deployment, tests, or documentation only when the user included them.
+- Declare `Materialization` and `Handoff` when a later task needs locally built,
+  installed, generated, published, or migrated state. Consumers run in a later
+  block.
+- Behaviour-changing code tasks default to `Local` verification running only
+  that task's spec test classes; use `Manual` for investigation or
+  documentation. Full suites belong to CI.
+- When review is in scope (step 6 above resolved `yes`), add one task owned by
+  the read-only Sonnet `reviewer` agent, with a stable ID like any other task.
+  Place its `Blocks:` after the implementation task(s) it reviews. Set
+  `Skills: None` (the `reviewer` agent is self-contained) and
+  `Verification: Manual` — a human reads the reviewer's findings; it is not an
+  automated pass/fail gate. Set `Handoff:` to instruct `plan-execute` to
+  surface the reviewer's returned findings to the user before considering the
+  overall plan complete.
 
-## 3. Investigate and resolve blockers
+For behaviour changes, decompose each spec requirement over its full eligible
+domain — every input class, source, and producer enumerated from code
+evidence, such as listing every mapper or handler the requirement applies to.
+An unenumerated domain is an open register item, not an assumed pass. Add a
+test matrix with one row per eligible class naming the spec requirement, the
+class, precondition, expected result, test location, and owning task. The
+most important question for any task is how its logic will be verified as
+correct: every task needs a concrete verification path, not just a completion
+criterion.
 
-Apply the investigate-before-asking rules in `rules/workflow.md`. Raise inconsistent evidence instead of choosing an interpretation silently.
+## Approve the brief
 
-After that investigation, ask at most three unresolved user-owned questions at a time, give each a recommended default, and wait. Include only candidate assumptions relevant to those decisions. Make each assumption specific and falsifiable; consider data, failure behavior, API boundaries, state, environment, scope, and testing only when the task touches them.
+Before calling `artifact-writer`, show the user a concise but complete approval
+brief containing:
 
-Resolve technical assumptions through evidence. Convert accepted user-owned assumptions into explicit boundaries or decisions, and never carry an unsupported assumption into the completed plan. If no blocking question remains, continue directly instead of emitting an empty questionnaire.
+- your interpretation of the prompt, objective, outcome, and boundaries;
+- every material decision, assumption, doubt, risk, and resolution;
+- ordered tasks with model, model reason, outcome, and dependencies;
+- the implementation plan, or the evidence and synthesis plan for an
+  investigation; and
+- the test plan with scenarios and verification ownership, or an explicit
+  reason tests do not apply.
 
-Use the main thread for small reads and bounded commands. Delegate noisy, broad, or parallel investigation under `rules/subagents.md`.
+Ask the user to identify omissions, incorrect assumptions, or desired changes.
+Incorporate each correction, reopen any affected decisions and downstream
+tasks, and present the revised brief. Repeat until the register has no open item
+and the user explicitly approves the complete brief. Do not infer approval and
+do not write the bundle before it.
 
-A forecast blocker is a credible, evidenced reason the intended approach could fail or force a plan change. Resolve every forecast blocker now:
+## Write and validate
 
-1. Dispatch bounded Haiku/Sonnet probes, parallelizing independent probes.
-2. Incorporate conclusive technical outcomes into the plan's Grounded facts or task instructions.
-3. Ask the user when an outcome changes behavior, architecture, dependencies, scope, or another user-owned choice.
-4. Halt if a required probe remains inconclusive or unavailable.
+After approval, dispatch one Haiku `artifact-writer` with the approved brief,
+staging path, repository roots, evidence, skill context, both template paths,
+and the validation command below. It writes the complete staging bundle once
+without changing the design and runs the deterministic check:
 
-Never carry an unresolved forecast blocker into execution. A runtime availability check may remain only as a deterministic task precondition whose failure response is already fixed and cannot change the approved approach.
+```bash
+python3 "${CLAUDE_SKILL_DIR}/scripts/materialize_plan_bundle.py" \
+  "<staging-file>" --repo-root "$root" --check
+```
 
-## 4. Compose the execution blocks
+Then dispatch one read-only Haiku `explorer` to review the staging bundle against
+the approved brief, both templates, and the validator result. It returns only
+specific mismatches; it does not redesign or write. Send a structural mismatch
+back to `artifact-writer` once. A semantic mismatch returns to user dialogue.
+Do not load the bundle into Opus and do not create verifier or recovery agents.
 
-Read `plan-template.md` before composing. Use its section order and task fields exactly.
+## Approve and materialize
 
-- **Objective:** restate the requested outcome in complete terms and include the acceptance criteria used to judge completion.
-- **Boundaries and decisions:** record each material assumption as a specific, falsifiable, user-approved constraint. For a meaningful design choice, name the selected option and reject the principal alternative in one clause with the reason.
-- **Grounded facts:** cite the exact repository or authoritative evidence for every technical fact the executor must rely on.
-- **IDs:** assign stable full IDs in the form `t<N>-<kebab-title>`. Use the full ID everywhere; no shorthand aliases.
-- **Titles:** make each title concise and specific enough for a developer to understand by skimming the task headings.
-- **Tasks:** define coherent, independently verifiable outcomes rather than forcing a file-count limit. Include exact paths, commands, and important function/type/interface signatures in `How`.
-- **Writes:** list comma-separated paths/globs the task may modify, or `None` for read-only work.
-- **Models:** assign the task model under `rules/subagents.md`; only `haiku` and `sonnet` are valid in a plan.
-- **Verification:** require an observable assertion such as an exit code, file state, query result, or table; never "looks correct."
-- **Blocks:** encode order once as `Blocks: <full-id> >> [<full-id>, <full-id>]`. Each `>>`-separated segment is exactly one `plan-execute` invocation followed by a stop. `t1 >> [t2, t3, t4] >> t5` means: run `t1` alone and stop; on the next invocation, dispatch `t2`, `t3`, and `t4` concurrently in three separate subagents and stop; on the next invocation, run `t5` alone and stop.
-- **Brackets:** use brackets only for tasks that are mutually independent, share no required intermediate output, and can run concurrently in separate subagents without overlapping Writes. Never bracket tasks that must run sequentially. Do not add per-task Dependencies.
-- **Fanout:** apply the probe-then-fanout pattern in `rules/subagents.md` and reference the probe's full task ID in consumer `How` fields.
-- **External effects:** include git operations, deployment, test-file changes, or documentation changes only when explicitly requested and record that inclusion under Boundaries and decisions.
-- **Deployment:** when explicitly requested, keep staging and production in separate sequential blocks; production uses and depends on the verified staging outcome.
-- **Manual actions:** add the optional section only for actions the user must perform.
-- **Final verification:** for code changes, include a final read-only task that runs the configured checks required by `rules/coding.md`. Writing or changing tests remains separate, explicit scope.
+After review, dispatch the same Haiku `artifact-writer` to copy the checked
+staging bundle unchanged to the harness plan file in plan mode and validate it.
+Outside plan mode, the brief approval authorizes the writer to materialize the
+checked bundle. Materialize without regeneration:
 
-Do not create `PLAN.HUMAN.md`. `PLAN.md` is the sole plan and execution state.
+```bash
+python3 "${CLAUDE_SKILL_DIR}/scripts/materialize_plan_bundle.py" \
+  "<staging-file>" --repo-root "$root"
+```
 
-## 5. Audit and materialize
+Reply `Done` and stop before implementation. When amending, retain `DONE` only
+for tasks whose full contract is unchanged; reset changed and downstream tasks
+and remove obsolete task files.
 
-Before approval:
-
-1. Map every explicit requirement and boundary to the objective, a global decision, or a task.
-2. Confirm there are no open decisions, unresolved forecast blockers, unsupported assumptions, placeholders, vague verification gates, duplicate task IDs, missing tasks, or parallel write conflicts.
-3. Confirm a fresh executor needs neither this conversation nor repository rediscovery to perform each task.
-
-When amending an executed plan, preserve `DONE` and Results only for tasks whose Goal, Writes, How, and Verification are unchanged. Reset every changed task and every task in later blocks to `PENDING` with empty Results. Remove obsolete tasks, retain stable IDs for unchanged tasks.
-
-In plan mode, call `ExitPlanMode` only after the audit and validation pass. After approval, create `$root/plans/<slug>/`, copy the exact approved staging content to `PLAN.md`, reply `Done`, and stop. Do not execute a task in the materialization turn.
-
-Outside plan mode, ask for approval only after the same audit and validation pass, then write the approved `PLAN.md` directly.
-
-## Halt
-
-Stop and ask for the exact missing decision or evidence when the objective or target plan is ambiguous, required ground truth cannot be established, a forecast blocker cannot be resolved, evidence conflicts with intent, the plan cannot be self-contained, validation fails, materialization fails, or cwd is not a git repository. Never present a partial plan as execution-ready.
+Before `ExitPlanMode`, confirm every template was read, the Haiku writer and
+reviewer steps ran, and the validator passed. Halt and do not exit plan mode on
+an unread template, a skipped writer/reviewer step, a validator failure, or any
+open register item. Never present a partial plan as execution-ready.

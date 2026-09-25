@@ -1,0 +1,36 @@
+#!/bin/bash
+# Block full-file reads on large files, redirect to /shunt-bulk-reader skill
+# Copied verbatim from spotify/portal-ai-plugins/plugins/shunt/hooks/check-file-size (Apache-2.0)
+# Local wording change: this setup uses a Haiku explorer and its local bulk-read script, not Spotify's AiKA.
+
+MIN_LINES="${SHUNT_MIN_LINES:-350}"
+case "$MIN_LINES" in ''|*[!0-9]*) MIN_LINES=350 ;; esac
+
+input=$(cat)
+
+file_path=$(echo "$input" | jq -r '.tool_input.file_path // empty')
+offset=$(echo "$input" | jq -r '.tool_input.offset // empty')
+limit=$(echo "$input" | jq -r '.tool_input.limit // empty')
+
+# Allow targeted reads (offset or limit set) — Claude already knows what it needs.
+# This is intentional Shunt behavior; Context Mode is the route for broader extraction.
+if [ -n "$offset" ] || [ -n "$limit" ]; then
+  exit 0
+fi
+
+# Allow if file doesn't exist or path is empty
+if [ -z "$file_path" ] || [ ! -f "$file_path" ]; then
+  exit 0
+fi
+
+# Allow small files — delegation overhead isn't worth it
+lines=$(wc -l < "$file_path" 2>/dev/null | tr -d ' ' || echo "0")
+if [ "$lines" -le "$MIN_LINES" ]; then
+  exit 0
+fi
+
+# Local compatibility change: current Claude Code PreToolUse hooks require
+# hookSpecificOutput.permissionDecision. Spotify's legacy decision:block is ignored.
+# Keep the upstream selection logic above unchanged; only translate its block response.
+reason="File is ${lines} lines (threshold: ${MIN_LINES}). Use the /shunt-bulk-reader skill or delegate to a Haiku explorer subagent instead of reading directly. For exact edit content, re-read with offset/limit for just the section you need. Alternatively: bash ~/Documents/GitHub/dev_setup/.claude/scripts/shunt/bulk-read --question \"<question>\" --paths \"$file_path\""
+jq -n --arg reason "$reason" '{hookSpecificOutput: {hookEventName: "PreToolUse", permissionDecision: "deny", permissionDecisionReason: $reason}}'

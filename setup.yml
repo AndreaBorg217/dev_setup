@@ -38,10 +38,10 @@
       tags:
         - apps
     - name: Configure Claude Code
-      ansible.builtin.include_tasks: tasks/claude.yml
+      ansible.builtin.include_tasks:
+        file: tasks/claude.yml
+        apply:
+          tags:
+            - claude
       tags:
         - claude
-    - name: Configure Codex
-      ansible.builtin.include_tasks: tasks/codex.yml
-      tags:
-        - codex

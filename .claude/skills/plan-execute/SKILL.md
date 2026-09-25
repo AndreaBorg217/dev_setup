@@ -1,83 +1,105 @@
 ---
 name: plan-execute
-description: Use when the user asks to execute, run, resume, or continue a PLAN.md produced by planner - dispatches exactly one execution block, verifies results, and preserves resumable state in PLAN.md.
+description: Use when the user asks to execute, run, resume, or continue a plan bundle produced by planner. Dispatches approved tasks and checkpoints resumable state without implementing in the parent.
+when_to_use: "execute plan, resume plan, continue plan, plan bundle, PLAN.md, tasks/<id>.md, schema 4, orchestrator, dispatch workers, checkpoint, resumable state, baseline, git skill, block, bracketed block, task template, DONE, IN_PROGRESS, FAILED, CI, Local, Manual, materialization, handoff, builder, explorer, artifact-writer, plan amendment, Skills used, worker dispatch"
+model: sonnet
+disable-model-invocation: true
 ---
 
 # Plan Execute
 
-Run on Sonnet outside plan mode. Execute exactly one `Blocks:` group per invocation, reply `Done`, and stop. Treat `PLAN.md` as the sole plan and execution state; no prior conversation is required.
+Run on Sonnet outside plan mode as an orchestrator. Parse state, enforce scope,
+dispatch workers, evaluate compact receipts, and update task files. Do not
+inspect source, implement, diagnose, repair, or run verification in the parent.
 
-## 1. Preflight
+Schema 4 uses immutable `PLAN.md` context and mutable `tasks/<id>.md` files.
+Read schemas 2 and 3, but require amendment rather than inventing missing skill
+context, materialization, or handoffs.
 
-This skill must run on Sonnet. If the session model is Opus, reply `Manual step switch to Sonnet required` and stop. Do not prescribe or run plugin commands, and never invoke Opus.
+## Preflight
 
-Resolve the plan:
+- If running on Opus, reply `Manual step switch to Sonnet required` and stop.
+- Resolve an explicit plan path first. Otherwise select it only when exactly one
+  `plans/*/PLAN.md` is incomplete; report the exact manual step for zero,
+  multiple, or already-complete candidates.
+- Before the first implementation block, invoke the `git` skill and compare the
+  repository to each recorded baseline. Fetch the recorded ref. Ask and stop if
+  it advanced or synchronization would require a mutation. On later invocations,
+  verify the baseline and completed handoffs without fetching through plan edits.
+- Read the selected manifest once. Validate its task index against `Blocks:` and
+  task paths, collect statuses with one bounded search, and select only the first
+  unfinished block. Read a task only when its block becomes current.
+- Read the [task template](../planner/task-template.md) once as the canonical
+  task and result schema. Reject malformed tasks, unresolved decisions,
+  assumptions, doubts, placeholders, undeclared scope, unjustified model
+  selection, incomplete handoffs, or broad local verification. Do not fill a
+  planning gap during execution. Legacy tasks crossing an implicit
+  artifact-readiness boundary require schema-4 amendment.
 
-1. Use an explicit user-supplied path when present.
-2. Otherwise scan `plans/*/PLAN.md` for plans containing any task whose Status is not `DONE`.
-3. If no `PLAN.md` exists, reply `Manual step run planner required`; never execute a harness staging file.
-4. Auto-select only when exactly one plan is incomplete. If plans exist but none are incomplete, reply `Done`. If several are incomplete, reply `Manual step choose PLAN.md required`.
+## Dispatch one block
 
-If an explicitly selected plan already has every task `DONE`, reply `Done` and stop.
+Process one block and stop unless the user explicitly requested uninterrupted
+execution — single-block is the default because the orchestrator stays light
+(each task runs in its own subagent; the parent keeps only compact receipts)
+and checkpointing preserves failure isolation. A bracketed block contains at
+most 2 independent tasks and must run concurrently; confirm disjoint writes and
+no sibling-produced input first.
 
-From the valid file, load the Objective, Boundaries and decisions, optional Grounded facts and Manual actions, Blocks groups, and every task's Status, Model, Goal, Writes, How, Verification, and Results.
+Require preceding tasks to be `DONE` and every required materialization and
+handoff to report a concrete ready state. Set current tasks to `IN_PROGRESS` by
+changing only their status lines.
 
-Execute only the approved behavior in the plan. Repository evidence can establish a technical fact but cannot broaden scope or supply a missing user preference.
+Route workers under `rules/subagents.md`: `builder` for bounded implementation
+and semantic judgement, and `explorer` for read-only work. Use
+`artifact-writer` for a Haiku task that writes approved documentation, static
+fixture data, or the plan bundle. The orchestrator stays light and only
+decides routing when the user gives no guidance; it never invents missing
+skill context. Pass the explicit model, model reason, full task contract,
+relevant baseline, decisions, test-matrix rows, dependencies, and earlier
+handoffs. Agent definitions and global rules are the worker contract; do not
+restate them in every prompt.
 
-## 2. Select and recover the current block
+An incomplete worker is a failed dispatch. Checkpoint its evidence and stop;
+do not continue, replace, or repair it in the parent.
 
-The current block is the first `>>`-separated group containing a task whose Status is not `DONE`. Never start a later block and never execute more than one block per invocation.
+A follow-up edit to a file already owned by a worker is routed to that same
+worker via `SendMessage`, not a fresh worker.
 
-Interpret each unbracketed group as one task and each bracketed group as one mandatory parallel batch. `t1 >> [t2, t3, t4] >> t5` means: run `t1` alone and stop; on the next invocation, dispatch `t2`, `t3`, and `t4` concurrently in three separate subagents and stop; on the next invocation, run `t5` alone and stop.
+## Verify and repair
 
-- Halt when any task in the current block is `FAILED` or `BLOCKED`; name the task and required user decision.
-- Recover repository-only `IN_PROGRESS` work by running its Verification first. If it passes, record Results and mark it `DONE`. If it fails, clear Results, set it to `PENDING`, and dispatch it with instructions to inspect and finish the existing partial artifact.
-- Do not automatically recover an `IN_PROGRESS` task that may have changed external state or is not idempotent. Ask the user to confirm the external state before retrying.
-- Select every `PENDING` task in the current block. Previously `DONE` tasks stay done and are not repeated.
+Run each task's `Verification` against the produced artifact before recording
+any outcome; never accept a worker's assertion of success as proof. For `CI`,
+this means confirming the artifact and handoff are actually ready to submit,
+not that the worker claimed they are. For `Local`, this means the orchestrator
+itself runs the task's spec tests for every eligible class the task's
+test-matrix rows cover, not that the worker reported them passing; the task is
+marked `DONE` only once those spec tests pass.
 
-Before dispatch, confirm that bracketed tasks are mutually independent, require no intermediate output from one another, and do not overlap in Writes. If a bracketed group cannot run concurrently, halt for a plan amendment; never serialize it or collapse its tasks into one subagent. Reject any git operation, deployment, test-file change, or documentation change not explicitly included under Boundaries and decisions. When an included operation requires approval under `rules/safety.md`, obtain that approval before setting Status to `IN_PROGRESS` or dispatching it. A blocking Manual action also halts before dispatch.
+## Record outcomes
 
-## 3. Dispatch
+- Compare all changed paths, including materialization side effects, with
+  `Writes`. Undeclared paths require plan amendment.
+- `Skills:` entries are planner suggestions, not requirements. A worker's non-use of a listed skill must not cause a `FAILED` status; record it under `Skills used:` in the Results as `None` or the subset actually used.
+- For `CI`, mark `DONE` only once the artifact and handoff are confirmed ready
+  per Verify and repair, and record the check as pending CI.
+- For `Local`, mark `DONE` only after the orchestrator has confirmed the
+  declared targeted check passes per Verify and repair. Record `FAILED` and
+  stop on failure.
+- For `Manual`, retain `IN_PROGRESS`, record the ready state and exact user
+  action, then stop. Apply the user's reported outcome on the next invocation.
+- Record worker errors as `FAILED`. Preserve successful siblings in a parallel
+  block before stopping.
 
-Set every selected task to `IN_PROGRESS` in `PLAN.md`. For a bracketed group, send one message containing one Agent call per task so every task starts concurrently in its own subagent. Sequential dispatch of bracketed tasks is forbidden.
+Write only the result fields defined in the task template; never include raw
+logs. Any new decision, dependency, credential need, expanded write scope, or
+uncertain external state requires plan amendment.
 
-- Route model, subagent type, and parallelism under `rules/subagents.md`. Pass the task's Model (`haiku` or `sonnet`) explicitly; the plan's value is authoritative.
-- Give each subagent the Objective, applicable Boundaries and decisions and Grounded facts, its Goal, Writes, How, Verification, and any earlier task Results referenced by full ID.
-- Pass this execution contract with every task:
-  - Treat the delegated task as exhaustive. Perform exactly its Goal and How, and write only within Writes.
-  - Do not add adjacent fixes, tests, documentation, comments, abstractions, safeguards, dependencies, cleanup, or formatting unless the Objective, boundaries, or task explicitly require them.
-  - Obey `rules/safety.md` and complete the stated Verification; narrow scope never permits bypassing either.
-  - Do not infer a missing product or design decision and do not ask the user directly. If blocked, make no speculative edit and return the exact blocker to the orchestrator in one sentence.
-- Extra dispatches may split already-approved work but may not expand the task. Keep them leaf-tier under `rules/subagents.md`; any further split returns to this orchestrator.
+A commit or MR claim of "all", "every", or "parity" requires a passing
+test-matrix row for each eligible class it claims to cover.
 
-There are no forecast blockers to resolve during execution. `planner` must have resolved them. If execution reveals an architectural issue, multiple valid repairs, or a missing user decision, persist the evidence and halt for plan amendment.
+## Finish
 
-If a subagent errors, returns nothing, or lacks a required tool, credential, or permission, set its Status to `FAILED` and record the exact error. In a parallel batch, first verify and persist every sibling result already returned, then halt. Do not leave a completed or failed task `IN_PROGRESS`.
-
-## 4. Verify and repair
-
-Run each task's Verification against the produced artifact; never accept the subagent's assertion as proof.
-
-- **Pass:** set Status to `DONE` and record compact Results.
-- **Fail:** allow one automatic repair only when the failure is ground-truth evidence for exactly one repair already permitted by Goal, Writes, How, Verification, and the global boundaries. Redispatch once and re-verify.
-- **Ask instead:** halt immediately when the repair is ambiguous, changes requirements or architecture, adds a dependency, exceeds Writes, affects uncertain external state, requires missing credentials, or contradicts the plan.
-- **Second failure:** set Status to `FAILED`, record the failure, and halt. Do not offer or infer a skip; skipping requires amending the plan.
-
-In a parallel block, retain passing tasks as `DONE`. Never rerun them while resolving another task.
-
-Write Results in `Straight_to_the_Point` voice: plain, direct sentences, no filler, no padding. Write directly in this compact form, omitting empty lines:
-
-```
-Outcome:
-Files changed:
-Verification:
-Notes for later tasks:
-```
-
-Do not dispatch a compactor and do not store raw logs or long reasoning.
-
-## 5. Finish or halt
-
-When every task in the current block is `DONE`, run execution validation again, reply exactly `Done`, and stop. The next invocation derives the next unfinished block from task statuses; there is no checkpoint field.
-
-On any halt, persist Status and Results when the plan is writable, then reply on one line as `Blocked on <task ID>: <exact problem>` or `Manual step <required action> required`. Do not add a summary or paragraph. Do not mark a task `BLOCKED` unless the user explicitly chooses that state, do not advance past a failed/blocked task, and do not retry an unchanged failing operation.
+Refresh statuses once after checkpointing. When all tasks are `DONE`, reply
+`Done`. When uninterrupted execution was requested, continue with the next
+block; otherwise reply `Checkpointed <block>; run plan-execute again for the
+next block.` On failure, reply `Blocked on <task ID>: <exact problem>`.

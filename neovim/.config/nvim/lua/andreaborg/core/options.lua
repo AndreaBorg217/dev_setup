@@ -16,6 +16,18 @@ opt.autoindent = true -- copy indent from current line when starting new one
 
 opt.wrap = false
 
+-- soft wrap at viewport for markdown + plaintext
+vim.api.nvim_create_autocmd("FileType", {
+	group = vim.api.nvim_create_augroup("word_wrap_markdown_plaintext", { clear = true }),
+	pattern = { "markdown", "text" },
+	callback = function()
+		vim.opt_local.wrap = true
+		vim.opt_local.linebreak = true -- wrap at word boundaries
+		vim.opt_local.breakindent = true -- keep indent on wrapped lines
+		vim.opt_local.showbreak = "" -- no prefix; set to "↪ " if you want a visual indicator
+	end,
+})
+
 -- search settings
 opt.ignorecase = true -- ignore case when searching
 opt.smartcase = true -- if you include mixed case in your search, assumes you want case-sensitive
@@ -41,6 +53,7 @@ opt.splitbelow = true -- split horizontal window to the bottom
 -- turn off swapfile
 opt.swapfile = false
 opt.autoread = true
+opt.updatetime = 50 -- instant like VS Code (was 200)
 opt.endofline = true
 opt.fixendofline = true
 
@@ -56,9 +69,30 @@ vim.api.nvim_create_autocmd("TextYankPost", {
 	end,
 })
 
-vim.api.nvim_create_autocmd({ "FocusGained", "BufEnter" }, {
+vim.api.nvim_create_autocmd({ "FocusGained", "BufEnter", "CursorHold", "CursorHoldI", "CursorMoved", "CursorMovedI", "InsertLeave", "BufWritePost", "TermClose", "TermLeave" }, {
 	group = vim.api.nvim_create_augroup("checktime", { clear = true }),
-	command = "checktime",
+	callback = function()
+		if vim.fn.getcmdwintype() == "" and vim.fn.mode() ~= "c" then
+			vim.cmd("checktime")
+		end
+	end,
+})
+
+-- VS Code-like instant file watching: poll `checktime` every 50ms via libuv (FSEvents is event-driven on macOS)
+-- store in _G to prevent GC
+_G._autoread_timer = (vim.uv or vim.loop).new_timer()
+_G._autoread_timer:start(50, 50, vim.schedule_wrap(function()
+	if vim.fn.getcmdwintype() == "" and vim.fn.mode() ~= "c" then
+		vim.cmd("silent! checktime")
+	end
+end))
+
+-- notify when file changes on disk (reloaded by autoread)
+vim.api.nvim_create_autocmd("FileChangedShellPost", {
+	group = vim.api.nvim_create_augroup("autoread_notify", { clear = true }),
+	callback = function()
+		vim.notify("File changed on disk. Buffer reloaded.", vim.log.levels.WARN)
+	end,
 })
 
 vim.api.nvim_create_autocmd("BufWritePre", {

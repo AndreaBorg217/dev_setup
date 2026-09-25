@@ -1,8 +1,97 @@
 # Coding rule BAD/GOOD examples
 
-These selected examples clarify code-level rules in `../../rules/coding.md`.
+These selected examples clarify the rules in [SKILL.md](SKILL.md).
 They are interpretation aids, not syntax or framework mandates. Repository
 evidence and the canonical rule always take precedence.
+
+## CodeGraph and Context Mode
+
+### G1. Use CodeGraph for structural discovery
+
+**BAD** — rebuild a call path through broad text search and repeated reads:
+
+```bash
+rg "RequestHandler" src
+```
+
+**GOOD** — in the main MCP-capable session, ask the graph for the relevant
+source, relationships, and impact:
+
+```text
+codegraph_explore(query: "Where is RequestHandler invoked and what depends on it?")
+```
+
+A subagent or non-MCP session uses the CLI equivalent against the same
+`.codegraph` index:
+
+```bash
+codegraph explore "Where is RequestHandler invoked and what depends on it?"
+```
+
+Use `rg` when the question is an exact string or configuration lookup rather
+than a source relationship.
+
+### G2. Select targeted tests from changed paths
+
+Before choosing an authorised targeted test, include tracked and relevant
+untracked source paths:
+
+```bash
+{
+  git diff --name-only HEAD
+  git ls-files --others --exclude-standard
+} | codegraph affected --stdin --quiet
+```
+
+Treat the result as a candidate set. It does not override repository-required
+checks or prove that omitted tests are unaffected.
+
+### G3. Analyse a large file without loading it into the conversation
+
+Context Mode's data-processing surface is MCP, so this is an MCP tool call, not
+a shell command:
+
+```text
+ctx_execute_file(
+  path: "access.log",
+  language: "javascript",
+  code: "const counts = {}; for (const line of FILE_CONTENT.split('\\n')) { const match = line.match(/^(\\S+).*\\s500\\s/); if (match) counts[match[1]] = (counts[match[1]] || 0) + 1; } console.log(JSON.stringify(counts));"
+)
+```
+
+Only the computed IP counts enter context; the raw log remains in the sandbox.
+Use native `Read` instead when exact bytes are needed for an edit.
+
+### G4. Keep verbose targeted-test output outside the conversation
+
+```text
+ctx_execute(
+  language: "shell",
+  code: "./gradlew test --tests ExampleServiceTest",
+  intent: "test summary failures exceptions"
+)
+```
+
+Run only a test command already authorised by the task. Return the compact
+matching evidence rather than the complete build log. Use `ctx_batch_execute`
+instead only for three or more related commands, keeping `concurrency: 1` for
+tests or other commands that share build state.
+
+### G5. Contain a potentially large CodeGraph CLI result
+
+When the MCP tool is unavailable and `codegraph explore` may be noisy, run the
+CLI inside Context Mode rather than allowing its raw stdout into the session:
+
+```text
+ctx_execute(
+  language: "shell",
+  code: "codegraph explore 'Trace RequestHandler callers and dependents'",
+  intent: "RequestHandler call path dependents source locations"
+)
+```
+
+This combines the CLI fallback with Context Mode's MCP sandbox. It does not
+replace the normal `codegraph_explore` MCP path.
 
 ## Simplicity
 
@@ -377,6 +466,104 @@ page = current_page + ONE
 MAX_LOGIN_ATTEMPTS = 5
 if failed_attempts >= MAX_LOGIN_ATTEMPTS:
     lock_account()
+```
+
+### C9. Group and space — blank lines between steps, split compound checks
+
+**BAD** — dense, no grouping, compound condition inline:
+
+```typescript
+function enPassantTarget(history: Move[], pawn: Pawn): Position | undefined {
+    const last = history[history.length - 1];
+    if (history.length && last.piece.colour !== pawn.colour && last.piece.kind === "pawn" && Math.abs(last.fromRow - last.toRow) === 2 && last.toRow === pawn.row && Math.abs(last.toCol - pawn.col) === 1) return new Position(pawn.row + pawn.direction, last.toCol);
+    return undefined;
+}
+```
+
+**GOOD** — ordered as it runs, one idea per line, blank line between steps:
+
+```typescript
+function enPassantTarget(history: Move[], pawn: Pawn): Position | undefined {
+    if (!history.length) {
+        return undefined;
+    }
+
+    const last = history[history.length - 1];
+
+    const isOpponent = last.piece.colour !== pawn.colour;
+    const isPawn = last.piece.kind === "pawn";
+    const isTwoSquares = Math.abs(last.fromRow - last.toRow) === 2;
+    if (!(isOpponent && isPawn && isTwoSquares)) {
+        return undefined;
+    }
+
+    const isSameRow = last.toRow === pawn.row;
+    const isAdjacent = Math.abs(last.toCol - pawn.col) === 1;
+    if (!(isSameRow && isAdjacent)) {
+        return undefined;
+    }
+
+    return new Position(pawn.row + pawn.direction, last.toCol);
+}
+```
+
+**BAD** — multi-step validation with no section headers:
+
+```typescript
+function enPassantTarget(history: Move[], pawn: Pawn): Position | undefined {
+    if (!history.length) {
+        return undefined;
+    }
+    const last = history[history.length - 1];
+    if (last.piece.colour === pawn.colour) {
+        return undefined;
+    }
+    if (last.piece.kind !== "pawn") {
+        return undefined;
+    }
+    if (Math.abs(last.fromRow - last.toRow) !== 2) {
+        return undefined;
+    }
+    if (last.toRow !== pawn.row) {
+        return undefined;
+    }
+    if (Math.abs(last.toCol - pawn.col) !== 1) {
+        return undefined;
+    }
+    return new Position(pawn.row + pawn.direction, last.toCol);
+}
+```
+
+**GOOD** — brief `//` headers mark each step:
+
+```typescript
+function enPassantTarget(history: Move[], pawn: Pawn): Position | undefined {
+    if (!history.length) {
+        return undefined;
+    }
+
+    // last move must be opponent two-square pawn advance
+    const last = history[history.length - 1];
+    if (last.piece.colour === pawn.colour) {
+        return undefined;
+    }
+    if (last.piece.kind !== "pawn") {
+        return undefined;
+    }
+    if (Math.abs(last.fromRow - last.toRow) !== 2) {
+        return undefined;
+    }
+
+    // pawn must be adjacent
+    if (last.toRow !== pawn.row) {
+        return undefined;
+    }
+    if (Math.abs(last.toCol - pawn.col) !== 1) {
+        return undefined;
+    }
+
+    return new Position(pawn.row + pawn.direction, last.toCol);
+}
 ```
 
 ## Exceptions
