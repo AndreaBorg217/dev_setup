@@ -1,6 +1,6 @@
 vim.lsp.config("lua_ls", {
-	cmd = { "lua-language-server" },
-	filetypes = { "lua" },
+	-- Keep the flat local root markers instead of lspconfig's tiered default, which adds
+	-- .emmyrc.json/.luacheckrc/stylua/selene markers this project doesn't use.
 	root_markers = { ".luarc.json", ".luarc.jsonc", ".git" },
 	settings = {
 		Lua = {
@@ -13,7 +13,6 @@ vim.lsp.config("lua_ls", {
 		},
 	},
 	on_attach = function(client, bufnr)
-		vim.lsp.inlay_hint.enable(true, { bufnr = bufnr })
 		vim.lsp.completion.enable(true, client.id, bufnr, { autotrigger = true })
 		vim.keymap.set("n", "<leader>fmt", function()
 			vim.lsp.buf.format({ bufnr = bufnr, id = client.id })

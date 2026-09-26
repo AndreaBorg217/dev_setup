@@ -10,7 +10,7 @@ vim.diagnostic.config({
 			[vim.diagnostic.severity.INFO] = " ",
 		},
 	},
-	float = { border = "rounded", source = "always", header = "", prefix = "" },
+	float = { source = "always", header = "", prefix = "" },
 	jump = {
 		on_jump = function(_, bufnr)
 			vim.diagnostic.open_float({ bufnr = bufnr, scope = "cursor", focus = false })
@@ -18,8 +18,7 @@ vim.diagnostic.config({
 	},
 })
 
-vim.lsp.config("*", { flags = { debounce_text_changes = 50 } }) -- Send edits to language servers promptly.
-
+require("languages.lsp")
 require("languages.keymaps")
 require("languages.python")
 require("languages.java")

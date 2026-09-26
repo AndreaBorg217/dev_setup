@@ -1,3 +1,3 @@
 return {
-	AUTO_FORMAT = true, -- Keep formatting on save enabled unless changed here.
+	AUTO_FORMAT = false, -- Keep formatting on save disabled unless changed here.
 }

@@ -1,7 +1,4 @@
 vim.lsp.config("jsonls", {
-	cmd = { "vscode-json-language-server", "--stdio" },
-	filetypes = { "json", "jsonc" },
-	root_markers = { ".git" },
 	init_options = { provideFormatter = true },
 	settings = { json = { validate = { enable = true }, schemas = require("schemastore").json.schemas() } },
 	on_attach = function(client, bufnr)

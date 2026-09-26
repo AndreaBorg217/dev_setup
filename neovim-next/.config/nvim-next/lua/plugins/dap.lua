@@ -1,7 +1,10 @@
 -- Neovim's LSP client cannot set breakpoints or step through programs.
-vim.pack.add({ "https://github.com/mfussenegger/nvim-dap" }, { confirm = false })
+vim.pack.add({ "https://codeberg.org/mfussenegger/nvim-dap" }, { confirm = false })
+-- Go debug configurations and Delve setup for nvim-dap.
+vim.pack.add({ "https://github.com/leoluz/nvim-dap-go" }, { confirm = false })
 
 local dap = require("dap")
+require("dap-go").setup()
 vim.fn.sign_define("DapBreakpoint", { text = "", texthl = "DiagnosticSignError" })
 local mapped_arrows = {}
 

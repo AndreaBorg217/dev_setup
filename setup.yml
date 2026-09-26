@@ -33,6 +33,10 @@
       ansible.builtin.include_tasks: tasks/neovim.yml
       tags:
         - vim
+    - name: Configure Neovim (nvim-next, parallel test install)
+      ansible.builtin.include_tasks: tasks/neovim-next.yml
+      tags:
+        - vim-next
     - name: Configure applications
       ansible.builtin.include_tasks: tasks/apps.yml
       tags:

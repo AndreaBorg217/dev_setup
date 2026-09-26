@@ -5,10 +5,14 @@ local spring_boot = require("spring_boot")
 -- Spring Tools uses a non-web launch when its optional MCP server is disabled.
 spring_boot.setup({
 	jvm_args = { "-Dspring.main.web-application-type=NONE" },
+	log_file = vim.fn.stdpath("state") .. "/spring-boot.log",
+	-- Only start where the build actually declares a Spring Boot dependency.
+	project_filter = function(root_dir)
+		return require("spring_boot.util").has_spring_boot_dependency(root_dir)
+	end,
 	server = {
 		on_attach = function(client, bufnr)
 			vim.lsp.completion.enable(true, client.id, bufnr, { autotrigger = true })
-			vim.lsp.inlay_hint.enable(true, { bufnr = bufnr })
 		end,
 	},
 })

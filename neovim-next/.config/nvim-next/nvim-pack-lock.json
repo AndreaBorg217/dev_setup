@@ -34,7 +34,11 @@
     },
     "nvim-dap": {
       "rev": "cfa2d58f4537aca6ca83e2de1a0d9f1491121264",
-      "src": "https://github.com/mfussenegger/nvim-dap"
+      "src": "https://codeberg.org/mfussenegger/nvim-dap"
+    },
+    "nvim-dap-go": {
+      "rev": "b4421153ead5d726603b02743ea40cf26a51ed5f",
+      "src": "https://github.com/leoluz/nvim-dap-go"
     },
     "nvim-dap-view": {
       "rev": "210b2c0e4acc08aad23fbd5a7989dd0169f716d0",
@@ -48,6 +52,10 @@
     "nvim-lsp-file-operations": {
       "rev": "0b939aff068c859b6f8cdbc3b3e676d038e6e15d",
       "src": "https://github.com/antosha417/nvim-lsp-file-operations"
+    },
+    "nvim-lspconfig": {
+      "rev": "046b1a797af1effe8e0474b9af9657a3761ec58a",
+      "src": "https://github.com/neovim/nvim-lspconfig"
     },
     "nvim-tree.lua": {
       "rev": "478c69c0fe253caea88de9c5e138bfa77395a59a",
