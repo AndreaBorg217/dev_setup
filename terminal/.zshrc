@@ -227,3 +227,7 @@ function nvim_clean {
     echo "  Verify with :Mason and :LspInfo"
 }
 alias clean_nvim=nvim_clean
+
+# Launch nvim-next (Neovim 0.12 config under neovim-next/.config/nvim-next)
+# instead of the current neovim/.config/nvim setup, for testing.
+alias nnvim='PATH="$HOME/.local/opt/neovim/next/bin:$PATH" NVIM_APPNAME=nvim-next nvim'

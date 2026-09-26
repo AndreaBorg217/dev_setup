@@ -16,10 +16,9 @@ local function format_go(bufnr, client)
 	vim.lsp.buf.format({ bufnr = bufnr, id = client.id, timeout_ms = 5000 })
 end
 
+-- lspconfig's cmd/filetypes default is identical here; its root_dir function is a superset
+-- (falls back to the same go.work/go.mod/.git markers, plus GOROOT/GOMODCACHE handling).
 vim.lsp.config("gopls", {
-	cmd = { "gopls" },
-	filetypes = { "go", "gomod", "gowork", "gotmpl" },
-	root_markers = { "go.work", "go.mod", ".git" },
 	settings = {
 		gopls = {
 			analyses = { unusedparams = true, shadow = true },
@@ -38,7 +37,6 @@ vim.lsp.config("gopls", {
 	},
 	on_attach = function(client, bufnr)
 		vim.lsp.completion.enable(true, client.id, bufnr, { autotrigger = true })
-		vim.lsp.inlay_hint.enable(true, { bufnr = bufnr })
 		vim.keymap.set("n", "<leader>fmt", function()
 			format_go(bufnr, client)
 		end, { buffer = bufnr, desc = "Format Go file and organise imports" })
@@ -57,30 +55,12 @@ vim.lsp.config("gopls", {
 vim.lsp.enable("gopls")
 
 -- Run golangci-lint as a second server for checks beyond gopls; overlapping warnings may appear twice.
+-- lspconfig's cmd default is identical; its filetypes/root_markers are supersets (also
+-- gomod/go.work/.golangci.toml/.golangci.json), which is harmless here, so they're dropped too.
 vim.lsp.config("golangci_lint_ls", {
-	cmd = { "golangci-lint-langserver" },
-	filetypes = { "go" },
-	root_markers = { ".golangci.yml", ".golangci.yaml", "go.mod", ".git" },
 	init_options = {
 		command = { "golangci-lint", "run", "--output.json.path", "stdout", "--show-stats=false", "--issues-exit-code=1" },
 	},
 })
 
 vim.lsp.enable("golangci_lint_ls")
-
-local dap = require("dap")
--- Delve builds from its process cwd, which must be inside the Go module.
-dap.adapters.go = function(callback, config)
-	callback({
-		type = "server",
-		port = "${port}",
-		executable = {
-			command = "dlv",
-			args = { "dap", "-l", "127.0.0.1:${port}" },
-			cwd = config.cwd,
-		},
-	})
-end
-dap.configurations.go = {
-	{ type = "go", request = "launch", name = "Launch Go package", program = "${fileDirname}", cwd = "${fileDirname}" },
-}

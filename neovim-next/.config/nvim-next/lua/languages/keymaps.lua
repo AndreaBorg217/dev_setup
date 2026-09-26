@@ -1,3 +1,23 @@
+-- Close the hover float (and any other open_floating_preview-based float) with Esc.
+-- A single trigger (e.g. one press of K) opens the float without focusing it, so the
+-- Esc keymap must also live on the buffer the cursor is still in, not only on the
+-- float's own buffer.
+do
+	local open_floating_preview = vim.lsp.util.open_floating_preview
+	vim.lsp.util.open_floating_preview = function(contents, syntax, opts, ...)
+		local source_bufnr = vim.api.nvim_get_current_buf()
+		local bufnr, winid = open_floating_preview(contents, syntax, opts, ...)
+		local function close()
+			if vim.api.nvim_win_is_valid(winid) then
+				vim.api.nvim_win_close(winid, true)
+			end
+		end
+		vim.keymap.set("n", "<Esc>", close, { buffer = bufnr, desc = "Close floating window" })
+		vim.keymap.set("n", "<Esc>", close, { buffer = source_bufnr, desc = "Close floating window" })
+		return bufnr, winid
+	end
+end
+
 -- Location mappings jump to one result or show a Telescope picker for several.
 vim.api.nvim_create_autocmd("LspAttach", {
 	group = vim.api.nvim_create_augroup("lsp_keymaps", { clear = true }),
@@ -6,7 +26,7 @@ vim.api.nvim_create_autocmd("LspAttach", {
 		local buffer = event.buf
 		local client = vim.lsp.get_client_by_id(event.data.client_id)
 		if client:supports_method("textDocument/codeLens") then
-			vim.lsp.codelens.enable(true, { bufnr = buffer })
+			-- vim.lsp.codelens.enable(true, { bufnr = buffer }) -- disabled per plan decision
 		end
 		vim.keymap.set("n", "gR", builtin.lsp_references, { buffer = buffer, desc = "Find references" })
 		vim.keymap.set("n", "<leader>gr", builtin.lsp_references, { buffer = buffer, desc = "Find references" })

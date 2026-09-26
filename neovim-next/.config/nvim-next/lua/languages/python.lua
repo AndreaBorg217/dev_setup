@@ -21,22 +21,19 @@ local function format_python(bufnr, client)
 end
 
 vim.lsp.config("ty", {
-	cmd = { "ty", "server" },
-	filetypes = { "python" },
+	-- lspconfig's cmd/filetypes default is identical; root_markers is kept because this
+	-- project also treats uv.lock as a root, which lspconfig's default list lacks.
 	root_markers = { "ty.toml", "pyproject.toml", "uv.lock", "setup.py", "setup.cfg", "requirements.txt", ".git" },
 	on_attach = function(client, bufnr)
 		vim.lsp.completion.enable(true, client.id, bufnr, { autotrigger = true })
-		vim.lsp.inlay_hint.enable(true, { bufnr = bufnr })
 	end,
 })
 
 vim.lsp.enable("ty")
 
 -- Ruff owns lint, fixes, imports and formatting; ty owns type intelligence and hover.
+-- lspconfig's cmd/filetypes/root_markers default is identical here.
 vim.lsp.config("ruff", {
-	cmd = { "ruff", "server" },
-	filetypes = { "python" },
-	root_markers = { "pyproject.toml", "ruff.toml", ".ruff.toml", ".git" },
 	init_options = {
 		settings = {
 			lineLength = 120,

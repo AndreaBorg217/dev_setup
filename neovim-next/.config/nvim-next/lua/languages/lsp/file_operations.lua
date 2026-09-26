@@ -4,10 +4,13 @@ vim.pack.add({ "https://github.com/antosha417/nvim-lsp-file-operations" }, { con
 local file_operations = require("lsp-file-operations")
 file_operations.setup()
 
-vim.lsp.config("*", {
-	capabilities = vim.tbl_deep_extend(
-		"force",
-		vim.lsp.protocol.make_client_capabilities(),
-		file_operations.default_capabilities()
-	),
-})
+local M = {}
+
+-- Consumed by languages/lsp/init.lua's merged "*" config instead of duplicating this table.
+M.capabilities = vim.tbl_deep_extend(
+	"force",
+	vim.lsp.protocol.make_client_capabilities(),
+	file_operations.default_capabilities()
+)
+
+return M

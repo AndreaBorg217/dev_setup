@@ -9,7 +9,6 @@ local function float_config()
 		width = width,
 		height = height,
 		style = "minimal",
-		border = "rounded",
 	}
 end
 

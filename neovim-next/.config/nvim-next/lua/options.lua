@@ -1,5 +1,4 @@
 vim.g.mapleader = " " -- Use Space as the leader key.
-vim.g.netrw_liststyle = 3 -- Show netrw files as a tree.
 
 vim.opt.relativenumber = true -- Show relative line numbers away from the cursor.
 vim.opt.number = true -- Show the current line's absolute number.
@@ -15,7 +14,7 @@ vim.opt.wrap = false -- Keep code lines on one screen line by default.
 vim.opt.ignorecase = true -- Ignore case in searches by default.
 vim.opt.smartcase = true -- Match case when a search contains uppercase.
 vim.opt.complete = { ".", "w", "b", "o" } -- Suggest words from open buffers and the active LSP omnifunc.
-vim.opt.completeopt = { "menu", "menuone", "noselect", "popup" } -- Show suggestions and documentation without selecting a match.
+vim.opt.completeopt = { "menu", "menuone", "noselect", "popup", "fuzzy" } -- Show suggestions and documentation without selecting a match.
 vim.opt.autocomplete = true -- Trigger native completion while typing.
 
 vim.opt.cursorline = true -- Highlight the cursor's line.
@@ -41,6 +40,7 @@ vim.opt.fixendofline = true -- Write a final newline when saving.
 
 vim.opt.cmdheight = 0 -- Show the command line only while it is in use.
 vim.opt.winborder = "rounded" -- Give floating windows rounded default borders.
+vim.opt.pumborder = "rounded" -- Give the popup completion menu a rounded border.
 
 -- Use Neovim 0.12's experimental command-line and message UI.
 require("vim._core.ui2").enable({})
