@@ -19,41 +19,50 @@
   tags:
     - "vim"
 
-- name: Install Neovim 0.11.4
+- name: Install tree-sitter CLI (required by nvim-treesitter's main branch)
+  community.general.homebrew:
+    name: tree-sitter-cli
+    state: present
+  tags:
+    - "vim"
+
+- name: Install Neovim nightly
   vars:
-    neovim_version: "0.11.4"
     neovim_release_architecture: >-
       {{ {'arm64': 'arm64', 'x86_64': 'x86_64'}[ansible_facts.architecture] }}
-    neovim_release_checksums:
-      arm64: "2de9623a4aa8cedf85c51e33bf8e85e05f6f291b923cd666c04704ccf164e8b7"
-      x86_64: "567b89138c29386f67a00fc8e26c6469c8bf0e5707dfea5e3fbaf4e21294d9eb"
     neovim_install_directory: >-
-      {{ ansible_facts.env.HOME }}/.local/opt/neovim/{{ neovim_version }}
+      {{ ansible_facts.env.HOME }}/.local/opt/neovim/nightly
     neovim_archive: >-
-      {{ ansible_facts.env.HOME }}/Library/Caches/neovim-{{ neovim_version }}-{{ neovim_release_architecture }}.tar.gz
+      {{ ansible_facts.env.HOME }}/Library/Caches/neovim-nightly-{{ neovim_release_architecture }}.tar.gz
   tags:
     - "vim"
   block:
-    - name: Inspect Neovim installation directory
-      ansible.builtin.stat:
-        path: "{{ neovim_install_directory }}"
-      register: neovim_install_directory_state
-
-    - name: Create Neovim installation directory
+    - name: Create Neovim nightly installation directory
       ansible.builtin.file:
         path: "{{ neovim_install_directory }}"
         state: directory
         mode: "0755"
 
-    - name: Download Neovim release
+    # Nightly is a rolling release with no published shasum256.txt (unlike
+    # tagged releases), so there is no checksum to pin or verify against;
+    # force a fresh download each run to track the latest build. Pinned to
+    # nightly (not a tagged release) because this config needs an inlay_hint
+    # fix (neovim/neovim#40569) that has not landed in a tagged release yet.
+    - name: Download Neovim nightly release
       ansible.builtin.get_url:
         url: >-
-          https://github.com/neovim/neovim/releases/download/v{{ neovim_version }}/nvim-macos-{{ neovim_release_architecture }}.tar.gz
+          https://github.com/neovim/neovim/releases/download/nightly/nvim-macos-{{ neovim_release_architecture }}.tar.gz
         dest: "{{ neovim_archive }}"
-        checksum: "sha256:{{ neovim_release_checksums[neovim_release_architecture] }}"
         mode: "0644"
+        force: true
+      register: neovim_nightly_download
 
-    - name: Extract Neovim release
+    - name: Inspect installed Neovim nightly binary
+      ansible.builtin.stat:
+        path: "{{ neovim_install_directory }}/bin/nvim"
+      register: neovim_nightly_binary
+
+    - name: Extract Neovim nightly release
       ansible.builtin.command:
         argv:
           - /usr/bin/tar
@@ -62,19 +71,13 @@
           - -C
           - "{{ neovim_install_directory }}"
           - --strip-components=1
-        creates: "{{ neovim_install_directory }}/bin/nvim"
-      when: >-
-        not ansible_check_mode or
-        neovim_install_directory_state.stat.isdir | default(false)
+      when: neovim_nightly_download.changed or not neovim_nightly_binary.stat.exists
 
-    - name: Select installed Neovim version
+    - name: Select Neovim nightly as the current binary
       ansible.builtin.file:
         src: "{{ neovim_install_directory }}"
         dest: "{{ ansible_facts.env.HOME }}/.local/opt/neovim/current"
         state: link
-      when: >-
-        not ansible_check_mode or
-        neovim_install_directory_state.stat.isdir | default(false)
 
 - name: Inspect existing Neovim config
   ansible.builtin.stat:
