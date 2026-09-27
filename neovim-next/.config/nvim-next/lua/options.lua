@@ -38,7 +38,7 @@ vim.opt.updatetime = 50 -- Trigger idle events after 50 ms.
 vim.opt.endofline = true -- Record a final newline for the buffer.
 vim.opt.fixendofline = true -- Write a final newline when saving.
 
-vim.opt.cmdheight = 0 -- Show the command line only while it is in use.
+vim.opt.cmdheight = 1 -- cmdheight = 0 left flash.nvim's label highlights stuck after a jump (missed redraw).
 vim.opt.winborder = "rounded" -- Give floating windows rounded default borders.
 vim.opt.pumborder = "rounded" -- Give the popup completion menu a rounded border.
 
