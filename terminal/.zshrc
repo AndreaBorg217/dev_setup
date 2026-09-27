@@ -105,61 +105,74 @@ venvd(){
     deactivate
 }
 
-# Create a .pylintrc that disables import-error
-pylintrc(){
-    touch .pylintrc
-    echo -e "[MESSAGES CONTROL]\ndisable=import-error" > .pylintrc
-}
-
-
 # ============================================================================
 # DOCKER FUNCTIONS
+# Some of these (image size inspection, dockerignore effectiveness) are from
+# https://devopscube.com/kubeflow-docker-image-optmization/
 # ============================================================================
 
 # Follow last n lines of logs, filtering for errors/warnings (default: 20)
 dockerrs() {
+    if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+        echo "Usage: dockerrs [lines]  (default: 20)"
+        return 0
+    fi
     local lines=${1:-20}
     docker compose logs -f -n "$lines" | grep -E "ERROR|CRITICAL|WARNING"
 }
 
 # Follow last n lines of logs (default: 20)
 docklogs() {
+    if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+        echo "Usage: docklogs [lines]  (default: 20)"
+        return 0
+    fi
     local lines=${1:-20}
     docker compose logs -f -n "$lines"
 }
 
 # Docker Compose up in detached mode
 dockup() {
+    [[ "$1" == "--help" || "$1" == "-h" ]] && { echo "Usage: dockup  (docker compose up -d)"; return 0; }
     docker compose up -d
 }
 
 # Docker Compose down
 dockdown() {
+    [[ "$1" == "--help" || "$1" == "-h" ]] && { echo "Usage: dockdown  (docker compose down)"; return 0; }
     docker compose down
 }
 
 # Docker Compose up with build in detached mode
 dockupb() {
+    [[ "$1" == "--help" || "$1" == "-h" ]] && { echo "Usage: dockupb  (docker compose up -d --build)"; return 0; }
     docker compose up -d --build
 }
 
 # Show running containers
 dock() {
+    [[ "$1" == "--help" || "$1" == "-h" ]] && { echo "Usage: dock  (docker ps)"; return 0; }
     docker ps
 }
 
 # Show all containers including stopped
 docka() {
+    [[ "$1" == "--help" || "$1" == "-h" ]] && { echo "Usage: docka  (docker ps -a)"; return 0; }
     docker ps -a
 }
 
 # Show container resource usage stats
 docks() {
+    [[ "$1" == "--help" || "$1" == "-h" ]] && { echo "Usage: docks  (docker stats)"; return 0; }
     docker stats
 }
 
 # Inspect image size
 imgsize() {
+    if [[ -z "$1" || "$1" == "--help" || "$1" == "-h" ]]; then
+        echo "Usage: imgsize <image>"
+        return 0
+    fi
     local image="$1"
     echo "Total size for $image: $(docker images "$image" --format '{{.Size}}')"
     docker history "$image" --no-trunc --format "table {{.Size}}\t{{.CreatedBy}}" > "${image//\//_}.txt"
@@ -167,11 +180,13 @@ imgsize() {
 
 # dockerignore effectiveness
 dockignore () {
+    [[ "$1" == "--help" || "$1" == "-h" ]] && { echo "Usage: dockignore  (builds with no cache, greps transfer context size)"; return 0; }
     docker build --no-cache --progress=plain -t test . 2>&1 | grep "transferring context"
 }
 
 # List all custom Docker networks and their subnets
 docknets() {
+    [[ "$1" == "--help" || "$1" == "-h" ]] && { echo "Usage: docknets  (writes docker_networks.txt with subnets per network)"; return 0; }
     OUTPUT_FILE="docker_networks.txt"
     > "$OUTPUT_FILE"
 
@@ -197,6 +212,165 @@ docknets() {
     echo "Total networks scanned: $(docker network ls --format "{{.Name}}" | grep -v "bridge\|host\|none" | wc -l)"
 }
 
+# ============================================================================
+# KUBECTL FUNCTIONS
+# ============================================================================
+
+# Switch kubectl context (no arg: list contexts)
+kctx() {
+    if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+        echo "Usage: kctx [context-name]  (no arg: list contexts)"
+        return 0
+    fi
+    if [ -z "$1" ]; then
+        kubectl config get-contexts
+    else
+        kubectl config use-context "$1"
+    fi
+}
+
+# Switch kubectl namespace (no arg: list namespaces)
+kname() {
+    if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+        echo "Usage: kname [namespace]  (no arg: list namespaces)"
+        return 0
+    fi
+    if [ -z "$1" ]; then
+        kubectl get namespaces
+    else
+        kubectl config set-context --current --namespace="$1"
+    fi
+}
+
+# Follow logs of the first pod matching a name pattern (default tail: 100 lines)
+klogs() {
+    if [[ -z "$1" || "$1" == "--help" || "$1" == "-h" ]]; then
+        echo "Usage: klogs <pod-name-pattern> [container]"
+        return 0
+    fi
+    local pattern="$1"
+    local container="$2"
+    local pod
+    pod=$(kubectl get pods --no-headers -o custom-columns=":metadata.name" | grep "$pattern" | head -n1)
+    if [ -z "$pod" ]; then
+        echo "No pod matching '$pattern' found"
+        return 1
+    fi
+    if [ -n "$container" ]; then
+        kubectl logs -f --tail=100 "$pod" -c "$container"
+    else
+        kubectl logs -f --tail=100 "$pod"
+    fi
+}
+
+# Follow logs of the first pod matching a name pattern, filtered for errors/warnings
+kerrs() {
+    if [[ -z "$1" || "$1" == "--help" || "$1" == "-h" ]]; then
+        echo "Usage: kerrs <pod-name-pattern> [container]"
+        return 0
+    fi
+    local pattern="$1"
+    local container="$2"
+    local pod
+    pod=$(kubectl get pods --no-headers -o custom-columns=":metadata.name" | grep "$pattern" | head -n1)
+    if [ -z "$pod" ]; then
+        echo "No pod matching '$pattern' found"
+        return 1
+    fi
+    if [ -n "$container" ]; then
+        kubectl logs -f --tail=100 "$pod" -c "$container" | grep -E "ERROR|CRITICAL|WARNING|Exception"
+    else
+        kubectl logs -f --tail=100 "$pod" | grep -E "ERROR|CRITICAL|WARNING|Exception"
+    fi
+}
+
+# List pods, sorted by age; pass through extra flags e.g. -n <ns>, -A, or -o wide
+kpods() {
+    if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+        echo "Usage: kpods [kubectl-get-flags]  (e.g. -n <ns>, -A, -o wide)"
+        return 0
+    fi
+    kubectl get pods --sort-by=.metadata.creationTimestamp "$@"
+}
+
+# List deployments (wide output, sorted by age); pass through extra flags e.g. -n <ns> or -A
+kdeps() {
+    if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+        echo "Usage: kdeps [kubectl-get-flags]  (e.g. -n <ns>, -A)"
+        return 0
+    fi
+    kubectl get deployments -o wide --sort-by=.metadata.creationTimestamp "$@"
+}
+
+# List services (wide output, sorted by age); pass through extra flags e.g. -n <ns> or -A
+ksvcs() {
+    if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+        echo "Usage: ksvcs [kubectl-get-flags]  (e.g. -n <ns>, -A)"
+        return 0
+    fi
+    kubectl get services -o wide --sort-by=.metadata.creationTimestamp "$@"
+}
+
+# Describe a resource, e.g. kdesc pod my-pod, kdesc deployment my-deploy
+kdesc() {
+    if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+        echo "Usage: kdesc <resource-type> <name> [-n <namespace>]"
+        echo "  e.g. kdesc pod my-pod, kdesc deployment my-deploy -n my-ns"
+        return 0
+    fi
+    kubectl describe "$@"
+}
+
+# List events sorted by creation timestamp; pass through extra flags e.g. -n <ns> or -A
+# First bare (non-flag) arg is treated as an object name and filtered via field-selector,
+# e.g. `kevents my-pod -n my-ns` shows events for my-pod in my-ns.
+kevents() {
+    if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+        echo "Usage: kevents [object-name] [kubectl-get-flags]  (e.g. -n <ns>, -A)"
+        return 0
+    fi
+    local name=""
+    if [[ -n "$1" && "$1" != -* ]]; then
+        name="$1"
+        shift
+    fi
+    if [[ -n "$name" ]]; then
+        kubectl get events --sort-by=.metadata.creationTimestamp --field-selector "involvedObject.name=$name" "$@"
+    else
+        kubectl get events --sort-by=.metadata.creationTimestamp "$@"
+    fi
+}
+
+# List pods by CPU usage (metrics-server required); pass through extra flags e.g. -n <ns> or -A
+kcpu() {
+    if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+        echo "Usage: kcpu [kubectl-top-flags]  (e.g. -n <ns>, -A)"
+        return 0
+    fi
+    kubectl top pods --sort-by=cpu "$@"
+}
+
+# List pods by memory usage (metrics-server required); pass through extra flags e.g. -n <ns> or -A
+kram() {
+    if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+        echo "Usage: kram [kubectl-top-flags]  (e.g. -n <ns>, -A)"
+        return 0
+    fi
+    kubectl top pods --sort-by=memory "$@"
+}
+
+# Generate a resource manifest via client-side dry-run, e.g. kgen deploy.yaml deployment my-app --image=nginx
+kgen() {
+    if [[ -z "$1" || -z "$2" || "$1" == "--help" || "$1" == "-h" ]]; then
+        echo "Usage: kgen <outfile> <kubectl-create-args...>"
+        echo "  e.g. kgen deploy.yaml deployment my-app --image=nginx"
+        return 0
+    fi
+    local outfile="$1"
+    shift
+    kubectl create "$@" --dry-run=client -o yaml > "$outfile"
+}
+
 lsg () {
     ls | grep -iE "$@"
 }
@@ -204,30 +378,3 @@ lsg () {
 gbc () {
     git branch "$@" && git checkout "$@"
 }
-
-# Clean unused Neovim plugins and LSPs (lua spec removed ≠ uninstalled)
-# - Lazy: `python = {}` in linter.lua stays installed until `Lazy clean`
-# - Mason: `ensure_installed` in mason.lua doesn't auto-uninstall old servers (e.g. removed pyright)
-function nvim_clean {
-    echo "→ Lazy: removing unused plugins (no longer in lua spec)..."
-    nvim --headless "+Lazy! clean" +qa 2>/dev/null
-    echo ""
-    echo "→ Mason: uninstalling packages not in mason.lua ensure_installed..."
-    # actual Mason package dir names (mason-lspconfig maps lua_ls->lua-language-server etc.)
-    local keep="pyright ruff gopls jdtls lua-language-server yaml-language-server dockerfile-language-server docker-compose-language-service gofumpt goimports golangci-lint gomodifytags impl yamllint yamlfmt hadolint cspell stylua prettier java-debug-adapter java-test palantir-java-format vscode-spring-boot-tools"
-    for pkg in $(ls -1 ~/.local/share/nvim/mason/packages 2>/dev/null); do
-        if ! echo "$keep" | tr ' ' '\n' | grep -qx "$pkg"; then
-            echo "  - MasonUninstall $pkg (not in ensure_installed)"
-            nvim --headless "+MasonUninstall $pkg" +qa 2>/dev/null
-        else
-            echo "  ✓ keep $pkg"
-        fi
-    done
-    echo ""
-    echo "  Verify with :Mason and :LspInfo"
-}
-alias clean_nvim=nvim_clean
-
-# Launch nvim-next (Neovim 0.12 config under neovim-next/.config/nvim-next)
-# instead of the current neovim/.config/nvim setup, for testing.
-alias nnvim='PATH="$HOME/.local/opt/neovim/next/bin:$PATH" NVIM_APPNAME=nvim-next nvim'
