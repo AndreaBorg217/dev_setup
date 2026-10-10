@@ -1,3 +1,15 @@
+vim.pack.add({ "https://github.com/brianhuster/live-preview.nvim" }, { confirm = false })
+
+vim.api.nvim_create_autocmd("FileType", {
+	pattern = "markdown",
+	callback = function(event)
+		vim.keymap.set("n", "<leader>op", "<cmd>LivePreview start<CR>", {
+			buffer = event.buf,
+			desc = "Open Markdown preview",
+		})
+	end,
+})
+
 vim.api.nvim_create_autocmd("FileType", {
 	group = vim.api.nvim_create_augroup("prose_spelling", { clear = true }),
 	pattern = { "markdown", "text" },
