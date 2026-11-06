@@ -1,7 +1,8 @@
 ---
 name: prometheus
-description: Use when querying Prometheus for metrics — instant/range queries, PromQL, or discovering metric/label names.
-when_to_use: "Prometheus, PromQL, instant query, range query, /api/v1/query, /api/v1/query_range, /api/v1/label/__name__/values, /api/v1/label/<name>/values, metric discovery, label name, PROMETHEUS_URL, curl, jq, request timeout, high cardinality, fleet-wide metric, aggregate, Grafana panel, panel expression, byte metrics, GiB, GB, JVM memory, RSS, heap, committed heap, non-heap, buffer pools, container working set, RocksDB, Alertmanager, snapshot, delete series, config reload"
+description: Use when querying or analyzing Prometheus metrics — service health, request/error rates, latency, business counters, trends, or metric/label discovery.
+when_to_use: "Prometheus, PromQL, service health, request rate, error rate, latency, business counter, trend analysis, hourly breakdown, counter total, instant query, range query, /-/healthy, /api/v1/query, /api/v1/query_range, /api/v1/label/__name__/values, /api/v1/label/<name>/values, metric discovery, label name, PROMETHEUS_URL, curl, jq, request timeout, high cardinality, fleet-wide metric, aggregate, Grafana panel, panel expression, byte metrics, GiB, GB, JVM memory, RSS, heap, committed heap, non-heap, buffer pools, container working set, RocksDB"
+---
 
 # Prometheus
 
@@ -15,17 +16,20 @@ Prometheus's base URL is never hardcoded here. If it isn't already known from th
 
 The workflow below is sufficient for ordinary instant queries. Read
 [references/prometheus-api.md](references/prometheus-api.md) when the task needs
-range queries, metric discovery, or Grafana panel extraction.
+range queries, counter totals or interval breakdowns, metric/label discovery,
+or Grafana panel extraction.
 
 ## Query workflow
 
-1. Confirm the base URL.
+1. Confirm the base URL and check `GET /-/healthy` with a request timeout before the first query.
 2. If the exact metric or label name isn't known, discover it first via `/api/v1/label/__name__/values` or `/api/v1/label/<name>/values` rather than guessing.
-3. Filter every metric to the named service, workload, namespace, pod, job, or instance. Never query a fleet-wide metric when the target is already known.
+3. Inspect the selected metric's label names before filtering or grouping; a label available elsewhere may be absent on this metric. Filter every metric to the named service, workload, namespace, pod, job, or instance using verified labels. Never query a fleet-wide metric when the target is already known.
 4. Pick instant query (`/api/v1/query`) for a single point in time, or range query (`/api/v1/query_range`) for a series over a window.
 5. Aggregate in PromQL when the question asks for an aggregate. Otherwise project only the labels and values needed, and cap displayed series or samples at the source.
 6. Set a request timeout on every call; Prometheus can be slow on wide time ranges or high-cardinality queries.
 7. Parse the JSON response with a compact `jq` projection. Do not return the raw response or full metric label maps to the conversation.
+
+A hook redirects Bash `curl`: run these calls inside `ctx_execute`, not Bash.
 
 For a bounded instant-vector result:
 
@@ -43,6 +47,20 @@ curl -sS -G "$PROMETHEUS_URL/api/v1/query" \
 
 If more than 20 series are relevant, narrow or aggregate the PromQL rather than
 silently relying on the display cap.
+
+## Counter and trend analysis
+
+Use `increase()` for counter totals over a requested window and `rate()` for
+per-second rates. Both account for counter resets; `delta()` is for gauges.
+Apply the function to each series before summing. For interval counts, match
+the `increase()` window to the range-query step and evaluate at interval ends.
+Read the reference for total, per-label, and hourly examples.
+
+For a window or trend question, report the requested total where applicable,
+an interval table, peak and trough timestamps, and patterns supported by the
+data. State the timezone, units, and any gaps or unavailable grouping labels.
+If a requested label is missing, explain the limitation and use an available
+log or other data source only when it supports that breakdown.
 
 ## Units and causal claims
 
