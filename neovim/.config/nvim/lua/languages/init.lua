@@ -1,5 +1,6 @@
 vim.diagnostic.config({
 	virtual_text = true, -- Show diagnostic messages beside the affected code.
+	underline = false, -- Mark diagnostics with signs and messages only, not underlines.
 	update_in_insert = true, -- Keep diagnostic displays current while typing.
 	severity_sort = true, -- Show the most severe diagnostic first on each line.
 	signs = {
