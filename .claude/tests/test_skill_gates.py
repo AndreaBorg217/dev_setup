@@ -26,7 +26,7 @@ class SkillGateTests(unittest.TestCase):
 
         self.recorder = load_module("record_skill_invocation", "record-skill-invocation.py")
         self.coding_gate = load_module("require_coding_skill", "require-coding-skill.py")
-        self.git_gate = load_module("require_git_skill", "require-git-skill.py")
+        self.git_gate = load_module("require_cli_skill", "require-cli-skill.py")
         for module in (self.recorder, self.coding_gate, self.git_gate):
             module.MARKER_ROOT = self.marker_root
 
@@ -168,6 +168,50 @@ class SkillGateTests(unittest.TestCase):
             self.coding_gate, self.edit_payload("sess-8", "agent-f", str(target))
         )
         self.assert_allowed(result)
+
+    def bash_payload(self, session_id, agent_id, command):
+        return {
+            "session_id": session_id,
+            "agent_id": agent_id,
+            "tool_name": "Bash",
+            "tool_input": {"command": command},
+            "transcript_path": self.missing_transcript_path(),
+        }
+
+    # 9. First CLI call is denied naming the skill; allowed once recorded.
+    def test_cli_requires_matching_skill_until_marker(self):
+        cases = {
+            "kubectl get pods": "kubectl",
+            "aws sts get-caller-identity": "aws",
+            "docker ps": "docker",
+            "argocd app list": "argocd",
+            "glab mr list": "glab",
+            "op read op://v/i/f": "1password-cli",
+            "cd x && KUBECONFIG=y kubectl get pods": "kubectl",
+            "echo hi | docker run x": "docker",
+            "echo $(aws s3 ls)": "aws",
+        }
+        for index, (command, skill) in enumerate(cases.items()):
+            with self.subTest(command=command):
+                session_id = f"sess-9-{index}"
+                payload = self.bash_payload(session_id, "agent-g", command)
+                reason = self.assert_denied(self.run_module(self.git_gate, payload))
+                self.assertIn(f"`{skill}`", reason)
+                self.write_marker(session_id, "agent-g", skill)
+                self.assert_allowed(self.run_module(self.git_gate, payload))
+
+    # 10. CLI names in quotes, paths or arguments are not commands.
+    def test_cli_name_outside_command_position_is_allowed(self):
+        for command in (
+            'git log --grep "kubectl get; aws s3 ls"',
+            "echo 'run kubectl get pods'",
+            "ls ~/.claude/skills/kubectl/SKILL.md",
+            "cat docs/aws-notes.md",
+            "grep -r docker .",
+        ):
+            with self.subTest(command=command):
+                payload = self.bash_payload("sess-10", "agent-h", command)
+                self.assert_allowed(self.run_module(self.git_gate, payload))
 
 
 if __name__ == "__main__":

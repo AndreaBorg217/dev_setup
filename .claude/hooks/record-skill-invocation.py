@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Record a session- and agent-scoped marker when a skill is invoked.
 
-require-coding-skill.py and require-git-skill.py gate Edit/Write/MultiEdit
+require-coding-skill.py and require-cli-skill.py gate Edit/Write/MultiEdit
 (and git-mutating Bash) on a skill having been invoked first. They decide
 this by re-scanning the transcript file for a prior Skill tool_use, keyed by
 transcript_path. For a subagent, the transcript_path seen by the gate on its

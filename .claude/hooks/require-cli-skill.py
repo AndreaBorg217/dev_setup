@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Deny git-mutating Bash commands, and edits made on an unverified feature
-branch, until the `git` skill has been invoked."""
+branch, until the `git` skill has been invoked. Also deny the first Bash call
+to a CLI that has a matching skill (CLI_SKILLS) until that skill is invoked."""
 
 from __future__ import annotations
 
@@ -26,10 +27,25 @@ def _safe_id(raw: str) -> str:
     return re.sub(r"[^A-Za-z0-9_-]", "_", raw)
 
 
-def _marker_present(session_id: str, agent_id: str) -> bool:
+def _marker_present(session_id: str, agent_id: str, skill: str = "git") -> bool:
     if not session_id:
         return False
-    return (MARKER_ROOT / _safe_id(session_id) / _safe_id(agent_id) / "git").exists()
+    return (MARKER_ROOT / _safe_id(session_id) / _safe_id(agent_id) / skill).exists()
+
+# CLI run in Bash -> skill that must be invoked before its first use.
+CLI_SKILLS = {
+    "kubectl": "kubectl",
+    "aws": "aws",
+    "docker": "docker",
+    "argocd": "argocd",
+    "glab": "glab",
+    "op": "1password-cli",
+}
+CLI_COMMAND = re.compile(
+    r"(?:^|[;&|(\n])\s*(?:[A-Za-z_][A-Za-z0-9_]*=\S+\s+)*"
+    r"(" + "|".join(CLI_SKILLS) + r")\s"
+)
+QUOTED_STRING = re.compile(r"\"[^\"]*\"|'[^']*'")
 
 GIT_MUTATING_COMMAND = re.compile(
     r"(?:^|[;&|]|\bcd\b[^;&|]*;)\s*"
@@ -56,7 +72,7 @@ def load_input() -> dict[str, Any]:
     return value if isinstance(value, dict) else {}
 
 
-def _skill_invoked_now(transcript_path: str) -> bool:
+def _skill_invoked_now(transcript_path: str, expected: str) -> bool:
     try:
         with open(transcript_path, "r", encoding="utf-8", errors="replace") as handle:
             for line in handle:
@@ -71,16 +87,16 @@ def _skill_invoked_now(transcript_path: str) -> bool:
                     if not isinstance(block, dict) or block.get("name") != "Skill":
                         continue
                     skill = str((block.get("input") or {}).get("skill") or "")
-                    if skill == "git" or skill.endswith(":git"):
+                    if skill == expected or skill.endswith(f":{expected}"):
                         return True
     except OSError:
         return False
     return False
 
 
-def git_skill_invoked(transcript_path: str) -> bool:
+def skill_invoked(transcript_path: str, skill: str = "git") -> bool:
     for attempt in range(_RETRY_ATTEMPTS):
-        if _skill_invoked_now(transcript_path):
+        if _skill_invoked_now(transcript_path, skill):
             return True
         if attempt < _RETRY_ATTEMPTS - 1:
             time.sleep(_RETRY_DELAY_SECONDS)
@@ -168,11 +184,31 @@ def main() -> int:
 
     if tool_name == "Bash":
         command = str(tool_input.get("command") or "")
+
+        unquoted = QUOTED_STRING.sub('""', command)
+        missing_cli_skills = []
+        for cli in CLI_COMMAND.findall(unquoted):
+            skill = CLI_SKILLS[cli]
+            if skill in missing_cli_skills:
+                continue
+            if _marker_present(session_id, agent_id, skill):
+                continue
+            if agent_id_raw is None and transcript_path and skill_invoked(str(transcript_path), skill):
+                continue
+            missing_cli_skills.append(skill)
+        if missing_cli_skills:
+            names = ", ".join(f"`{skill}`" for skill in missing_cli_skills)
+            emit_deny(
+                f"CLI_SKILL_REQUIRED: invoke the {names} skill via the Skill tool "
+                "before the first Bash command that runs its CLI."
+            )
+            return 0
+
         if not GIT_MUTATING_COMMAND.search(command):
             return 0
         if _marker_present(session_id, agent_id):
             return 0
-        if agent_id_raw is None and transcript_path and git_skill_invoked(str(transcript_path)):
+        if agent_id_raw is None and transcript_path and skill_invoked(str(transcript_path)):
             return 0
         emit_deny(
             "GIT_SKILL_REQUIRED: invoke the `git` skill via the Skill tool "
@@ -186,7 +222,7 @@ def main() -> int:
             return 0
         if _marker_present(session_id, agent_id):
             return 0
-        if agent_id_raw is None and transcript_path and git_skill_invoked(str(transcript_path)):
+        if agent_id_raw is None and transcript_path and skill_invoked(str(transcript_path)):
             return 0
         branch = on_unverified_feature_branch(str(file_path))
         if not branch:
