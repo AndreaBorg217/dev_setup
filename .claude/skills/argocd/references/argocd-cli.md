@@ -120,6 +120,8 @@ argocd app manifests "$APP" --source git
 argocd app manifests "$APP" --source live
 ```
 
+`argocd app manifests` prints YAML, not JSON: pipe it to `yq` (for example `yq 'select(.kind == "Deployment" and .metadata.name == strenv(RESOURCE))'`) or read it as YAML. `jq` fails on it.
+
 Do not call desired Git manifests “deployed”. Use the refreshed application
 status, live manifests, resource tree, sync revision, and reported images as
 evidence for what is running. Narrow by kind/name before loading any manifest
@@ -239,6 +241,30 @@ Add `--prune` only when the deletion set was explicitly approved. After the
 rollback, rerun the compact refreshed application projection and `app history`.
 Report the observed revision, health, sync state, and operation result, and do
 not claim durable recovery until the Git desired state is reconciled.
+
+## Approved resource deletion
+
+`delete-resource` removes a live resource and is a conclusive operation: show the
+exact application, `GROUP:KIND:NAME`, namespace and whether dependents are
+orphaned, then obtain explicit approval immediately before running it. Automated
+sync may recreate the resource. Do not use `--all` or `--force` unless the user
+approved that mechanism and the resolved target.
+
+```bash
+argocd app delete-resource "$APP" \
+  --group apps \
+  --kind Deployment \
+  --namespace "$NAMESPACE" \
+  --resource-name "$RESOURCE"
+```
+
+Add `--orphan` only when dependents must be kept. Use an empty `--group ""` for core-group kinds. After an approved deletion, inspect the resource tree and refreshed application state.
+
+## Approved sync policy change
+
+`argocd app set "$APP" --sync-policy manual` (or `automated`) changes how the
+application reconciles. It is a mutation: show the application and the target
+policy and obtain approval first.
 
 ## Approved live-resource patch
 
