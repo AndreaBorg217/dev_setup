@@ -14,7 +14,9 @@ LOCAL_AGENT_MODELS = {
     "analyst": "sonnet",
     "builder": "sonnet",
     "explorer": "haiku",
+    "reviewer": "sonnet",
 }
+BUILTIN_AGENTS = {"explore", "plan"}
 MODEL_TIER = re.compile(r"(?:^|[^a-z])(haiku|sonnet|opus)(?=$|[^a-z])")
 
 
@@ -38,13 +40,22 @@ def validation_result(tool_input: dict[str, Any]) -> tuple[str, str] | None:
     agent_type = str(
         tool_input.get("subagent_type") or tool_input.get("type") or ""
     ).strip()
+    if agent_type.lower() in BUILTIN_AGENTS:
+        return "deny", (
+            f"AGENT_ROUTING: built-in {agent_type} is not allowed. Use local "
+            "`explorer` (haiku) for collection, `analyst` (sonnet) for "
+            "read-only analysis, `builder` (sonnet) for implementation, "
+            "`reviewer` (sonnet) for code review."
+        )
+
     model_value = tool_input.get("model")
     model_text = str(model_value or "").strip()
     if not model_text:
         return "deny", (
             "AGENT_MODEL_POLICY: every worker must declare model=haiku or "
-            "model=sonnet. The main thread must choose the least expensive "
-            "capable model for this task before dispatching it."
+            "model=sonnet. Use local `explorer` (haiku), `analyst`, `builder` or "
+            "`reviewer` (sonnet), `artifact-writer` (haiku), and set the "
+            "model explicitly."
         )
 
     requested_model = model_tier(model_text)

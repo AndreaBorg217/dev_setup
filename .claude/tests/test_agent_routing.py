@@ -53,7 +53,7 @@ class AgentRoutingTests(unittest.TestCase):
         )
 
     def test_every_agent_type_requires_approval_for_opus(self):
-        for agent_type in ("analyst", "plugin:reviewer", "general-purpose", ""):
+        for agent_type in ("analyst", "plugin:reviewer", "claude-code-guide", ""):
             with self.subTest(agent_type=agent_type):
                 self.assert_asks(
                     {"subagent_type": agent_type, "model": "claude-opus-5"}
@@ -66,9 +66,29 @@ class AgentRoutingTests(unittest.TestCase):
                 self.assertIsNone(self.run_hook("Agent", tool_input))
 
     def test_omitted_model_is_denied_for_every_agent_type(self):
-        for agent_type in ("explorer", "plugin:reviewer", "general-purpose", ""):
+        for agent_type in ("explorer", "plugin:reviewer", "claude-code-guide", ""):
             with self.subTest(agent_type=agent_type):
                 self.assert_denied({"subagent_type": agent_type})
+
+    def test_builtin_agents_are_denied_even_with_model(self):
+        for agent_type in ("Explore", "Plan"):
+            with self.subTest(agent_type=agent_type):
+                self.assert_denied({"subagent_type": agent_type, "model": "sonnet"})
+
+    def test_general_purpose_allowed_with_model_denied_without(self):
+        self.assertIsNone(
+            self.run_hook(
+                "Agent", {"subagent_type": "general-purpose", "model": "sonnet"}
+            )
+        )
+        self.assert_denied({"subagent_type": "general-purpose"})
+
+    def test_claude_code_guide_allowed_with_model(self):
+        self.assertIsNone(
+            self.run_hook(
+                "Agent", {"subagent_type": "claude-code-guide", "model": "haiku"}
+            )
+        )
 
     def test_explicit_unknown_model_is_denied(self):
         self.assert_denied(

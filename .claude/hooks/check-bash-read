@@ -1,5 +1,5 @@
 #!/bin/bash
-# Block Bash commands that read large files, redirect to /shunt-bulk-reader skill
+# Block Bash commands that read large files, redirect to the local Haiku explorer agent
 # Copied verbatim from spotify/portal-ai-plugins/plugins/shunt/hooks/check-bash-read (Apache-2.0)
 
 MIN_LINES="${SHUNT_MIN_LINES:-350}"
@@ -36,7 +36,7 @@ if [ -n "$file_path" ] && [ -f "$file_path" ]; then
     # Local compatibility change: current Claude Code PreToolUse hooks require
     # hookSpecificOutput.permissionDecision. Spotify's legacy decision:block is ignored.
     # Keep the upstream command matching above unchanged; only translate its block response.
-    reason="File is ${lines} lines (threshold: ${MIN_LINES}). Use the /shunt-bulk-reader skill or Haiku subagent instead of cat/head/tail. Piped commands (cat file | grep) pass through as targeted reads."
+    reason="File is ${lines} lines (threshold: ${MIN_LINES}). Delegate to the local `explorer` agent (model=haiku set explicitly) instead of cat/head/tail. Piped commands (cat file | grep) pass through as targeted reads."
     jq -n --arg reason "$reason" '{hookSpecificOutput: {hookEventName: "PreToolUse", permissionDecision: "deny", permissionDecisionReason: $reason}}'
     exit 0
   fi
@@ -52,7 +52,7 @@ if echo "$command" | grep -qE '(^|[;&|]\s*)(grep\s+(-[A-Za-z]*r[A-Za-z]*\s+|--re
   scoped=0
   echo "$command" | grep -qE '(^|\s)-[A-Za-z]*m[0-9]*[A-Za-z]*|(^|\s)-[A-Za-z]*l[A-Za-z]*(\s|$)|--max-count(=|\s)|-maxdepth\s' && scoped=1
   if [ "$scoped" -eq 0 ]; then
-    reason="Unscoped repository search (grep -r/find/rg without a result-limiting flag). Use the /shunt-bulk-reader skill or a Haiku explorer subagent for repo-wide search, or add -m/--max-count/-l (grep) or -maxdepth (find) to scope it."
+    reason="Unscoped repository search (grep -r/find/rg without a result-limiting flag). Use the local `explorer` agent (model=haiku set explicitly) for repo-wide search, or add -m/--max-count/-l (grep) or -maxdepth (find) to scope it."
     jq -n --arg reason "$reason" '{hookSpecificOutput: {hookEventName: "PreToolUse", permissionDecision: "deny", permissionDecisionReason: $reason}}'
     exit 0
   fi
