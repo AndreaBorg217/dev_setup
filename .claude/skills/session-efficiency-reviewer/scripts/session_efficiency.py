@@ -94,8 +94,6 @@ class Thresholds:
         max_subagent_requests: int = 10,
         max_main_requests: int = 25,
         hook_retry_count: int = 2,
-        slow_shunt_ms: int = 30_000,
-        large_shunt_result_bytes: int = 6_000,
         continuation_calls: int = 2,
         tool_errors: int = 10,
         missed_delegation_calls: int = 8,
@@ -116,8 +114,6 @@ class Thresholds:
         self.max_subagent_requests = max_subagent_requests
         self.max_main_requests = max_main_requests
         self.hook_retry_count = hook_retry_count
-        self.slow_shunt_ms = slow_shunt_ms
-        self.large_shunt_result_bytes = large_shunt_result_bytes
         self.continuation_calls = continuation_calls
         self.tool_errors = tool_errors
         self.missed_delegation_calls = missed_delegation_calls
@@ -222,42 +218,7 @@ def safe_result_marker(content: Any) -> str | None:
     lowered = content.lower()
     if "mandatory skill not loaded" in lowered or "required skill not loaded" in lowered:
         return "missing_skill"
-    if "shunt bulk-reader delegation is still required" in lowered:
-        return "shunt_pending_read"
-    if "shunt code-writer delegation is still required" in lowered:
-        return "shunt_pending_write"
-    if (
-        "read can expose more than" in lowered
-        and "shunt.py read" in lowered
-    ) or "shell read can expose more than" in lowered:
-        return "shunt_read_denied"
     return None
-
-
-def shunt_receipt(content: Any) -> dict[str, Any] | None:
-    if not isinstance(content, str) or "SHUNT_RECEIPT " not in content:
-        return None
-    raw = content.split("SHUNT_RECEIPT ", 1)[1].splitlines()[0]
-    try:
-        receipt = json.loads(raw)
-    except (json.JSONDecodeError, TypeError):
-        return None
-    if not isinstance(receipt, dict):
-        return None
-    allowed = {
-        key: receipt[key]
-        for key in (
-            "op",
-            "files",
-            "input_bytes",
-            "result_bytes",
-            "worker_result_bytes",
-            "elapsed_ms",
-            "truncated",
-        )
-        if key in receipt and isinstance(receipt[key], (str, int, bool))
-    }
-    return allowed or None
 
 
 def project_key(project_root: Path) -> str:
@@ -409,7 +370,6 @@ def _apply_result(call: dict[str, Any], event: dict[str, Any], block: dict[str, 
     call["structured_result"] = looks_structured(content)
     call["result_error"] = bool(block.get("is_error"))
     call["result_marker"] = safe_result_marker(content)
-    call["shunt_receipt"] = shunt_receipt(content)
     raw_result = event.get("toolUseResult")
     if not isinstance(raw_result, dict):
         return
@@ -508,7 +468,6 @@ def parse_transcripts(paths: Iterable[Path]) -> dict[str, Any]:
                             "structured_result": False,
                             "result_error": False,
                             "result_marker": None,
-                            "shunt_receipt": None,
                         }
                         calls.append(call)
                         request["calls"].append(call)
@@ -1202,8 +1161,6 @@ def analyze(
         call["result_marker"] for call in calls if call.get("result_marker")
     )
     for marker, count in sorted(marker_counts.items()):
-        if marker == "shunt_read_denied":
-            continue
         if count < thresholds.hook_retry_count:
             continue
         warnings.append(
@@ -1213,41 +1170,6 @@ def analyze(
                 "Make the guard advisory or stateless, and never block Stop while recovery is pending.",
                 marker=marker,
                 occurrences=count,
-            )
-        )
-
-    receipts = [call["shunt_receipt"] for call in calls if call.get("shunt_receipt")]
-    slow_receipts = []
-    large_receipts = []
-    for receipt in receipts:
-        if int(receipt.get("elapsed_ms") or 0) > thresholds.slow_shunt_ms:
-            slow_receipts.append(receipt)
-        if int(receipt.get("result_bytes") or 0) > thresholds.large_shunt_result_bytes:
-            large_receipts.append(receipt)
-    if slow_receipts or large_receipts:
-        warnings.append(
-            warning(
-                "inefficient_shunt_worker",
-                f"Shunt had {len(slow_receipts)} slow call(s) and {len(large_receipts)} oversized result(s)",
-                "Keep the one-shot question narrow, cap returned bytes, and split inputs when latency remains high.",
-                slow_calls=len(slow_receipts),
-                oversized_results=len(large_receipts),
-                slow_threshold_ms=thresholds.slow_shunt_ms,
-                result_threshold_bytes=thresholds.large_shunt_result_bytes,
-            )
-        )
-
-    shunt_operations = collections.Counter(
-        str(receipt.get("op") or "unknown") for receipt in receipts
-    )
-    shunt_denials = marker_counts["shunt_read_denied"]
-    if shunt_denials and not shunt_operations["read"]:
-        warnings.append(
-            warning(
-                "shunt_bypassed_after_denial",
-                f"Shunt rejected {shunt_denials} oversized read(s), but no bulk-reader call completed",
-                "The removed Shunt route was bypassed; use one bounded Haiku explorer with rg/jq and source-side limits instead of reconstructing the file.",
-                calls=shunt_denials,
             )
         )
 
@@ -1346,11 +1268,6 @@ def analyze(
                 "broad": validation_kinds["broad"],
                 "targeted": validation_kinds["targeted"],
             },
-            "shunt": {
-                "read": shunt_operations["read"],
-                "write": shunt_operations["write"],
-                "denied_reads": shunt_denials,
-            },
         },
         "warnings": warnings,
     }
@@ -1380,10 +1297,6 @@ def render_text(report: dict[str, Any]) -> str:
             f"verification commands: {summary['verification_commands']['targeted']} targeted; "
             f"{summary['verification_commands']['broad']} broad; "
             f"tool errors: {summary['tool_errors']}"
-        ),
-        (
-            f"shunt: {summary['shunt']['read']} read; {summary['shunt']['write']} write; "
-            f"{summary['shunt']['denied_reads']} denied oversized read"
         ),
     ]
     if summary["invalid_lines"]:
@@ -1449,7 +1362,6 @@ def review_day(
     warning_categories: collections.Counter[str] = collections.Counter()
     sessions_by_warning: dict[str, set[str]] = collections.defaultdict(set)
     verification = collections.Counter()
-    shunt = collections.Counter()
     session_rows = []
     for transcript, report in reports:
         item = report["summary"]
@@ -1459,7 +1371,6 @@ def review_day(
         tools.update(item["tools"])
         skills.update(item["skills"])
         verification.update(item["verification_commands"])
-        shunt.update(item["shunt"])
         categories = collections.Counter(warning["category"] for warning in report["warnings"])
         warning_categories.update(categories)
         session_name = f"{transcript.parent.name}/{transcript.stem}"
@@ -1481,7 +1392,6 @@ def review_day(
             "tools": dict(sorted(tools.items())),
             "skills": dict(sorted(skills.items())),
             "verification_commands": dict(sorted(verification.items())),
-            "shunt": dict(sorted(shunt.items())),
         }
     )
     return {

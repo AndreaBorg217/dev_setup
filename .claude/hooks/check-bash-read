@@ -2,7 +2,7 @@
 # Block Bash commands that read large files, redirect to the local Haiku explorer agent
 # Copied verbatim from spotify/portal-ai-plugins/plugins/shunt/hooks/check-bash-read (Apache-2.0)
 
-MIN_LINES="${SHUNT_MIN_LINES:-350}"
+MIN_LINES="${LARGE_READ_MIN_LINES:-350}"
 case "$MIN_LINES" in ''|*[!0-9]*) MIN_LINES=350 ;; esac
 
 input=$(cat)
@@ -11,7 +11,7 @@ command=$(echo "$input" | jq -r '.tool_input.command // empty')
 [ -z "$command" ] && exit 0
 
 # Skip piped commands (cat file | grep) — those are targeted reads.
-# This is intentional Shunt behavior; Context Mode handles broad multi-step extraction.
+# This is intentional; Context Mode handles broad multi-step extraction.
 echo "$command" | grep -qE '\|' && exit 0
 
 # Skip redirections (cat file > out) — not a read-into-context operation

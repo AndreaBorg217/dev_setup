@@ -1,7 +1,7 @@
 ---
 name: session-efficiency-reviewer
 description: Audits Claude Code JSONL sessions for evidence-backed context waste, file-ownership duplication, skill adherence, and model routing. Use for session-cost or agent-efficiency reviews, not code-correctness reviews.
-when_to_use: "session_efficiency.py, JSONL transcript, context waste, file-ownership duplication, skill adherence, model routing, review --latest, review-day, list --mentions-path, mine-preferences, correction marker, preference marker, confidence tier, proposed_artifact, resolvedModel, subagent trace, repeated reads, broad build/test commands, token estimate, Shunt receipt, --main-only, --json, --project-root, --transcript-root"
+when_to_use: "session_efficiency.py, JSONL transcript, context waste, file-ownership duplication, skill adherence, model routing, review --latest, review-day, list --mentions-path, mine-preferences, correction marker, preference marker, confidence tier, proposed_artifact, resolvedModel, subagent trace, repeated reads, broad build/test commands, token estimate, --main-only, --json, --project-root, --transcript-root"
 ---
 
 # Session efficiency reviewer
@@ -75,7 +75,7 @@ and one `proposed_artifact`:
   mechanically-enforceable, repeatedly-violated constraint on a named
   tool/model/validation step — a candidate for a new blocking/advisory
   PreToolUse hook, following this repo's `advise-agent-routing.py`,
-  `require-coding-skill.py`, and `require-git-skill.py` precedent),
+  `require-coding-skill.py`, and `require-cli-skill.py` precedent),
   `workflow doc` (situational context worth recording but not a standing
   rule), or `none` (contradicted or weak evidence — do not force an
   artifact).
@@ -109,9 +109,6 @@ general-purpose model. Use `--main-only` when subagent traces must be excluded.
 - Count repeated reads only after successful results and only when ranges are
   broad or substantially overlap. Denied attempts and disjoint targeted ranges
   are not repeat reads.
-- For historical sessions, use legacy Shunt receipt totals to distinguish successful offload from denied
-  reads followed by paging. Treat a denial without a completed read receipt as
-  a routing defect, not proof that Haiku was used.
 - Report repeated broad build/test commands separately from targeted checks.
   One final pre-MR full suite is acceptable; prefer CI or approved targeted
   checks during implementation.

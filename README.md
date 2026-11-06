@@ -212,13 +212,13 @@ Installs the Claude Code cask, language servers (jdtls, pyright, gopls), CodeGra
 
 ### Hooks
 
-Two `PreToolUse` hooks are adapted from Spotify's [Shunt](https://github.com/spotify/portal-ai-plugins/tree/master/plugins/shunt) plugin — see [Portal by Spotify cut my Claude Code token usage by 90%](https://engineering.atspotify.com/2026/9/portal-by-spotify-cut-my-claude-code-token-usage-by-90) for the pattern.
+Two `PreToolUse` hooks are copied from Spotify's [portal-ai-plugins](https://github.com/spotify/portal-ai-plugins/tree/master/plugins/shunt) repository (Apache-2.0).
 
 | Hook                          | Event          | Matcher            | Source                                       | Purpose                                                                                                                                                               |
 | ----------------------------- | -------------- | ------------------ | -------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `block-secret-exposure.py`    | `PreToolUse`   | `Bash\|Read\|Grep` | `.claude/scripts/block-secret-exposure.py`   | Blocks plaintext secret disclosure (`op read`, `bw get`, `sops -d` to stdout, untrapped temp-file redirects, `kubectl get secret -o yaml/json`, sensitive file reads) |
-| `check-file-size`             | `PreToolUse`   | `Read`             | `.claude/hooks/check-file-size` (from Shunt) | Blocks full reads of files >350 lines; redirects to `/shunt-bulk-reader` or offset/limit reads                                                                        |
-| `check-bash-read`             | `PreToolUse`   | `Bash`             | `.claude/hooks/check-bash-read` (from Shunt) | Blocks `cat/head/tail` on files >350 lines; piped/filtered reads pass through                                                                                         |
+| `check-file-size`             | `PreToolUse`   | `Read`             | `.claude/hooks/check-file-size` | Blocks full reads of files >350 lines; redirects to the local `explorer` agent or offset/limit reads                                                                        |
+| `check-bash-read`             | `PreToolUse`   | `Bash`             | `.claude/hooks/check-bash-read` | Blocks `cat/head/tail` on files >350 lines; piped/filtered reads pass through; otherwise redirects to the local `explorer` agent                                                                                         |
 | `context-mode-cache-heal.mjs` | `SessionStart` | —                  | `.claude/hooks/context-mode-cache-heal.mjs`  | No-op stub; real cache healing is owned by the `context-mode` plugin when installed                                                                                   |
 
 ### Skills
@@ -239,7 +239,6 @@ Two `PreToolUse` hooks are adapted from Spotify's [Shunt](https://github.com/spo
 | `prometheus`                  | PromQL instant/range queries and metric discovery                     |
 | `review-code`                 | Concrete correctness/maintainability/performance review               |
 | `session-efficiency-reviewer` | Local transcript cost audit (no prompt/tool output emitted)           |
-| `shunt-bulk-reader`           | Delegate bulk reads (>350 lines / 3+ files) to Haiku via Context Mode |
 
 ### Statusline
 
