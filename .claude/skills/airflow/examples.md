@@ -257,7 +257,8 @@ def fetch_orders(since: str) -> dict:
     Returns:
     - orders: List[Dict] -> raw orders returned by the API
     Throws:
-    - AirflowFailException if the API returns a non-2xx response
+    - AirflowFailException if the API returns a 4xx response other than 429
+    - AirflowException, retried, if the API returns a 5xx or 429 response
     """
     ...
 

@@ -51,7 +51,8 @@ See [examples.md#branching-and-gating](../examples.md#branching-and-gating).
 
 # Fail-fast validation
 
-- Raise `AirflowFailException` with a descriptive f-string for "this should never happen" precondition guards - not expected/recoverable business exceptions.
+- Raise `AirflowFailException` with a descriptive f-string for "this should never happen" precondition guards - not expected/recoverable business exceptions. It fails the task without using its `retries`, so never raise it for a transient failure (a 5xx, throttling, a "please try again" error).
+- Raise `AirflowException` for a transient failure the task should retry, including one an API reports inside a successful response (e.g. per-item errors in a batch call). It uses the task's `retries` and backoff, so the task must be safe to rerun.
 - Raise `AirflowSkipException` when a task genuinely has nothing to do (empty input list, no new data) and that's a normal, expected outcome. Prefer this over branching around the task when the "nothing to do" check only applies to one task.
 - Idempotent-resource-creation pattern, for any task that provisions something external: read current state first; if it already exists in a "this task already succeeded" state, skip and return; if it exists in any other unexpected state, fail loud rather than silently overwriting. This makes retries safe.
 
