@@ -371,6 +371,88 @@ kgen() {
     kubectl create "$@" --dry-run=client -o yaml > "$outfile"
 }
 
+# Per-container CPU/memory requests and limits; defaults to the current namespace (see kname)
+kresources() {
+    if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+        echo "Usage: kresources [-n <namespace> | -A]  (default: current namespace)"
+        return 0
+    fi
+    local ns_args=()
+    case "$1" in
+        -A|--all-namespaces) ns_args=(--all-namespaces) ;;
+        -n|--namespace)
+            if [ -z "$2" ]; then
+                echo "Usage: kresources [-n <namespace> | -A]"
+                return 1
+            fi
+            ns_args=(-n "$2")
+            ;;
+        "") ;;
+        *)
+            echo "Usage: kresources [-n <namespace> | -A]"
+            return 1
+            ;;
+    esac
+    local all=false
+    [[ "${ns_args[1]}" == "--all-namespaces" ]] && all=true
+
+    # Input: pod JSON on stdin, `kubectl top` rows in $top. Missing usage shows as "-".
+    local jq_program='
+        # "250m" or "2" -> cores, 2 decimals
+        def cores:
+            if . == "-" then "-"
+            else
+                (if endswith("m") then ((.[:-1] | tonumber) / 1000) else tonumber end)
+                | . * 100 | round / 100 | tostring
+            end;
+
+        def bytes_per_unit: {
+            "": 1, "m": 0.001,
+            "Ki": 1024, "Mi": 1048576, "Gi": 1073741824, "Ti": 1099511627776,
+            "k": 1000, "K": 1000, "M": 1000000, "G": 1000000000
+        };
+
+        # "512Mi" -> GiB, 1 decimal
+        def gib:
+            if . == "-" then "-"
+            else
+                capture("^(?<n>[0-9.]+)(?<u>[A-Za-z]*)$")
+                | (.n | tonumber) * bytes_per_unit[.u] / 1073741824
+                | . * 10 | round / 10 | tostring
+            end;
+
+        # `kubectl top` rows -> {"[namespace/]pod/container": [cpu, memory]}
+        ($top
+            | split("\n")
+            | map(gsub("^\\s+|\\s+$"; "") | select(length > 0) | split(" +"; null))
+            | map({key: (.[0:length-2] | join("/")), value: .[-2:]})
+            | from_entries
+        ) as $usage
+
+        | (
+            (if $all then ["NAMESPACE"] else [] end)
+            + ["POD", "CONTAINER", "CPU cores use/req/lim", "MEM GiB use/req/lim"],
+
+            (.items[]
+                | .metadata.namespace as $ns
+                | .metadata.name as $pod
+                | .spec.containers[]
+                | (if $all then $ns + "/" else "" end) as $key_prefix
+                | ($usage[$key_prefix + $pod + "/" + .name] // ["-", "-"]) as $use
+                | (if $all then [$ns] else [] end) + [
+                    $pod,
+                    .name,
+                    "\($use[0] | cores)/\(.resources.requests.cpu // "-" | cores)/\(.resources.limits.cpu // "-" | cores)",
+                    "\($use[1] | gib)/\(.resources.requests.memory // "-" | gib)/\(.resources.limits.memory // "-" | gib)"
+                ]
+            )
+        ) | @tsv'
+
+    kubectl get pods "${ns_args[@]}" -o json | jq -r --argjson all "$all" \
+        --rawfile top <(kubectl top pods --containers --no-headers "${ns_args[@]}" 2>/dev/null) \
+        "$jq_program" | column -ts $'\t'
+}
+
 lsg () {
     ls | grep -iE "$@"
 }
