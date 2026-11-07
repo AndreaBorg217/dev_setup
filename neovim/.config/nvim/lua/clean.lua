@@ -38,3 +38,5 @@ vim.api.nvim_create_user_command("NvimClean", function()
 		end)
 	end
 end, { desc = "Remove unused Neovim plugins and Mason packages" })
+
+vim.api.nvim_create_autocmd("VimEnter", { command = "NvimClean" })

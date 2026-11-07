@@ -20,7 +20,8 @@ vim.opt.autocomplete = true -- Trigger native completion while typing.
 vim.opt.cursorline = true -- Highlight the cursor's line.
 vim.opt.termguicolors = true -- Use 24-bit terminal colours.
 vim.opt.background = "dark" -- Select dark variants of colour schemes.
-vim.cmd.colorscheme("catppuccin") -- Use Neovim 0.12's bundled Catppuccin theme.
+vim.pack.add({ "https://github.com/folke/tokyonight.nvim" }, { confirm = false })
+vim.cmd.colorscheme("tokyonight")
 vim.opt.signcolumn = "yes" -- Reserve space for signs so text does not shift.
 vim.opt.showtabline = 0 -- Hide the tabpage line; this config does not use tabs.
 

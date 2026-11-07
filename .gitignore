@@ -6,6 +6,7 @@ neovim/.config/nvim/local.lua
 __pycache__/
 *.py[cod]
 .nvimlog
+/nvim.log
 .luarc.json
 spring-docker-compose/.project
 spring-docker-compose/.classpath

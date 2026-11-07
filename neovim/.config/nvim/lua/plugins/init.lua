@@ -21,6 +21,7 @@ require("plugins.harpoon")
 require("plugins.file_explorer")
 -- file_operations now lives under languages.lsp, loaded via languages.init.
 require("plugins.file_search")
+require("plugins.review")
 require("plugins.todo")
 require("plugins.snippets")
 require("plugins.supermaven")
