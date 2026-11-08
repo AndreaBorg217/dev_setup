@@ -27,17 +27,17 @@ judgement over returned evidence in the main thread.
 - Use Haiku `explorer` for factual collection: repository evidence, a specified
   data query, or external sources. It never implements or makes substantive
   comparisons or judgements.
-- Use Sonnet `analyst` for bounded read-only comparison, critique, diagnosis,
+- Use `analyst` for bounded read-only comparison, critique, diagnosis,
   and sparring when the evidence needs interpretation. It never implements.
 - Use Haiku `artifact-writer` for fully specified renders and mechanical edits:
   documentation from approved facts, static fixture data from an approved test
   matrix, deterministic plan encoding, and low-risk mechanical config edits. It
   runs only supplied commands and never takes source logic, test logic,
   debugging, or unresolved content decisions.
-- Use Sonnet `builder` for source, test logic, configuration with semantic risk,
+- Use `builder` for source, test logic, configuration with semantic risk,
   debugging, and implementation-related diagnosis. Choose per task; writing a
   file alone does not require Sonnet.
-- Use Sonnet `reviewer` for thermo-nuclear-strength read-only code review of a
+- Use `reviewer` for thermo-nuclear-strength read-only code review of a
   diff, file, symbol, or branch. It never implements or delegates.
 - Never use `WebSearch` or `WebFetch` in the main thread. Route external research
   through `explorer`.
@@ -71,10 +71,12 @@ judgement over returned evidence in the main thread.
 
 ## Tool and output discipline
 
-- Set `subagent_type` and `model` explicitly. Choose Haiku for bounded
-collection or deterministic rendering and Sonnet for semantic analysis,
-implementation, or diagnosis. Local custom agents must match their declared
-model. An Opus worker requires explicit user approval for that call.
+- Set `subagent_type` and `model` explicitly. Worker tiers:
+  - Haiku: `explorer`, `artifact-writer`.
+  - Sonnet: `analyst`, `builder`, `reviewer`.
+  - An Opus worker requires explicit user approval for that call.
+  `hooks/advise-agent-routing.py` enforces the tiers; its denial names the
+  expected model.
 - Workers gather with `ctx_batch_execute`, follow up with one batched
   `ctx_search`, and process with `ctx_execute`/`ctx_execute_file`
   (`intent` filtered). Never return full files, logs, SQL, result

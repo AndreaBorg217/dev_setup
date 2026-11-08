@@ -80,6 +80,8 @@ format-on-save while retaining manual formatting with:
 vim.g.disable_autoformat = true
 ```
 
+Neovim runs `:NvimClean` on startup to remove inactive plugins and Mason packages no longer listed in the configuration.
+
 This is a small neovim cheatsheet:
 
 | Action                         | Command           |
@@ -111,6 +113,21 @@ This is a small neovim cheatsheet:
 | Next diagnostic                | `]d`              |
 | Previous diagnostic            | `[d`              |
 | Show workspace diagnostics     | `space xw`        |
+| Toggle code review             | `space rv`        |
+| Review two branches            | `space rb`        |
+| Review: toggle file list       | `f`               |
+| Preview review comments        | `space rp`        |
+| Close review preview           | `q`               |
+| Review: comment                | `c`               |
+| Review: comment on lines       | `V`, select, `c`  |
+| Review: edit comment           | `e`               |
+| Review: save comment           | `Ctrl-s`          |
+| Review: mark file reviewed     | `r`               |
+| Review: delete comment         | `dd`              |
+| Review: discard comment        | `q`               |
+| Review: copy feedback prompt   | `y`               |
+| Review: clear all feedback     | `X`               |
+| Review: close                  | `q`               |
 | Add file to Harpoon            | `space ha`        |
 | Clear Harpoon                  | `space hc`        |
 | Harpoon navigate               | `space h<1-4>`    |
@@ -118,6 +135,10 @@ This is a small neovim cheatsheet:
 | Split vertically               | `space sv`        |
 | Split horizontally             | `space sh`        |
 | Close split                    | `space sx`        |
+
+Use `:Review branch new-nvim origin/master` to review changes since the branches diverged, including uncommitted changes on `new-nvim`. Use `:Review commits origin/master new-nvim` to compare the committed branch tips.
+
+`y` copies the complete prompt and numbered review comments in Markdown. `space rp` previews only the comments. The prompt asks Claude whether to make local changes or submit GitLab review posts. For GitLab, Claude asks for the MR URL; posting still requires your approval. Issues and suggestions become diff threads at the selected file, line or line range; notes and praise become MR notes. `X` clears local comments and reviewed marks; it does not delete posts already sent to GitLab.
 
 ### Visual Studio Code
 
@@ -212,13 +233,13 @@ Installs the Claude Code cask, language servers (jdtls, pyright, gopls), CodeGra
 
 ### Hooks
 
-Two `PreToolUse` hooks are adapted from Spotify's [Shunt](https://github.com/spotify/portal-ai-plugins/tree/master/plugins/shunt) plugin — see [Portal by Spotify cut my Claude Code token usage by 90%](https://engineering.atspotify.com/2026/9/portal-by-spotify-cut-my-claude-code-token-usage-by-90) for the pattern.
+Two `PreToolUse` hooks are copied from Spotify's [portal-ai-plugins](https://github.com/spotify/portal-ai-plugins/tree/master/plugins/shunt) repository (Apache-2.0).
 
 | Hook                          | Event          | Matcher            | Source                                       | Purpose                                                                                                                                                               |
 | ----------------------------- | -------------- | ------------------ | -------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `block-secret-exposure.py`    | `PreToolUse`   | `Bash\|Read\|Grep` | `.claude/scripts/block-secret-exposure.py`   | Blocks plaintext secret disclosure (`op read`, `bw get`, `sops -d` to stdout, untrapped temp-file redirects, `kubectl get secret -o yaml/json`, sensitive file reads) |
-| `check-file-size`             | `PreToolUse`   | `Read`             | `.claude/hooks/check-file-size` (from Shunt) | Blocks full reads of files >350 lines; redirects to `/shunt-bulk-reader` or offset/limit reads                                                                        |
-| `check-bash-read`             | `PreToolUse`   | `Bash`             | `.claude/hooks/check-bash-read` (from Shunt) | Blocks `cat/head/tail` on files >350 lines; piped/filtered reads pass through                                                                                         |
+| `check-file-size`             | `PreToolUse`   | `Read`             | `.claude/hooks/check-file-size` | Blocks full reads of files >350 lines; redirects to the local `explorer` agent or offset/limit reads                                                                        |
+| `check-bash-read`             | `PreToolUse`   | `Bash`             | `.claude/hooks/check-bash-read` | Blocks `cat/head/tail` on files >350 lines; piped/filtered reads pass through; otherwise redirects to the local `explorer` agent                                                                                         |
 | `context-mode-cache-heal.mjs` | `SessionStart` | —                  | `.claude/hooks/context-mode-cache-heal.mjs`  | No-op stub; real cache healing is owned by the `context-mode` plugin when installed                                                                                   |
 
 ### Skills
@@ -239,7 +260,6 @@ Two `PreToolUse` hooks are adapted from Spotify's [Shunt](https://github.com/spo
 | `prometheus`                  | PromQL instant/range queries and metric discovery                     |
 | `review-code`                 | Concrete correctness/maintainability/performance review               |
 | `session-efficiency-reviewer` | Local transcript cost audit (no prompt/tool output emitted)           |
-| `shunt-bulk-reader`           | Delegate bulk reads (>350 lines / 3+ files) to Haiku via Context Mode |
 
 ### Statusline
 

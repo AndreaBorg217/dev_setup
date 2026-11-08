@@ -16,7 +16,7 @@
 <!-- Explain how this reaches each environment and how success will be verified. Reference CI/CD jobs, dashboards, logs, prerequisite/follow-up MRs, migrations, feature flags, or manual steps where relevant. -->
 
 - **Delivery and order:**
-- **Dependencies:**
+- **Dependencies:** <!-- Link every prerequisite MR by full URL, state the merge order, and report whether its native Merge request dependency was verified or is pending. Configure native dependencies directly with glab api, without posting a note or opening a discussion; description links alone are insufficient. State None when there are no dependencies. -->
 - **Success criteria:**
 
 ## Rollback

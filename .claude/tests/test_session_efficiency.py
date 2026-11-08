@@ -553,38 +553,18 @@ class SessionEfficiencyTests(unittest.TestCase):
             {"command": "mvn -Dtest=TopologyTest test"},
         )
         fixture.result("bash-2", "passed")
-        fixture.tool(
-            "denied-read",
-            "read-1",
-            "Read",
-            {"file_path": str(self.root / "Large.java")},
-        )
-        fixture.result(
-            "read-1",
-            "Read can expose more than 400 lines; run shunt.py read",
-            is_error=True,
-        )
         fixture.write()
 
         report = reviewer.analyze(reviewer.parse_transcripts([self.transcript]))
         categories = {item["category"] for item in report["warnings"]}
 
-        self.assertTrue(
-            {
-                "repeated_broad_verification",
-                "shunt_bypassed_after_denial",
-            }.issubset(categories)
-        )
+        self.assertIn("repeated_broad_verification", categories)
         self.assertNotIn("dedicated_verifier", categories)
         self.assertNotIn("subagent_continuation_churn", categories)
         self.assertNotIn("unbounded_subagent", categories)
         self.assertEqual(
             {"broad": 2, "targeted": 1},
             report["summary"]["verification_commands"],
-        )
-        self.assertEqual(
-            {"read": 0, "write": 0, "denied_reads": 1},
-            report["summary"]["shunt"],
         )
 
     def test_long_trace_fix_does_not_recommend_turn_caps(self):

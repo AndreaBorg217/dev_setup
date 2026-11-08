@@ -8,13 +8,13 @@ choose the least expensive capable path:
 - Use Context Mode directly for a bounded extraction that returns the needed
   answer without substantive side-task reasoning.
 - Use Haiku `explorer` for noisy factual collection and external research.
-- Use Sonnet `analyst` for bounded comparison, critique, diagnosis, or sparring.
-- Use Sonnet `builder` for implementation and implementation-related diagnosis.
+- Use `analyst` for bounded comparison, critique, diagnosis, or sparring.
+- Use `builder` for implementation and implementation-related diagnosis.
 - Use Haiku `artifact-writer` only for fully specified mechanical artifacts.
 
 The main thread owns user dialogue, decomposition, decisions, coordination, and
-final synthesis. Every worker call must set `subagent_type` and `model`; choose
-Haiku or Sonnet explicitly. An Opus worker requires explicit user approval.
+final synthesis. Every worker call must set `subagent_type` and `model`
+explicitly, using the worker tiers in `rules/subagents.md`.
 
 All files under `rules/` are binding for every task in every repository.
 

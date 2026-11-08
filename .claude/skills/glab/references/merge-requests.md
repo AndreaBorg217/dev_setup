@@ -41,6 +41,14 @@ List exact automated and manual checks with observed results. Mark only checks t
 
 Explain how the change reaches each environment and in what order. Reference relevant CI/CD jobs or pipelines, prerequisite and follow-up MRs, migrations, feature flags, manual steps, dashboards, logs, queries, or other observable success criteria.
 
+Always configure native **Merge request dependencies** and document the merge order:
+
+- In each dependent MR, link every prerequisite by its full MR URL and explicitly state `Merge <prerequisite MR> before this MR`. For a chain, show the ordered MR links.
+- Add reciprocal links to follow-up MRs in prerequisite descriptions when those MRs exist and the updates are authorized. If an MR has not been created yet, mark its link as pending and add the real URL once available; never invent an IID or URL.
+- Configure each prerequisite as a native Merge request dependency, within the authorized mutation scope. Follow [glab-cli.md → Merge request dependencies](glab-cli.md#merge-request-dependencies) to create it directly with `glab api`, then verify the saved relationship. Do not post a note or open a discussion for dependency setup. Description links alone do not fulfill this requirement. If unavailable, keep the explicit links and order in the descriptions and report the limitation and pending setup.
+- Before merging a dependent MR, verify that every prerequisite is merged. Description links alone do not enforce merge order.
+- For a chain of branch-per-step MRs, follow [glab-cli.md → Stacked merge requests](glab-cli.md#stacked-merge-requests) for targets, merge order and retargeting.
+
 ### Rollback
 
 Give executable reversal or recovery steps in order. Include limitations such as irreversible writes, schema incompatibility, data loss, downtime, offset changes, or a bounded rollback window. Do not write only “revert the MR” when operational state also changes.
@@ -53,13 +61,13 @@ Cover performance and operational impact, security or compatibility concerns, kn
 
 - Use `TICKET: concise imperative summary` when a ticket key exists.
 - Specify source and target branches explicitly.
-- Self-assign using the authenticated username for the active host.
+- Always assign the MR. Self-assign using the authenticated username for the active host, read from the CLI. If it cannot be inferred, ask with `AskUserQuestion` before creating the MR.
 - Normally request source-branch removal after merge.
 - Use `-R GROUP/PROJECT` for cross-project creation.
 - Do not create a duplicate MR for the same source branch.
 
 ## QA and creation
 
-Present the title and fully rendered description to the user. Obtain explicit approval immediately before `glab mr create`; prior approval to commit or push does not authorize MR creation.
+Present the title, fully rendered description, and proposed native dependency relationships for QA. Include dependency setup in the requested mutation scope. Obtain explicit approval immediately before `glab mr create`; prior approval to commit or push does not authorize MR creation.
 
-After creation, return the MR URL and report source/target branches, pipeline state if available, and any pending deployment or testing item. Do not merge, close, comment, resolve discussions, or mutate CI unless separately approved.
+Once both MR URLs exist, configure the approved native dependencies and verify them before reporting dependency setup complete. Reuse existing relationships; report failed or pending setup explicitly. Return the MR URL and report source/target branches, verified dependencies, pipeline state if available, and any pending deployment or testing item. Do not merge, close, post unrelated comments, resolve discussions, or mutate CI unless separately approved.

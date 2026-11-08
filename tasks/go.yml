@@ -1,7 +1,7 @@
 - name: Install Go
   community.general.homebrew:
     name: go
-    state: present
+    state: latest
   tags:
     - "go"
 

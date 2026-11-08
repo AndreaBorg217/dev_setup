@@ -19,11 +19,24 @@
   templates, branch/commit conventions, deployment scripts, linters, and CI.
   If these conflict with each other or the current request, surface the exact
   conflict before writing rather than silently choosing a different convention.
+- When the user names a reference, or the repository already holds an
+  established precedent for the artifact (a Kafka connector, a repeated
+  pipeline, Terraform, a manifest, a DAG, a migration), build from it: 1) copy
+  the closest existing example, 2) rename it for the new target, 3) edit only
+  what differs. Do not write from scratch or from generic templates when a
+  precedent exists. If several candidates fit, pick the closest and name it.
+  Report each field changed from the source. When neither the user nor the
+  repository supplies a precedent, research how others solved the problem
+  before writing code: route a web search through `explorer` for official
+  docs, established libraries, and open-source implementations, compare the
+  approaches, and build from the most established one. Do not implement a
+  novel solution when a proven one fits; if none fits, say why before writing.
 - Investigate before asking. Gather only the evidence relevant to this edit via targeted CodeGraph/Context Mode lookups. Repository facts discoverable with a bounded search are research, not user questions; raise contradictions instead of silently choosing one. Do not pre-read full test/configuration manifests for surgical edits.
 - Ask only for unresolved user-owned decisions when a wrong assumption would materially change or discard the work. Include a recommended default.
 - Scale ceremony to blast radius. Let small changes with one obvious correct form proceed directly. Make assumptions, boundaries, and verification explicit for multi-step work and for changes involving schemas, authentication, money, migrations, deletion, or other high-risk state.
 - Structure implementation as small, coherent, reviewable behaviours or design
   decisions. Split only at natural boundaries, not arbitrary line counts.
+- Do not poll or sleep-loop for status (CI, deploys, pipelines, background jobs, `sleep N && check`). The user checks; poll only when the user explicitly asks.
 - Do not start broad refactors unless explicitly directed.
 - Keep work surgical and limited to the requested behavior and named files. Do not fix adjacent problems. If the task genuinely requires touching more, ask before expanding scope.
 - If repository evidence invalidates an established assumption or approach, stop and explain the conflict instead of quietly improvising a different design.
