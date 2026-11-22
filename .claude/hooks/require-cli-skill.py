@@ -34,7 +34,7 @@ def _marker_present(session_id: str, agent_id: str, skill: str = "git") -> bool:
 
 # CLI run in Bash -> skill that must be invoked before its first use.
 CLI_SKILLS = {
-    "kubectl": "kubectl",
+    "kubectl": "kubernetes",
     "aws": "aws",
     "docker": "docker",
     "argocd": "argocd",

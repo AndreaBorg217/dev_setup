@@ -1,7 +1,22 @@
-# kubectl CLI reference
+# kubectl reference
 
 Concrete command shapes actually used for pod investigation, kept generic -
 substitute the real namespace/pod/container from the current task.
+
+## Investigation order
+
+Narrow scope at each step:
+
+1. **`get`** - find the resource. Start broad, then narrow to the one
+   resource once identified.
+2. **`describe`** - scheduling, restarts and event history on that one
+   resource. `Events:` at the bottom is usually the fastest signal for
+   `Pending`, `CrashLoopBackOff` and image-pull failures.
+3. **`logs`** - once `describe` points at the failing container, read the
+   actual error.
+
+`kubectl get events` is a companion for when the failing resource is not yet
+identified, not a replacement step.
 
 ## get - locate the resource
 
