@@ -100,7 +100,7 @@ See [examples.md#params-config-and-constants](../examples.md#params-config-and-c
 
 - Inside a task body: `get_current_context()["task_instance"].xcom_pull(task_ids="...")` - use this (instead of a plain TaskFlow argument) when a task needs to join/aggregate the XComs of several upstream (often mapped or branched) task instances into one result.
 - Inside operator kwargs (e.g. `TriggerDagRunOperator.conf`): the Jinja form, `"{{ ti.xcom_pull(task_ids='plan_run')['run_id'] }}"`.
-- `@task(multiple_outputs=True)` when a task's dict return should unpack into multiple named XComs instead of one blob.
+- `@task(multiple_outputs=True)` when a task's dict return should unpack into multiple named XComs instead of one blob. Never feed one of those named XComs to `.expand()` - see "Expand only over a plain return value" below.
 - Don't push/pull a value through XCom if it can instead be read or computed directly from `get_current_context()` in the consumer - threading it through XCom adds a needless dependency edge and a serialized copy for something already available for free.
 - Same reasoning, different source: config values (a connection id, a constant) belong in a Variable or module-level constant, read directly by whichever task needs them - not pushed by an earlier task just so a later one can pull it.
 - Push only what the next task actually consumes.
@@ -154,6 +154,19 @@ See [examples.md#documentation](../examples.md#documentation) for a full DAG wit
 A mapped task's signature often needs more than the expanded element - `.expand()` alone only supplies the varying value. `.partial(**fixed_kwargs)` supplies the rest: every mapped instance gets the same `fixed_kwargs` plus its own value for whatever `.expand()` maps. Pre-filter/validate the input list before expanding - mapping over an unfiltered or unbounded list creates one task instance per element, so a bad or huge input list becomes an uncontrolled fan-out.
 
 See [examples.md#partial--expand](../examples.md#partial--expand).
+
+# Expand only over a plain return value
+
+`.expand()` maps only over an upstream task's default `return_value` XCom. Subscripting a task's output (`plan["items"]`) does not index into the dict at run time; it references the XCom stored under the custom key `items`, whether that key came from `multiple_outputs=True` or not. The DAG then fails to import with `ValueError: cannot map over XCom with custom key 'items' from <Task(...)>`, so no run of that DAG is scheduled until it is fixed.
+
+When a planning task produces both the list to map over and other data:
+
+- Preferred: keep one dict `return_value` (`multiple_outputs=False`) and add a small extract task that takes the whole dict as a TaskFlow argument and returns `plan["items"]`; expand over the extract task. Every consumer takes the whole dict as an argument and reads its own key, so all data flows through TaskFlow arguments and nothing touches the context. The cost is one short extra task per run.
+- Alternative, when an extra task is not wanted: return the list itself and push the other data under its own key with `get_current_context()["task_instance"].xcom_push(key=..., value=...)`; the consumer pulls that key. Push it on every path that returns, including early returns, or the consumer reads `None`.
+
+The error appears at DAG import, not at run time, so a DAG import check before merge catches it; `py_compile` does not.
+
+See [examples.md#expand-only-over-a-plain-return-value](../examples.md#expand-only-over-a-plain-return-value).
 
 # Debugging via the REST API
 

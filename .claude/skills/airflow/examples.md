@@ -246,6 +246,67 @@ def process_table(table: str, mode: str) -> None:
 process_table.partial(mode="incremental").expand(table=["orders", "users", "payments"])
 ```
 
+## Expand only over a plain return value
+
+Wrong - fails at DAG import with `cannot map over XCom with custom key 'chunks'`:
+
+```python
+@task(multiple_outputs=True)
+def plan_chunks() -> dict:
+    return {"chunks": [...], "summary": [...]}
+
+plan = plan_chunks()
+process_chunk.expand(chunk=plan["chunks"])
+report(plan["summary"])
+```
+
+Preferred - one dict return value, an extract task for the mapped list, and TaskFlow arguments everywhere:
+
+```python
+@task(multiple_outputs=False)
+def plan_chunks() -> dict:
+    return {"chunks": [...], "summary": [...]}
+
+
+@task
+def extract_chunks(plan: dict) -> list:
+    """Pass the chunks on as a plain return_value for expand()."""
+    return plan["chunks"]
+
+
+@task(trigger_rule="none_failed_min_one_success")
+def report(plan: dict) -> list:
+    return plan["summary"]
+
+
+plan = plan_chunks()
+processed = process_chunk.expand(chunk=extract_chunks(plan))
+processed >> report(plan)
+```
+
+Alternative, without the extra task - the mapped list is the plain return value; the other data has its own key:
+
+```python
+@task
+def plan_chunks() -> list:
+    context = get_current_context()
+    chunks, summary = [...], [...]
+    context["task_instance"].xcom_push(key="summary", value=summary)
+    return chunks
+
+
+@task(trigger_rule="none_failed_min_one_success")
+def report() -> list:
+    return get_current_context()["task_instance"].xcom_pull(task_ids="plan_chunks", key="summary")
+
+
+plan = plan_chunks()
+processed = process_chunk.expand(chunk=plan)
+[plan, processed] >> report()
+```
+
+In both, `none_failed_min_one_success` lets `report` run when the mapped list is empty (the mapped task is skipped), and still blocks it when any mapped instance fails.
+
 ## Docstrings
 
 ```python
