@@ -39,8 +39,6 @@
         // AI & AUTOCOMPLETE
         "christian-kohler.path-intellisense",
         "VisualStudioExptTeam.vscodeintellicode",
-        "Supermaven.supermaven",
-        "coderabbit.coderabbit-vscode",
         // "anthropic.claude-code",
         // GO
         "golang.go",

@@ -68,10 +68,6 @@ The Neovim task is currently disabled because its `setup.yml` include is comment
 stow --restow --no-folding --target "$HOME" neovim
 ```
 
-Java support uses JDTLS with Spring Boot language-server extensions, debugging, tests, and Palantir formatting.
-
-Supermaven provides inline AI completions. Start with `:SupermavenUseFree`, or use `:SupermavenUsePro` for an existing Pro account.
-
 Machine-specific Neovim settings belong in
 `neovim/.config/nvim/local.lua`, which is ignored by Git. For example, disable
 format-on-save while retaining manual formatting with:
@@ -235,31 +231,31 @@ Installs the Claude Code cask, language servers (jdtls, pyright, gopls), CodeGra
 
 Two `PreToolUse` hooks are copied from Spotify's [portal-ai-plugins](https://github.com/spotify/portal-ai-plugins/tree/master/plugins/shunt) repository (Apache-2.0).
 
-| Hook                          | Event          | Matcher            | Source                                       | Purpose                                                                                                                                                               |
-| ----------------------------- | -------------- | ------------------ | -------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `block-secret-exposure.py`    | `PreToolUse`   | `Bash\|Read\|Grep` | `.claude/scripts/block-secret-exposure.py`   | Blocks plaintext secret disclosure (`op read`, `bw get`, `sops -d` to stdout, untrapped temp-file redirects, `kubectl get secret -o yaml/json`, sensitive file reads) |
-| `check-file-size`             | `PreToolUse`   | `Read`             | `.claude/hooks/check-file-size` | Blocks full reads of files >350 lines; redirects to the local `explorer` agent or offset/limit reads                                                                        |
-| `check-bash-read`             | `PreToolUse`   | `Bash`             | `.claude/hooks/check-bash-read` | Blocks `cat/head/tail` on files >350 lines; piped/filtered reads pass through; otherwise redirects to the local `explorer` agent                                                                                         |
-| `context-mode-cache-heal.mjs` | `SessionStart` | —                  | `.claude/hooks/context-mode-cache-heal.mjs`  | No-op stub; real cache healing is owned by the `context-mode` plugin when installed                                                                                   |
+| Hook                          | Event          | Matcher            | Source                                      | Purpose                                                                                                                                                               |
+| ----------------------------- | -------------- | ------------------ | ------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `block-secret-exposure.py`    | `PreToolUse`   | `Bash\|Read\|Grep` | `.claude/scripts/block-secret-exposure.py`  | Blocks plaintext secret disclosure (`op read`, `bw get`, `sops -d` to stdout, untrapped temp-file redirects, `kubectl get secret -o yaml/json`, sensitive file reads) |
+| `check-file-size`             | `PreToolUse`   | `Read`             | `.claude/hooks/check-file-size`             | Blocks full reads of files >350 lines; redirects to the local `explorer` agent or offset/limit reads                                                                  |
+| `check-bash-read`             | `PreToolUse`   | `Bash`             | `.claude/hooks/check-bash-read`             | Blocks `cat/head/tail` on files >350 lines; piped/filtered reads pass through; otherwise redirects to the local `explorer` agent                                      |
+| `context-mode-cache-heal.mjs` | `SessionStart` | —                  | `.claude/hooks/context-mode-cache-heal.mjs` | No-op stub; real cache healing is owned by the `context-mode` plugin when installed                                                                                   |
 
 ### Skills
 
-| Skill                         | Purpose                                                               |
-| ----------------------------- | --------------------------------------------------------------------- |
-| `airflow`                     | DAG/task authoring and live Airflow operations                        |
-| `coding`                      | Mandatory policy for all code, test, and code-review work             |
-| `council`                     | Five-advisor stress test for high-stakes decisions                    |
-| `debugger`                    | Log/stack-trace-driven diagnosis and repair                           |
-| `docker`                      | Dockerfiles and compose authoring/troubleshooting                     |
-| `explain-code`                | Code walkthrough with diagrams and gotchas                            |
-| `feature-spec`                | Strict intake spec collection (no implementation)                     |
-| `git`                         | Git operations via the curated CLI reference                          |
-| `glab`                        | GitLab/MR/pipeline operations                                         |
-| `plan-execute`                | Dispatch of approved plan bundles (Sonnet orchestrator)               |
-| `planner`                     | Human-in-the-loop planning on Opus (produces `plans/<slug>/`)         |
-| `prometheus`                  | PromQL instant/range queries and metric discovery                     |
-| `review-code`                 | Concrete correctness/maintainability/performance review               |
-| `session-efficiency-reviewer` | Local transcript cost audit (no prompt/tool output emitted)           |
+| Skill                         | Purpose                                                       |
+| ----------------------------- | ------------------------------------------------------------- |
+| `airflow`                     | DAG/task authoring and live Airflow operations                |
+| `coding`                      | Mandatory policy for all code, test, and code-review work     |
+| `council`                     | Five-advisor stress test for high-stakes decisions            |
+| `debugger`                    | Log/stack-trace-driven diagnosis and repair                   |
+| `docker`                      | Dockerfiles and compose authoring/troubleshooting             |
+| `explain-code`                | Code walkthrough with diagrams and gotchas                    |
+| `feature-spec`                | Strict intake spec collection (no implementation)             |
+| `git`                         | Git operations via the curated CLI reference                  |
+| `glab`                        | GitLab/MR/pipeline operations                                 |
+| `plan-execute`                | Dispatch of approved plan bundles (Sonnet orchestrator)       |
+| `planner`                     | Human-in-the-loop planning on Opus (produces `plans/<slug>/`) |
+| `prometheus`                  | PromQL instant/range queries and metric discovery             |
+| `review-code`                 | Concrete correctness/maintainability/performance review       |
+| `session-efficiency-reviewer` | Local transcript cost audit (no prompt/tool output emitted)   |
 
 ### Statusline
 

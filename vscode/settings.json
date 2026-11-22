@@ -26,9 +26,6 @@
     // AI
     "chat.disableAIFeatures": true,
     "coderabbit.agentType": "Claude Code",
-    "coderabbit.autoReviewMode": "disabled",
-    "coderabbit.region": "eu",
-    "coderabbit.autoStartTask": false,
     "editor.inlineSuggest.minShowDelay": 500,
     "editor.quickSuggestions": {
         "other": "on",
