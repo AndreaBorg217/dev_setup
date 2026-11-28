@@ -13,6 +13,9 @@
   Numbers inherited from earlier plans or sessions must be re-run live before a
   decision uses them. Every metric must state what it counts (population,
   filters, numerator/denominator).
+- Keep a compact internal log of material decisions, edits, checks, results,
+  and their reasons. Report only entries needed to understand the outcome or
+  an unresolved issue.
 - Use the user's installed rules, applicable skills, and repository contracts
   before generic plugin guidance, external examples, inferred best practice, or
   model preference. Repository contracts include applicable instructions,
@@ -32,10 +35,15 @@
   approaches, and build from the most established one. Do not implement a
   novel solution when a proven one fits; if none fits, say why before writing.
 - Investigate before asking. Gather only the evidence relevant to this edit via targeted CodeGraph/Context Mode lookups. Repository facts discoverable with a bounded search are research, not user questions; raise contradictions instead of silently choosing one. Do not pre-read full test/configuration manifests for surgical edits.
+- Run decisive checks available through current tools, including operational
+  queries, before reporting an evidence gap. Do not defer an available check
+  to later. A gap remains only when the agent cannot close it and human action
+  is required; name the attempted check and exact blocker.
 - Ask only for unresolved user-owned decisions when a wrong assumption would materially change or discard the work. Include a recommended default.
 - Scale ceremony to blast radius. Let small changes with one obvious correct form proceed directly. Make assumptions, boundaries, and verification explicit for multi-step work and for changes involving schemas, authentication, money, migrations, deletion, or other high-risk state.
 - Structure implementation as small, coherent, reviewable behaviours or design
-  decisions. Split only at natural boundaries, not arbitrary line counts.
+  decisions. Complete and verify one unit before starting the next. Split only
+  at natural boundaries, not arbitrary line counts.
 - Do not poll or sleep-loop for status (CI, deploys, pipelines, background jobs, `sleep N && check`). The user checks; poll only when the user explicitly asks.
 - Do not start broad refactors unless explicitly directed.
 - Keep work surgical and limited to the requested behavior and named files. Do not fix adjacent problems. If the task genuinely requires touching more, ask before expanding scope.

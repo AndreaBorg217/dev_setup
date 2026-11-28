@@ -36,6 +36,11 @@ verify the base, create and check out the requested branch, then restore only th
 changes that belong on the new branch. Stop for unclear stash ownership, conflicts,
 an unknown branch name, or a base that is behind or diverged.
 
+Prefer an approved branch in the existing checkout. Create a worktree only when
+isolation is needed or requested. Before closing the task, inspect worktrees
+created for it and any uncommitted or unpushed work. Obtain explicit QA and
+approval before removing a worktree; leave one with unresolved work intact.
+
 ## Synchronize before change work
 
 Before source discovery or edits for a new change, inspect the worktree, branch,
@@ -49,10 +54,10 @@ never select a synchronization strategy because it is conventional.
 ## Keep history reviewable
 
 - Match the repository's established commit convention.
-- Keep commits small and logical. Amend corrections into their logical commit instead of retaining false-start or review-fix commits.
+- After explicit QA and approval, commit verified logical units in dependency order. Amend corrections into their logical commit instead of retaining false-start or review-fix commits.
 - Rebase feature work onto the verified target. Do not merge the target into the feature branch.
 - After rewritten history, use force-with-lease. Never use an unguarded force update.
-- Commit at useful review boundaries and push in bulk to avoid unnecessary CI/CD churn.
+- Push the approved series in bulk to avoid unnecessary CI/CD churn.
 
 ## Approval
 

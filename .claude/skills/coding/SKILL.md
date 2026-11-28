@@ -31,7 +31,11 @@ Unless explicitly required:
 
 If two implementations satisfy the requirement, prefer the one with fewer concepts, branches, files, and lines — do not express in 1000 lines what can be expressed in 10. Deleting unnecessary code is preferred.
 
-Even if a bug is identified, do not first assume the code is missing logic and add more code to cater for a particular case. Identify if the bug is in the existing logic and favour amending the existing logic instead of adding more logic to cover bugs.
+Before choosing a fix, identify the actual data shape, ownership, state transitions, and observable result. Keep each decision in one place. If evidence breaks the current design premise, describe the simplest design that would satisfy the requirement from the start, then reach it in small verified units. Remove obsolete logic before adding new logic. Leave clear unrelated code alone.
+
+At an external boundary, handle states allowed by the contract or observed in real data. Investigate observations that contradict a declared contract. Parse and validate once, then trust established types, schemas, and upstream invariants internally. Use domain types when they eliminate a meaningful invalid state. Every new runtime guard must name the reachable state it handles. Do not silence type errors to bypass an invariant.
+
+Make operations idempotent when they can be retried, replayed, or resumed after failure. Reproduce bugs and fix their cause; a guard that merely hides a failure is not a fix.
 
 Do not add handling for established invariants to protect against things that cannot materialise in practice, like:
 
@@ -87,7 +91,11 @@ Use normal conditionals for expected control flow. Idiomatic EAFP is fine when i
 
 ## Testing
 
-Do not create or modify tests unless explicitly requested or approved.
+Before changing behaviour, identify each distinct required outcome and realistic regression in the affected data flow. For work with multiple paths or shared state, keep a brief requirement-to-proof checklist. Include observed production cases, downstream effects, and materially different event orders.
+
+Add or update a test when it gives decisive proof of required behaviour or protects against a realistic regression. Observe the expected failure before the fix when practical. Assert through the relevant call path and observable output. Test an internal identity or ownership property only when it is part of the contract. Do not test trivial wiring, guaranteed invariants, or cases invented solely for coverage.
+
+After the change, check every requirement against its proof. A nearby passing test does not cover an untested case.
 
 Each test must validate one observable behavior with a plausible failure path, derive expectations from the specification rather than the implementation, and protect against a realistic regression. In this way, a condition in the code is either a case that can materialise in reality and should be protected by tests, or otherwise it cannot materialise in reality and hence it should be removed and not covered by a test to add coverage.
 
@@ -102,6 +110,8 @@ Do not disable or weaken failing tests without permission.
 Change only what is necessary for the requested task.
 
 Do not perform opportunistic refactors, rename or reformat unrelated code, reorganize modules unnecessarily, clean up unrelated code, or silently expand scope.
+
+When a refactor is requested or necessary for the requirement, establish current observable behaviour, change structure in small units, and verify that behaviour is preserved. Do not turn a local fix into unrelated redesign.
 
 Remove code made unused or unreachable by the current change. Do not leave commented-out implementations. Mention pre-existing dead code outside the task scope instead of removing it.
 
@@ -133,27 +143,35 @@ Spend tokens on answers, not on discovery. Discovery order is fixed:
 
 ## Verification
 
-During implementation, use LSP/static diagnostics and only the smallest
-targeted check authorised by the task. Do not run a full build or test suite
-after individual edits. A model session may run one full suite per repository
-and test runner at the final pre-MR state, after hook/user approval; CI owns it
-otherwise.
+During implementation, use available LSP diagnostics and the smallest relevant
+checks. Do not run a full build or test suite after individual edits.
 
-Before claiming a task done, run the targeted spec tests for every eligible
-class the change touches. Claims in commits or MRs must match passing tests —
-do not claim "all", "every", or "parity" coverage without a passing test for
-each eligible class.
-If runtime-relevant source changes after that run, a second run requires a new
-user decision. Documentation, comment, formatting-only Python, and docstring-only
-changes do not require runtime tests and do not invalidate a completed suite.
+Before completion, revisit each requirement and its proof. Discover the
+project's configured checks from its manifests and scripts. Run the relevant
+tests and available operational checks, then run each configured linter,
+formatter check, type checker, and full test suite once at the final source
+state. Record the exact command and result for each check. If a check is
+destructive or has a separate approval gate, prepare the exact command and
+request approval. A check that needs human approval remains open until the
+user decides. Claims in commits or MRs must match passing tests; do not claim
+coverage that the evidence does not establish.
 
-Do not let formatters modify files outside the current scope. Run configured
-linters, formatter checks, and type checkers only when the task or user approves
-them.
+If runtime-relevant source changes after verification, rerun the checks affected
+by that change. Documentation, comment, formatting-only Python, and docstring-only
+changes do not require runtime tests. Do not let formatters modify files outside
+the current scope.
 
-When a language server is available for the language being edited, use it for type-aware navigation and diagnostics (definitions, references, symbols, type information, errors) after the CodeGraph/Context Mode pass above. Treat language-server results as code intelligence, not as a substitute for the repository's configured verification commands. Run verification commands themselves inside `ctx_execute` with an `intent` filter so only failures and summaries enter context.
+When a language server is available for the language being edited, use it for
+type-aware navigation and diagnostics (definitions, references, symbols, type
+information, errors) after the CodeGraph/Context Mode pass above. Record the
+diagnostic result. If no language server is available, state that explicitly;
+do not imply it ran. Treat language-server results as code intelligence, not
+as a substitute for the repository's configured verification commands. Run
+verification commands themselves inside `ctx_execute` with an `intent` filter
+so only failures and summaries enter context.
 
-If no linter exists, say so and suggest an appropriate one.
+In the final response, name each configured check and its result, or say why
+it could not run. If no linter exists, say so and suggest an appropriate one.
 
 ## Final Audit
 
