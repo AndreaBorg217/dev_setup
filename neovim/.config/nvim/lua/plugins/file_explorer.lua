@@ -15,6 +15,15 @@ require("nvim-tree").setup({
 		end, { buffer = buffer, desc = "Toggle folder" })
 	end,
 	view = { side = "left" }, -- Keep the explorer on the left of editing windows.
+	filters = {
+		git_ignored = false,
+		custom = {
+			"^\\.git$", "^\\.venv$", "^venv$", "^node_modules$", "^__pycache__$",
+			"^target$", "^\\.idea$", "^\\.settings$", "^\\.DS_Store$",
+			"^\\.nvimlog$", "^nvim\\.log$", "^\\.luarc\\.json$",
+			"^\\.project$", "^\\.classpath$", "\\.py[cod]$",
+		},
+	},
 	renderer = {
 		icons = {
 			glyphs = {

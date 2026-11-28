@@ -16,10 +16,13 @@ require("telescope").setup({
 })
 local builtin = require("telescope.builtin")
 
--- --hidden would otherwise list VCS internals and untracked dependency trees.
+-- --hidden and --no-ignore-vcs include local config files, so omit repository noise.
 local excluded_globs = {}
-for _, dir in ipairs({ ".git", "node_modules", ".venv", "venv", "__pycache__", "target", ".idea" }) do
+for _, dir in ipairs({ ".git", "node_modules", ".venv", "venv", "__pycache__", "target", ".idea", ".settings" }) do
 	vim.list_extend(excluded_globs, { "--glob", "!**/" .. dir .. "/**" })
+end
+for _, file in ipairs({ ".DS_Store", ".nvimlog", "nvim.log", ".luarc.json", ".project", ".classpath", "*.py[cod]" }) do
+	vim.list_extend(excluded_globs, { "--glob", "!**/" .. file })
 end
 
 -- The global 'autocomplete' option (options.lua) would otherwise pop native
@@ -39,12 +42,12 @@ end
 vim.keymap.set("n", "<leader>ff", function()
 	builtin.find_files({
 		cwd = project_root(),
-		find_command = vim.list_extend({ "rg", "--files", "--color", "never", "--hidden" }, excluded_globs),
+		find_command = vim.list_extend({ "rg", "--files", "--color", "never", "--hidden", "--no-ignore-vcs" }, excluded_globs),
 	})
 end, { desc = "Find project files" })
 
 vim.keymap.set("n", "<leader>fs", function()
-	builtin.live_grep({ cwd = project_root(), additional_args = vim.list_extend({ "--hidden" }, excluded_globs) })
+	builtin.live_grep({ cwd = project_root(), additional_args = vim.list_extend({ "--hidden", "--no-ignore-vcs" }, excluded_globs) })
 end, { desc = "Search project text" })
 
 vim.keymap.set("n", "<leader>fk", builtin.keymaps, { desc = "Find keymaps" })
