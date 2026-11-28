@@ -78,6 +78,13 @@ vim.g.disable_autoformat = true
 
 Neovim runs `:NvimClean` on startup to remove inactive plugins and Mason packages no longer listed in the configuration.
 
+Neovim uses Minuet with Ollama for inline completion. Set the model and request
+frequency in `neovim/.config/nvim/lua/config.lua`.
+The Neovim Ansible task creates this ignored file from `config.sample.lua` if it is absent.
+Ollama needs `ollama pull qwen2.5-coder:1.5b`.
+Tab accepts a snippet jump, selected native completion,
+or ghost text in that order.
+
 This is a small neovim cheatsheet:
 
 | Action                         | Command           |

@@ -40,6 +40,10 @@
       "rev": "050638170639ceb7bef4e804507cbf209e565b2c",
       "src": "https://github.com/nvim-mini/mini.snippets"
     },
+    "minuet-ai.nvim": {
+      "rev": "fcda648efd20f7495403de5f572165502a861731",
+      "src": "https://github.com/milanglacier/minuet-ai.nvim"
+    },
     "nui.nvim": {
       "rev": "10fc361835c856ba4233ef5ea135b919bf3dce97",
       "src": "https://github.com/MunifTanjim/nui.nvim"

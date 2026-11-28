@@ -185,6 +185,16 @@
   tags:
     - "vim"
 
+- name: Initialise local Neovim settings
+  ansible.builtin.copy:
+    src: "{{ ansible_facts.env.HOME }}/Documents/GitHub/dev_setup/neovim/.config/nvim/lua/config.sample.lua"
+    dest: "{{ ansible_facts.env.HOME }}/Documents/GitHub/dev_setup/neovim/.config/nvim/lua/config.lua"
+    remote_src: true
+    force: false
+    mode: "0644"
+  tags:
+    - "vim"
+
 - name: Inspect stowed Neovim config
   ansible.builtin.stat:
     path: "{{ ansible_facts.env.HOME }}/.config/nvim"

@@ -3,6 +3,7 @@
 .DS_Store
 vscode/settings.local.json
 neovim/.config/nvim/local.lua
+neovim/.config/nvim/lua/config.lua
 __pycache__/
 *.py[cod]
 .nvimlog
